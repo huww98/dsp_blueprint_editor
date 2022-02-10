@@ -98,13 +98,15 @@ let mounted = false;
 
 onMounted(() => {
 	const rootEl = root.value!;
-	const camera = new PerspectiveCamera(75, rootEl.clientWidth / rootEl.clientHeight, 0.05, 2000);
-	const renderer = new WebGLRenderer();
+	const camera = new PerspectiveCamera(75, rootEl.clientWidth / rootEl.clientHeight, 0.05, 100);
+	const renderer = new WebGLRenderer({ antialias: true });
+	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(rootEl.clientWidth, rootEl.clientHeight);
 
 	const controls = new PlanetMapControls(camera, renderer.domElement);
 	controls.listenToKeyEvents(window)
 	controls.minDistance = R * 1.1;
+	controls.maxDistance = R * 5;
 
 	rootEl.appendChild(renderer.domElement);
 
