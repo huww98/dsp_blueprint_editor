@@ -4,50 +4,8 @@
 
 <script lang="ts">
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
+import { gridAreas } from '@/blueprint/planet';
 import { Group, LineSegments, LineBasicMaterial } from 'three';
-
-const segmentMap: [number, number][] = [
-	[0, 1],
-	[1, 4],
-	[8, 8],
-	[16, 16],
-	[20, 20],
-	[28, 32],
-	[40, 40],
-	[54, 60],
-	[73, 80],
-	[91, 100],
-	[114, 120],
-	[140, 160],
-	[177, 200],
-	[Infinity, Infinity],
-];
-
-function calcLatitudeSeg(seg: number, maxSegment = 200) {
-	const latitude = Math.acos(seg / maxSegment);
-	const radPerSeg = 2 * Math.PI / maxSegment;
-	return Math.ceil(latitude / radPerSeg);
-}
-
-function* gridAreas(segment = 200) {
-	for (let i = 1; i < segmentMap.length - 1; i++) {
-		const [minSeg, longitudeSeg] = segmentMap[i];
-		const maxSeg = segmentMap[i + 1][0]
-		const maxLatitudeSeg = calcLatitudeSeg(minSeg, segment);
-		const minLatitudeSeg = calcLatitudeSeg(Math.min(maxSeg, segment), segment);
-		const latitudeSeg = maxLatitudeSeg - minLatitudeSeg;
-		yield {
-			minLatitudeSeg,
-			latitudeSeg,
-			longitudeSeg,
-		};
-		yield {
-			minLatitudeSeg: -minLatitudeSeg,
-			latitudeSeg: -latitudeSeg,
-			longitudeSeg,
-		}
-	}
-}
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -94,14 +52,11 @@ const scene = new Scene();
 scene.add(buildPlanetGrid(R * 1.001, SEGMENT));
 
 const root: Ref<HTMLDivElement | null> = ref(null);
-let mounted = false;
 
 onMounted(() => {
 	const rootEl = root.value!;
 	const camera = new PerspectiveCamera(75, rootEl.clientWidth / rootEl.clientHeight, 0.05, 100);
 	const renderer = new WebGLRenderer({ antialias: true });
-	renderer.setPixelRatio(window.devicePixelRatio);
-	renderer.setSize(rootEl.clientWidth, rootEl.clientHeight);
 
 	const controls = new PlanetMapControls(camera, renderer.domElement);
 	controls.listenToKeyEvents(window)
@@ -113,7 +68,16 @@ onMounted(() => {
 	camera.position.z = 2;
 	controls.update();
 
-	mounted = true;
+	const onResize = () => {
+		camera.aspect = rootEl.clientWidth / rootEl.clientHeight;
+		camera.updateProjectionMatrix();
+		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setSize(rootEl.clientWidth, rootEl.clientHeight);
+	}
+	onResize();
+	window.addEventListener('resize', onResize);
+
+	let mounted = true;
 	function animate() {
 		if (!mounted)
 			return;
@@ -122,10 +86,13 @@ onMounted(() => {
 		renderer.render(scene, camera);
 	}
 	animate();
-});
 
-onUnmounted(() => {
-	mounted = false;
+	onUnmounted(() => {
+		controls.dispose();
+		renderer.dispose();
+		window.removeEventListener('resize', onResize);
+		mounted = false;
+	});
 });
 
 </script>

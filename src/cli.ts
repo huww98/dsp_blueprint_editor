@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import { fromStr } from './blueprint'
+import { fromStr } from './blueprint/parser'
 
 function readStdin() {
     return new Promise<string>(resolve => {

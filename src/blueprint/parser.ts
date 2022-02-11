@@ -1,7 +1,7 @@
 import { Base64 } from 'js-base64';
 import pako from 'pako';
 
-interface BlueprintArea {
+export interface BlueprintArea {
     index: number;
     parentIndex: number;
     tropicAnchor: number;
