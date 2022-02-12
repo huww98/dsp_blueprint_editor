@@ -48,7 +48,7 @@ export function* gridAreas(segment = 200) {
     for (let i = 1; i < segmentArr.length - 1; i++) {
         const seg = planetAreaByIndex(i, segment);
         yield seg;
-        if (seg.minLatitudeSeg < 0) { // cross the equator
+        if (seg.minLatitudeSeg > 0) { // cross the equator
             yield {
                 minLatitudeSeg: -seg.minLatitudeSeg,
                 latitudeSeg: -seg.latitudeSeg,
@@ -89,7 +89,7 @@ export function findPosForAreas(areas: BlueprintArea[]): AreaPos[] {
     const adjList = areas.map(() => [] as number[]);
     for (let i = 0; i < areas.length; i++) {
         const a = areas[i];
-        if (a.parentIndex > 0) {
+        if (a.parentIndex >= 0) {
             adjList[a.parentIndex].push(i);
         } else {
             root = i;
@@ -125,45 +125,47 @@ export function findPosForAreas(areas: BlueprintArea[]): AreaPos[] {
     findLongitude();
 
     const findRootLatitude = () => {
-        let onTopTropic = false,
-            onBottomTropic = false,
-            inTopHemisphere = false,
-            inBottomHemisphere = false;
+        let onHighTropic = false,
+            onLowTropic = false,
+            inPositiveHemisphere = false,
+            inNegativeHemisphere = false;
         const a1 = areas[root];
         const planetAreaInfo = planetAreaByLongitudeSegment(a1.areaSegments);
         for (const j of adjList[root]) {
             const a2 = areas[j];
             if (a2.areaSegments === a1.areaSegments)
                 throw new Error(`Area ${j} has the same segments as its parent`)
-            if (a2.anchorLocalOffset.y > 0) {
-                onBottomTropic = true;
-                if (a2.areaSegments < a1.areaSegments)
-                    inBottomHemisphere = true;
-                else
-                    inTopHemisphere = true;
-            } else if (a2.anchorLocalOffset.y < 0) {
-                onTopTropic = true;
-                if (a2.areaSegments < a1.areaSegments)
-                    inTopHemisphere = true;
-                else
-                    inBottomHemisphere = true;
-            } else
+            if (a2.anchorLocalOffset.y === 0)
                 throw new Error(`Area ${j} unexpected anchorLocalOffsetY == 0`);
+
+            if (a2.areaSegments < a1.areaSegments) {
+                onHighTropic = true;
+                if (a2.anchorLocalOffset.y > 0)
+                    inPositiveHemisphere = true;
+                else
+                    inNegativeHemisphere = true;
+            } else {
+                onLowTropic = true
+                if (a2.anchorLocalOffset.y < 0)
+                    inPositiveHemisphere = true;
+                else
+                    inNegativeHemisphere = true;
+            }
         }
         let latitude = NaN;
-        if (onBottomTropic)
-            latitude = planetAreaInfo.minLatitudeSeg * GRID_PER_SEGMENT + a1.size.y + 1;
-        else if (onTopTropic)
-            latitude = (planetAreaInfo.minLatitudeSeg + planetAreaInfo.latitudeSeg) * GRID_PER_SEGMENT;
+        if (onLowTropic)  // Should not be possible in current game version
+            latitude = planetAreaInfo.minLatitudeSeg * GRID_PER_SEGMENT + 1;
+        else if (onHighTropic)
+            latitude = (planetAreaInfo.minLatitudeSeg + planetAreaInfo.latitudeSeg) * GRID_PER_SEGMENT - a1.size.y + 1;
         else
-            latitude = Math.round((planetAreaInfo.minLatitudeSeg + planetAreaInfo.latitudeSeg / 2) * GRID_PER_SEGMENT + a1.size.y / 2);
+            latitude = Math.ceil((planetAreaInfo.minLatitudeSeg + planetAreaInfo.latitudeSeg / 2) * GRID_PER_SEGMENT - a1.size.y / 2) | 0;
         // let maxHeight = planetAreaInfo.latitudeSeg * GRID_PER_SEGMENT;
         // if (planetAreaInfo.minLatitudeSeg < 0) // cross the equator
         //     maxHeight++;
         // if (onTopTropic && onBottomTropic && a1.size.y !== maxHeight)
         //     throw new Error(`Area ${i} height ${a1.size.y} does not match height ${maxHeight} on planet`);
-        if (!inTopHemisphere && inBottomHemisphere)
-            latitude = -latitude + a1.size.y;
+        if (!inPositiveHemisphere && inNegativeHemisphere)
+            latitude = -latitude - a1.size.y + 1;
         return latitude;
     }
     pos[root].latitude = findRootLatitude()
