@@ -19,7 +19,7 @@ export interface BlueprintArea {
 interface XYZ {
     x: number, y: number, z: number,
 }
-interface BlueprintBuilding {
+export interface BlueprintBuilding {
     index: number,
     areaIndex: number,
     localOffset: [ XYZ, XYZ ],
@@ -39,7 +39,7 @@ interface BlueprintBuilding {
     parameters: number[],
 }
 
-interface BlueprintData {
+export interface BlueprintData {
     header: {
         layout: number;
         icons: number[];

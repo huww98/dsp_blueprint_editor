@@ -1,4 +1,5 @@
-import { BlueprintArea } from "./parser";
+import { Matrix4 } from "three";
+import { BlueprintArea, BlueprintBuilding } from "./parser";
 
 const segmentArr: [number, number][] = [
 	[0, 1],
@@ -79,12 +80,16 @@ function lcm(a: number, b: number) {
     return a * b / gcd(a, b);
 }
 
-interface AreaPos {
-    longitude: number;
-    latitude: number;
+export interface PositionedBlueprint {
+    segment: number;
+    areas: {
+        longitude: number;
+        latitude: number;
+        segment: number;
+    }[];
 }
 
-export function findPosForAreas(areas: BlueprintArea[]): AreaPos[] {
+export function findPosForAreas(areas: BlueprintArea[], segment = 200): PositionedBlueprint {
     let root = -1;
     const adjList = areas.map(() => [] as number[]);
     for (let i = 0; i < areas.length; i++) {
@@ -103,7 +108,10 @@ export function findPosForAreas(areas: BlueprintArea[]): AreaPos[] {
     const gridSize = gridCount.map(c => longitudeBase / c)
     const period = gridSize.reduce(lcm);
 
-    const pos = areas.map(() => ({ longitude: NaN, latitude: NaN } as AreaPos));
+    const pos: PositionedBlueprint = {
+        segment: segment,
+        areas:  areas.map(a => ({ longitude: NaN, latitude: NaN, segment: a.areaSegments }))
+    };
     const findLongitude = () => {
         const validateArea = (i: number, longitude: number) => {
             for (const j of adjList[i]) {
@@ -113,7 +121,7 @@ export function findPosForAreas(areas: BlueprintArea[]): AreaPos[] {
                     !validateArea(j, anchor - a2.anchorLocalOffset.x * gridSize[j]))
                     return false
             }
-            pos[i].longitude = longitude / gridSize[i];
+            pos.areas[i].longitude = longitude / gridSize[i];
             return true;
         }
         for (let l = 0; l < period; l += gridSize[root]) {
@@ -130,7 +138,7 @@ export function findPosForAreas(areas: BlueprintArea[]): AreaPos[] {
             inPositiveHemisphere = false,
             inNegativeHemisphere = false;
         const a1 = areas[root];
-        const planetAreaInfo = planetAreaByLongitudeSegment(a1.areaSegments);
+        const planetAreaInfo = planetAreaByLongitudeSegment(a1.areaSegments, segment);
         for (const j of adjList[root]) {
             const a2 = areas[j];
             if (a2.areaSegments === a1.areaSegments)
@@ -159,23 +167,43 @@ export function findPosForAreas(areas: BlueprintArea[]): AreaPos[] {
             latitude = (planetAreaInfo.minLatitudeSeg + planetAreaInfo.latitudeSeg) * GRID_PER_SEGMENT - a1.size.y + 1;
         else
             latitude = Math.ceil((planetAreaInfo.minLatitudeSeg + planetAreaInfo.latitudeSeg / 2) * GRID_PER_SEGMENT - a1.size.y / 2) | 0;
-        // let maxHeight = planetAreaInfo.latitudeSeg * GRID_PER_SEGMENT;
-        // if (planetAreaInfo.minLatitudeSeg < 0) // cross the equator
-        //     maxHeight++;
-        // if (onTopTropic && onBottomTropic && a1.size.y !== maxHeight)
-        //     throw new Error(`Area ${i} height ${a1.size.y} does not match height ${maxHeight} on planet`);
+
         if (!inPositiveHemisphere && inNegativeHemisphere)
             latitude = -latitude - a1.size.y + 1;
         return latitude;
     }
-    pos[root].latitude = findRootLatitude()
+    pos.areas[root].latitude = findRootLatitude()
     const calcChildAreaLatitude = (i: number) => {
         for (const j of adjList[i]) {
-            pos[j].latitude = pos[i].latitude + areas[j].anchorLocalOffset.y;
+            pos.areas[j].latitude = pos.areas[i].latitude + areas[j].anchorLocalOffset.y;
             calcChildAreaLatitude(j)
         }
     }
     calcChildAreaLatitude(root);
 
     return pos;
+}
+
+export function calcBuildingTrans(pos: PositionedBlueprint, building: BlueprintBuilding) {
+    const area = pos.areas[building.areaIndex];
+    const longitudeGridSize = 2 * Math.PI / area.segment / GRID_PER_SEGMENT;
+    const latitudeGridSize = 2 * Math.PI / pos.segment / GRID_PER_SEGMENT;
+    const unitSize = latitudeGridSize;
+
+    const partTrans = (i: number) => {
+        const longitude = (area.longitude + building.localOffset[i].x) * longitudeGridSize;
+        const latitude = (area.latitude + building.localOffset[i].y) * latitudeGridSize;
+        const height = 1 + building.localOffset[i].z * unitSize;
+
+        const trans = new Matrix4(),
+            temp = new Matrix4();
+        trans.makeScale(unitSize, unitSize, unitSize);
+        trans.premultiply(temp.makeTranslation(0, 0, height));
+        trans.premultiply(temp.makeRotationZ(building.yaw[i] / 180.0 * Math.PI));
+        trans.premultiply(temp.makeRotationX(latitude));
+        trans.premultiply(temp.makeRotationY(longitude));
+        return trans
+    }
+
+    return building.localOffset.map((_v, i) => partTrans(i));
 }
