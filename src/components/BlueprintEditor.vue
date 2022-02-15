@@ -3,11 +3,15 @@
 </template>
 
 <script lang="ts">
-import { Group, LineSegments, InstancedMesh, LineBasicMaterial, MeshStandardMaterial, CylinderGeometry, Matrix4, DirectionalLight } from 'three';
+import {
+	Group, LineSegments, InstancedMesh,
+	LineBasicMaterial, MeshStandardMaterial, MeshLambertMaterial, CylinderGeometry, BoxGeometry,
+	Matrix4, DirectionalLight, Vector3,
+} from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans, PositionedBlueprint } from '@/blueprint/planet';
-import { beltColorMap, isBelt } from '@/data/items';
+import { beltColorMap, buildingMeta, isBelt, isInserter } from '@/data/items';
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -35,21 +39,76 @@ function buildPlanetGrid(radius = 1, segment = 200) {
 
 function buildBuildings(R: number, pos: PositionedBlueprint, buildings: BlueprintBuilding[]) {
 	const allBuildings = new Group();
-	const rScale = new Matrix4().makeScale(R, R, R);
+	const transforms = buildings.map(b => calcBuildingTrans(R, pos, b));
 	{
 		const belts = buildings.filter(b => isBelt(b.itemId));
 		const thickness = 0.1;
-		const geometry = new CylinderGeometry(0.3, 0.3, thickness, 32);
-		const material = new MeshStandardMaterial({ metalness: 0, roughness: 1 });
-		const mesh = new InstancedMesh(geometry, material, belts.length);
-		const offset = new Matrix4().makeRotationX(Math.PI / 2);
-		offset.premultiply(new Matrix4().makeTranslation(0, 0, thickness / 2));
-		for (let i = 0; i < belts.length; i++) {
-			const trans = calcBuildingTrans(pos, belts[i])[0];
-			trans.multiply(offset);
-			trans.premultiply(rScale);
+		const material = new MeshLambertMaterial();
+		{
+			const geometry = new CylinderGeometry(0.32, 0.32, thickness, 8);
+			const mesh = new InstancedMesh(geometry, material, belts.length);
+			const offset = new Matrix4().makeRotationX(Math.PI / 2);
+			offset.premultiply(new Matrix4().makeTranslation(0, 0, thickness / 2));
+			const trans = new Matrix4();
+			for (let i = 0; i < belts.length; i++) {
+				trans.copy(transforms[belts[i].index][0]);
+				trans.multiply(offset);
+				mesh.setMatrixAt(i, trans);
+				mesh.setColorAt(i, beltColorMap.get(belts[i].itemId)!);
+			}
+			mesh.instanceMatrix.needsUpdate = true;
+			mesh.instanceColor!.needsUpdate = true;
+			allBuildings.add(mesh);
+		}
+		const linkThickness = 0.6 * thickness;
+		{ // links
+			const geometry = new BoxGeometry(0.2, linkThickness, 1.0);
+			const mesh = new InstancedMesh(geometry, material, belts.length);
+			let numLinks = 0;
+			const offset = new Matrix4().makeTranslation(0, linkThickness / 2, -0.5);
+			const pos1 = new Vector3();
+			const pos2 = new Vector3();
+			const dir = new Vector3();
+			const scale = new Vector3();
+			const temp = new Matrix4();
+			const trans = new Matrix4();
+			for (let i = 0; i < belts.length; i++) {
+				const b1 = belts[i];
+				if (b1.outputObjIdx < 0)
+					continue;
+				pos1.setFromMatrixPosition(transforms[b1.index][0]);
+				pos2.setFromMatrixPosition(transforms[b1.outputObjIdx][0]);
+				const len = dir.subVectors(pos1, pos2).length();
+				trans.identity();
+				trans.lookAt(pos1, pos2, pos1);
+				scale.setFromMatrixScale(transforms[b1.index][0]);
+				trans.multiply(temp.makeScale(scale.x, scale.y, len));
+				trans.multiply(offset);
+				trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
+				mesh.setMatrixAt(numLinks, trans);
+				mesh.setColorAt(numLinks, beltColorMap.get(b1.itemId)!);
+				numLinks++;
+			}
+			mesh.count = numLinks;
+			mesh.instanceMatrix.needsUpdate = true;
+			mesh.instanceColor!.needsUpdate = true;
+			allBuildings.add(mesh);
+		}
+	}
+	{
+		const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
+		const geometry = new BoxGeometry(1.0, 1.0, 1.0);
+		const material = new MeshLambertMaterial();
+		const mesh = new InstancedMesh(geometry, material, boxes.length);
+		const trans = new Matrix4();
+		for (let i = 0; i < boxes.length; i++) {
+			const b = boxes[i];
+			const meta = buildingMeta.get(b.itemId);
+			if (meta === undefined)
+				continue
+			trans.multiplyMatrices(transforms[boxes[i].index][0], meta.unitBoxTrans);
 			mesh.setMatrixAt(i, trans);
-			mesh.setColorAt(i, beltColorMap.get(belts[i].itemId)!);
+			mesh.setColorAt(i, meta.color);
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
@@ -58,7 +117,7 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 	return allBuildings;
 }
 
-const R = 1.;
+const R = 200.2;
 const SEGMENT = 200;
 
 </script>
@@ -77,7 +136,7 @@ const props = defineProps<{
 }>();
 
 const scene = new Scene();
-scene.add(new AmbientLight(0xffffff, 0.1));
+scene.add(new AmbientLight(0xffffff, 0.2));
 const dirLight = new DirectionalLight(0xffffff, 1);
 scene.add(dirLight);
 {
@@ -95,7 +154,7 @@ const root: Ref<HTMLDivElement | null> = ref(null);
 
 onMounted(() => {
 	const rootEl = root.value!;
-	const camera = new PerspectiveCamera(90, rootEl.clientWidth / rootEl.clientHeight, 0.02, 100);
+	const camera = new PerspectiveCamera(90, rootEl.clientWidth / rootEl.clientHeight, 1, 10000);
 	const renderer = new WebGLRenderer({ antialias: true });
 
 	let controls: PlanetMapControls | OrbitControls;
@@ -106,11 +165,12 @@ onMounted(() => {
 		controls.listenToKeyEvents(window)
 		controls.minDistance = R * 1.05;
 		controls.maxDistance = R * 5;
+		controls.targetRadius = R;
 	}
 
 	rootEl.appendChild(renderer.domElement);
 
-	camera.position.z = 1.5;
+	camera.position.z = 1.5 * R;
 	controls.update();
 
 	const onResize = () => {

@@ -184,20 +184,20 @@ export function findPosForAreas(areas: BlueprintArea[], segment = 200): Position
     return pos;
 }
 
-export function calcBuildingTrans(pos: PositionedBlueprint, building: BlueprintBuilding) {
+const HEIGHT_GRID_SIZE = 4 / 3;
+
+export function calcBuildingTrans(R: number, pos: PositionedBlueprint, building: BlueprintBuilding) {
     const area = pos.areas[building.areaIndex];
     const longitudeGridSize = 2 * Math.PI / area.segment / GRID_PER_SEGMENT;
     const latitudeGridSize = 2 * Math.PI / pos.segment / GRID_PER_SEGMENT;
-    const unitSize = latitudeGridSize;
 
     const partTrans = (i: number) => {
         const longitude = (area.longitude + building.localOffset[i].x) * longitudeGridSize;
         const latitude = (area.latitude + building.localOffset[i].y) * latitudeGridSize;
-        const height = 1 + building.localOffset[i].z * unitSize;
+        const height = R + building.localOffset[i].z * HEIGHT_GRID_SIZE;
 
         const trans = new Matrix4(),
             temp = new Matrix4();
-        trans.makeScale(unitSize, unitSize, unitSize);
         trans.premultiply(temp.makeTranslation(0, 0, height));
         trans.premultiply(temp.makeRotationZ(building.yaw[i] / 180.0 * Math.PI));
         trans.premultiply(temp.makeRotationX(latitude));

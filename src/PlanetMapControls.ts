@@ -32,6 +32,8 @@ export class PlanetMapControls extends EventDispatcher {
 
     /** sets the location of focus, where the object orbits around */
     target = new Vector3();
+    /** focus when dolly and rotate */
+    targetRadius = 0;
 
     // How far you can dolly in and out ( PerspectiveCamera only )
     minDistance = 0;
@@ -166,7 +168,7 @@ export class PlanetMapControls extends EventDispatcher {
         this.spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, this.spherical.phi));
         this.spherical.makeSafe();
 
-        this.spherical.radius *= this.scale;
+        this.spherical.radius = this.targetRadius + (this.spherical.radius - this.targetRadius) * this.scale;
 
         // restrict radius to be between desired limits
         this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
@@ -255,8 +257,8 @@ export class PlanetMapControls extends EventDispatcher {
     rotate(deltaX: number, deltaY: number) {
         const offset = new Vector3();
         offset.copy(this.object.position).sub(this.target);
-        const targetDistance = offset.length() - 1.0;
-        const unitAngle = targetDistance * Math.tan(this.object.fov / 2 * (Math.PI / 180.0)) * 2 / this.domElement.clientHeight;
+        const targetDistance = offset.length() - this.targetRadius;
+        const unitAngle = targetDistance * Math.tan(this.object.fov / 2 * (Math.PI / 180.0)) * 2 / this.targetRadius / this.domElement.clientHeight;
 
         this.rotateLeft(deltaX * unitAngle);
         this.rotateUp(deltaY * unitAngle);
