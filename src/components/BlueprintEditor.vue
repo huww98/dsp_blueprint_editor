@@ -4,14 +4,16 @@
 
 <script lang="ts">
 import {
-	Group, LineSegments, InstancedMesh,
+	Group, LineSegments, InstancedMesh, WebGLRenderer,
 	LineBasicMaterial, MeshStandardMaterial, MeshLambertMaterial, CylinderGeometry, BoxGeometry,
 	Matrix4, DirectionalLight, Vector3,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans, PositionedBlueprint } from '@/blueprint/planet';
-import { beltColorMap, buildingMeta, isBelt, isInserter } from '@/data/items';
+import { beltColorMap, buildingMeta, isBelt, isInserter, noIconBuildings } from '@/data/items';
+import { IconTexture } from '@/iconTexture';
+import { Icons } from '@/icons';
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -37,7 +39,7 @@ function buildPlanetGrid(radius = 1, segment = 200) {
 	return allGrids;
 }
 
-function buildBuildings(R: number, pos: PositionedBlueprint, buildings: BlueprintBuilding[]) {
+function buildBuildings(R: number, pos: PositionedBlueprint, buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
 	const allBuildings = new Group();
 	const transforms = buildings.map(b => calcBuildingTrans(R, pos, b));
 	{
@@ -95,8 +97,8 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 			allBuildings.add(mesh);
 		}
 	}
+	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
 	{
-		const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
 		const geometry = new BoxGeometry(1.0, 1.0, 1.0);
 		const material = new MeshLambertMaterial();
 		const mesh = new InstancedMesh(geometry, material, boxes.length);
@@ -106,12 +108,31 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 			const meta = buildingMeta.get(b.itemId);
 			if (meta === undefined)
 				continue
-			trans.multiplyMatrices(transforms[boxes[i].index][0], meta.unitBoxTrans);
+			trans.multiplyMatrices(transforms[b.index][0], meta.unitBoxTrans);
 			mesh.setMatrixAt(i, trans);
 			mesh.setColorAt(i, meta.color);
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
+		allBuildings.add(mesh);
+	}
+	{
+		const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
+		const iconTexture = new IconTexture(renderer);
+		const mesh = new Icons(iconTexture.texture, iconBuildings.length);
+		const trans = new Matrix4();
+		const iconIds: number[] = []
+		for (let i = 0; i < iconBuildings.length; i++) {
+			const b = iconBuildings[i];
+			const meta = buildingMeta.get(b.itemId);
+			if (meta === undefined)
+				continue
+			trans.multiplyMatrices(transforms[b.index][0], meta.iconTrans);
+			mesh.setMatrixAt(i, trans);
+			iconIds.push(iconTexture.requestItemIcon(b.itemId))
+		}
+		mesh.setIconIds(iconIds);
+		mesh.instanceMatrix.needsUpdate = true;
 		allBuildings.add(mesh);
 	}
 	return allBuildings;
@@ -124,7 +145,7 @@ const SEGMENT = 200;
 
 <script setup lang="ts">
 import { ref, onMounted, Ref, onUnmounted, defineProps } from 'vue'
-import { Scene, PerspectiveCamera, WebGLRenderer, SphereGeometry, Mesh, AmbientLight } from 'three';
+import { Scene, PerspectiveCamera, SphereGeometry, Mesh, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -148,7 +169,6 @@ scene.add(dirLight);
 scene.add(buildPlanetGrid(R * 1.0001, SEGMENT));
 
 const pos = findPosForAreas(props.blueprintData.areas, SEGMENT);
-scene.add(buildBuildings(R, pos, props.blueprintData.buildings));
 
 const root: Ref<HTMLDivElement | null> = ref(null);
 
@@ -156,6 +176,7 @@ onMounted(() => {
 	const rootEl = root.value!;
 	const camera = new PerspectiveCamera(90, rootEl.clientWidth / rootEl.clientHeight, 1, 10000);
 	const renderer = new WebGLRenderer({ antialias: true });
+	scene.add(buildBuildings(R, pos, props.blueprintData.buildings, renderer));
 
 	let controls: PlanetMapControls | OrbitControls;
 	if (FREEVIEW) {

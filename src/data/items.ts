@@ -25,6 +25,7 @@ export const beltColorMap = new Map<number, Color>([
 export interface BuildingMeta {
     color: Color;
     unitBoxTrans: Matrix4;
+    iconTrans: Matrix4;
 }
 
 const buildingMetaRaw: [number, { color: number | null, box: [number, number, number], offset: [number, number, number] }][] = ([
@@ -70,13 +71,29 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
 export const buildingMeta = new Map<number, BuildingMeta>();
 
 for (const [id, d] of buildingMetaRaw) {
-    const trans = new Matrix4();
+    const unitBoxTrans = new Matrix4();
+    const iconTrans = new Matrix4();
     const temp = new Matrix4();
-    trans.makeScale(d.box[0] * 0.9, d.box[1] * 0.9, d.box[2]);
-    trans.premultiply(temp.makeTranslation(...d.offset));
-    trans.premultiply(temp.makeRotationX(Math.PI / 2));
+    unitBoxTrans.makeScale(d.box[0] * 0.9, d.box[1] * 0.9, d.box[2]);
+    unitBoxTrans.premultiply(temp.makeTranslation(...d.offset));
+    unitBoxTrans.premultiply(temp.makeRotationX(Math.PI / 2));
+
+    const iconHeight = d.box[1] < 4.0 ? d.box[1] / 2.0 : d.box[1] - 2.0;
+    iconTrans.makeScale(2., 2., 1.)
+    iconTrans.premultiply(temp.makeTranslation(d.offset[0], -d.offset[2], iconHeight));
+
     buildingMeta.set(id, {
         color: new Color(d.color ?? 0xdddddd),
-        unitBoxTrans: trans,
+        unitBoxTrans,
+        iconTrans,
     });
 }
+
+export const noIconBuildings = new Set<number>([
+    2020, // 四向分流器
+    2040, // 自动集装机
+    2030, // 流速监测器
+    2313, // 喷涂机
+    2201, // 电力感应塔
+    2202, // 无线输电塔
+])
