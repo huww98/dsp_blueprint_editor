@@ -254,6 +254,7 @@ export class PlanetMapControls extends EventDispatcher {
         this.sphericalDelta.phi -= angle;
     }
 
+    /** unit: css pixel */
     rotate(deltaX: number, deltaY: number) {
         const offset = new Vector3();
         offset.copy(this.object.position).sub(this.target);
@@ -285,11 +286,10 @@ export class PlanetMapControls extends EventDispatcher {
 
     handleMouseMoveRotate(event: PointerEvent) {
         this.rotateEnd.set(event.clientX, event.clientY);
-        this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(this.rotateSpeed);
+        this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart)
+            .multiplyScalar(this.rotateSpeed);
 
-        const element = this.domElement;
-        this.rotateLeft(2 * Math.PI * this.rotateDelta.x / element.clientHeight); // yes, height
-        this.rotateUp(2 * Math.PI * this.rotateDelta.y / element.clientHeight);
+        this.rotate(this.rotateDelta.x, this.rotateDelta.y);
 
         this.rotateStart.copy(this.rotateEnd);
         this.update();
