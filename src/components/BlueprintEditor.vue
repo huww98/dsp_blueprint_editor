@@ -129,7 +129,8 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 				continue
 			trans.multiplyMatrices(transforms[b.index][0], meta.iconTrans);
 			mesh.setMatrixAt(i, trans);
-			iconIds.push(iconTexture.requestItemIcon(b.itemId))
+			const iconId = b.recipeId > 0 ? iconTexture.requestRecipeIcon(b.recipeId) : iconTexture.requestItemIcon(b.itemId);
+			iconIds.push(iconId);
 		}
 		mesh.setIconIds(iconIds);
 		mesh.instanceMatrix.needsUpdate = true;
