@@ -63,7 +63,7 @@ export class PlanetMapControls extends EventDispatcher {
 
     mouseButtons = { LEFT: -1 as MOUSE, MIDDLE: MOUSE.ROTATE, RIGHT: -1 as MOUSE };
 
-    touches = { ONE: -1 as TOUCH, TWO: TOUCH.ROTATE };
+    touches = { ONE: -1 as TOUCH, TWO: TOUCH.DOLLY_ROTATE };
 
     constructor(public object: PerspectiveCamera, public domElement: HTMLElement) {
         super();
@@ -358,15 +358,12 @@ export class PlanetMapControls extends EventDispatcher {
 
             this.rotateEnd.set(x, y);
         }
+        this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart)
+            .multiplyScalar(this.rotateSpeed);
 
-        this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(this.rotateSpeed);
-
-        const element = this.domElement;
-        this.rotateLeft(2 * Math.PI * this.rotateDelta.x / element.clientHeight); // yes, height
-        this.rotateUp(2 * Math.PI * this.rotateDelta.y / element.clientHeight);
+        this.rotate(this.rotateDelta.x, this.rotateDelta.y);
 
         this.rotateStart.copy(this.rotateEnd);
-
     }
 
     handleTouchMoveDolly(event: PointerEvent) {
