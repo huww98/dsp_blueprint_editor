@@ -224,10 +224,10 @@ onMounted(() => {
 
 	let mounted = true;
 	let lastTimeStamp : number | null = null
-	function animate(time: number | null) {
+	function animate(time: number) {
 		if (!mounted)
 			return;
-		if (time && lastTimeStamp) {
+		if (lastTimeStamp) {
 			controls.updateTimeDelta((time - lastTimeStamp) / 1000);
 		}
 		lastTimeStamp = time;
@@ -236,7 +236,7 @@ onMounted(() => {
 		dirLight.position.copy(camera.position);
 		renderer.render(scene, camera);
 	}
-	animate(null);
+	requestAnimationFrame(animate);
 
 	onUnmounted(() => {
 		controls.dispose();

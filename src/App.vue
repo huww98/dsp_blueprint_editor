@@ -14,10 +14,15 @@
         <div class="row">
           <label for="bp-str" style="margin-right: auto;">代码</label>
           <span class="error" v-if="notSupport">不支持，请手动复制</span>
-          <button @click="copy" :disabled="working || !bpStr">复制</button>
-          <button @click="paste" :disabled="working">粘贴</button>
+          <button style="margin: 0 2px;" @click="copy" :disabled="working || !bpStr">复制</button>
+          <button style="margin: 0 2px;" @click="paste" :disabled="working">粘贴</button>
         </div>
         <textarea rows="3" id="bp-str" @copy="onCopy" @cut="onCut" @paste="onPaste" v-model.lazy.trim="bpStrShort"></textarea>
+        <button @click="bpStr = ''" style="width: 100%; position: relative;" :disabled="working">
+          {{bpStr ? "清空" : "选择文件"}}
+          <input v-if="!bpStr" @change="onBpFile" :disabled="working"
+                 type="file" id="blueprint-file" style="position: absolute; inset: 0; opacity: 0;" accept="text/plain">
+        </button>
         <div class="error">{{parseErrorMessage}}</div>
       </section>
       <section>
@@ -35,12 +40,12 @@
 
 <script setup lang="ts">
 import { BlueprintData, fromStr } from './blueprint/parser';
-import { computed, defineAsyncComponent, ref, ShallowRef, shallowRef, watchEffect } from 'vue';
+import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
 
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
 
 const bpStr = ref('');
-const data: ShallowRef<BlueprintData | null> = shallowRef(null);
+const data = shallowRef(null as BlueprintData | null);
 const expandSidebar = ref(true);
 const working = ref(false);
 const notSupport = ref(false);
@@ -72,6 +77,16 @@ watchEffect(() => {
   }
 });
 
+const onBpFile = async (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    working.value = true;
+    bpStr.value = await input.files[0].text();
+    working.value = false;
+  }
+  input.value = '';
+}
+
 const onCopy = (e: ClipboardEvent) => {
   if (!e.clipboardData)
     return;
@@ -99,20 +114,20 @@ const copy = async () => {
   working.value = true;
   try {
     await navigator.clipboard.writeText(bpStr.value);
-    working.value = false;
   } catch {
     notSupport.value = true;
   }
+  working.value = false;
 }
 
 const paste = async () => {
   working.value = true;
   try {
     bpStr.value = await navigator.clipboard.readText();
-    working.value = false;
   } catch {
     notSupport.value = true;
   }
+  working.value = false;
 }
 </script>
 
@@ -183,7 +198,6 @@ body {
     color: inherit;
     background: #64A0DC;
     border: 0;
-    margin: 0 2px;
 
     &[disabled] {
       background: gray;
