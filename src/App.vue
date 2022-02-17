@@ -35,9 +35,9 @@
 
 <script setup lang="ts">
 import { BlueprintData, fromStr } from './blueprint/parser';
-import BlueprintEditor from './components/BlueprintEditor.vue';
+import { computed, defineAsyncComponent, ref, ShallowRef, shallowRef, watchEffect } from 'vue';
 
-import { computed, ref, ShallowRef, shallowRef, watchEffect } from 'vue';
+const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
 
 const bpStr = ref('');
 const data: ShallowRef<BlueprintData | null> = shallowRef(null);
@@ -119,6 +119,7 @@ const paste = async () => {
 <style lang="scss">
 body {
   margin: 0;
+  background: black;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
