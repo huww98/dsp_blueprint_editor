@@ -1,4 +1,3 @@
-import { Base64 } from 'js-base64';
 import pako from 'pako';
 
 export interface BlueprintArea {
@@ -75,6 +74,15 @@ class BufferReader {
     getFloat32() { return this._get(this.view.getFloat32, 4); }
 }
 
+function atobUint8Array(a: string) {
+    const b = atob(a);
+    const arr = new Uint8Array(b.length);
+    for (let i = 0; i < b.length; i++) {
+        arr[i] = b.charCodeAt(i);
+    }
+    return arr;
+}
+
 function importArea(r: BufferReader): BlueprintArea {
     return {
         index: r.getInt8(),
@@ -147,7 +155,7 @@ export function fromStr(strData: string): BlueprintData {
     const encoded = strData.match(/"(.+)"/);
     if (!encoded)
         throw Error('Content not found')
-    const decoded = pako.inflate(Base64.toUint8Array(encoded[1]));
+    const decoded = pako.inflate(atobUint8Array(encoded[1]));
     const reader = new BufferReader(new DataView(decoded.buffer));
 
     const meta = {

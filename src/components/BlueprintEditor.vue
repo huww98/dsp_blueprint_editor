@@ -1,12 +1,12 @@
 <template>
-	<div class="editor-root" ref="root"></div>
+	<div class="editor-root" ref="root" tabindex="-1"></div>
 </template>
 
 <script lang="ts">
 import {
 	Group, LineSegments, InstancedMesh, WebGLRenderer,
 	LineBasicMaterial, MeshStandardMaterial, MeshLambertMaterial, CylinderGeometry, BoxGeometry,
-	Matrix4, DirectionalLight, Vector3,
+	Matrix4, DirectionalLight, Vector3, Object3D,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding } from '@/blueprint/parser';
@@ -40,12 +40,13 @@ function buildPlanetGrid(radius = 1, segment = 200) {
 }
 
 function buildBuildings(R: number, pos: PositionedBlueprint, buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
-	const allBuildings = new Group();
 	const transforms = buildings.map(b => calcBuildingTrans(R, pos, b));
-	{
-		const belts = buildings.filter(b => isBelt(b.itemId));
+	const buildBelts = (belts: BlueprintBuilding[]) => {
+		if (!belts)
+			return [];
 		const thickness = 0.1;
 		const material = new MeshLambertMaterial();
+		const objects: Object3D[] = [];
 		{
 			const geometry = new CylinderGeometry(0.32, 0.32, thickness, 8);
 			const mesh = new InstancedMesh(geometry, material, belts.length);
@@ -60,7 +61,7 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 			}
 			mesh.instanceMatrix.needsUpdate = true;
 			mesh.instanceColor!.needsUpdate = true;
-			allBuildings.add(mesh);
+			objects.push(mesh);
 		}
 		const linkThickness = 0.6 * thickness;
 		{ // links
@@ -91,14 +92,16 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 				mesh.setColorAt(numLinks, beltColorMap.get(b1.itemId)!);
 				numLinks++;
 			}
-			mesh.count = numLinks;
-			mesh.instanceMatrix.needsUpdate = true;
-			mesh.instanceColor!.needsUpdate = true;
-			allBuildings.add(mesh);
+			if (numLinks) {
+				mesh.count = numLinks;
+				mesh.instanceMatrix.needsUpdate = true;
+				mesh.instanceColor!.needsUpdate = true;
+				allBuildings.add(mesh);
+			}
 		}
+		return objects;
 	}
-	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
-	{
+	const buildBoxes = (boxes: BlueprintBuilding[]) => {
 		const geometry = new BoxGeometry(1.0, 1.0, 1.0);
 		const material = new MeshLambertMaterial();
 		const mesh = new InstancedMesh(geometry, material, boxes.length);
@@ -114,10 +117,9 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
-		allBuildings.add(mesh);
+		return [mesh];
 	}
-	{
-		const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
+	const buildIcons = (iconBuildings: BlueprintBuilding[]) => {
 		const iconTexture = new IconTexture(renderer);
 		const mesh = new Icons(iconTexture.texture, iconBuildings.length);
 		const trans = new Matrix4();
@@ -134,8 +136,22 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		}
 		mesh.setIconIds(iconIds);
 		mesh.instanceMatrix.needsUpdate = true;
-		allBuildings.add(mesh);
+		return [mesh];
 	}
+
+	const allBuildings = new Group();
+	const belts = buildings.filter(b => isBelt(b.itemId));
+	if (belts)
+		allBuildings.add(...buildBelts(belts));
+
+	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
+	if (boxes)
+		allBuildings.add(...buildBoxes(boxes));
+
+	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
+	if (iconBuildings)
+		allBuildings.add(...buildIcons(iconBuildings));
+
 	return allBuildings;
 }
 
@@ -145,16 +161,13 @@ const SEGMENT = 200;
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref, onUnmounted, defineProps } from 'vue'
+import { ref, onMounted, Ref, onUnmounted, defineProps, watchEffect } from 'vue'
 import { Scene, PerspectiveCamera, SphereGeometry, Mesh, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
-const FREEVIEW = false;
 
 const props = defineProps<{
-  blueprintData: BlueprintData;
+  blueprintData: BlueprintData | null;
 }>();
 
 const scene = new Scene();
@@ -169,26 +182,31 @@ scene.add(dirLight);
 }
 scene.add(buildPlanetGrid(R * 1.0001, SEGMENT));
 
-const pos = findPosForAreas(props.blueprintData.areas, SEGMENT);
-
 const root: Ref<HTMLDivElement | null> = ref(null);
 
 onMounted(() => {
 	const rootEl = root.value!;
 	const camera = new PerspectiveCamera(90, rootEl.clientWidth / rootEl.clientHeight, 1, 10000);
 	const renderer = new WebGLRenderer({ antialias: true });
-	scene.add(buildBuildings(R, pos, props.blueprintData.buildings, renderer));
 
-	let controls: PlanetMapControls | OrbitControls;
-	if (FREEVIEW) {
-		controls = new OrbitControls(camera, renderer.domElement);
-	} else {
-		controls = new PlanetMapControls(camera, renderer.domElement);
-		controls.listenToKeyEvents(window)
-		controls.minDistance = R * 1.05;
-		controls.maxDistance = R * 5;
-		controls.targetRadius = R;
-	}
+	let buildings: Group | null = null
+	watchEffect(() => {
+		if (buildings !== null) {
+			scene.remove(buildings);
+			buildings = null;
+		}
+		if (props.blueprintData) {
+			const pos = findPosForAreas(props.blueprintData.areas, SEGMENT);
+			buildings = buildBuildings(R, pos, props.blueprintData.buildings, renderer)
+			scene.add(buildings);
+		}
+	});
+
+	let controls = new PlanetMapControls(camera, renderer.domElement);
+	controls.listenToKeyEvents(rootEl);
+	controls.minDistance = R * 1.05;
+	controls.maxDistance = R * 5;
+	controls.targetRadius = R;
 
 	rootEl.appendChild(renderer.domElement);
 
@@ -232,7 +250,7 @@ onMounted(() => {
 
 <style lang="scss">
 .editor-root {
-	height: 100vh;
-	width: 100vw;
+	width: 100%;
+	height: 100%;
 }
 </style>
