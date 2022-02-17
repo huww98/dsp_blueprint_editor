@@ -205,15 +205,20 @@ onMounted(() => {
 	window.addEventListener('resize', onResize);
 
 	let mounted = true;
-	function animate() {
+	let lastTimeStamp : number | null = null
+	function animate(time: number | null) {
 		if (!mounted)
 			return;
+		if (time && lastTimeStamp) {
+			controls.updateTimeDelta((time - lastTimeStamp) / 1000);
+		}
+		lastTimeStamp = time;
 		requestAnimationFrame(animate);
 		controls.update();
 		dirLight.position.copy(camera.position);
 		renderer.render(scene, camera);
 	}
-	animate();
+	animate(null);
 
 	onUnmounted(() => {
 		controls.dispose();

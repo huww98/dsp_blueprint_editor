@@ -1,13 +1,5 @@
 import { EventDispatcher, MOUSE, PerspectiveCamera, Quaternion, Spherical, TOUCH, Vector2, Vector3 } from 'three';
 
-export enum KeyAction {
-    NONE,
-    ROTATE_UP,
-    ROTATE_DOWN,
-    ROTATE_LEFT,
-    ROTATE_RIGHT,
-}
-
 enum STATE {
     NONE,
     ROTATE,
@@ -61,13 +53,13 @@ export class PlanetMapControls extends EventDispatcher {
     enableRotate = true;
     rotateSpeed = 1.0;
 
-    keys: Record<string, KeyAction> = {
-        KeyW: KeyAction.ROTATE_UP,
-        KeyS: KeyAction.ROTATE_DOWN,
-        KeyA: KeyAction.ROTATE_LEFT,
-        KeyD: KeyAction.ROTATE_RIGHT,
+    keys: Record<string, { rotate: Vector2 }> = {
+        KeyW: { rotate: new Vector2( 0,  1) },
+        KeyS: { rotate: new Vector2( 0, -1) },
+        KeyA: { rotate: new Vector2( 1,  0) },
+        KeyD: { rotate: new Vector2(-1,  0) },
     };
-    keyRotateSpeed = 6.0;
+    keyRotateSpeed = 100.0;
 
     mouseButtons = { LEFT: -1 as MOUSE, MIDDLE: MOUSE.ROTATE, RIGHT: -1 as MOUSE };
 
@@ -90,7 +82,8 @@ export class PlanetMapControls extends EventDispatcher {
 
     private domElementKeyEvents: GlobalEventHandlers | null = null;
     listenToKeyEvents(domElement: GlobalEventHandlers) {
-        domElement.addEventListener('keydown', e => this.handleKeyDown(e));
+        domElement.addEventListener('keydown', this.onKeyDown);
+        domElement.addEventListener('keyup', this.onKeyUp);
         this.domElementKeyEvents = domElement;
     }
 
@@ -109,6 +102,17 @@ export class PlanetMapControls extends EventDispatcher {
 
     getDistance() {
         return this.object.position.distanceTo(this.target);
+    }
+
+    private keyRotate = new Vector2();
+    updateTimeDelta(deltaTimeInSeconds: number) {
+        for (const code of this.downKeys) {
+            const act = this.keys[code];
+            if (act === undefined)
+                continue;
+            this.keyRotate.copy(act.rotate).multiplyScalar(this.keyRotateSpeed * deltaTimeInSeconds);
+            this.rotate(this.keyRotate.x, this.keyRotate.y);
+        }
     }
 
     private lastPosition = new Vector3();
@@ -230,6 +234,7 @@ export class PlanetMapControls extends EventDispatcher {
 
         if (this.domElementKeyEvents !== null) {
             this.domElementKeyEvents.removeEventListener('keydown', this.onKeyDown);
+            this.domElementKeyEvents.removeEventListener('keyup', this.onKeyUp);
         }
     }
 
@@ -301,28 +306,18 @@ export class PlanetMapControls extends EventDispatcher {
         this.update();
     }
 
+    private downKeys = new Set<string>();
+
     protected handleKeyDown(event: KeyboardEvent) {
-        let updated = true;
-        switch (this.keys[event.code]) {
-            case KeyAction.ROTATE_UP:
-                this.rotate(0, this.keyRotateSpeed);
-                break;
-            case KeyAction.ROTATE_DOWN:
-                this.rotate(0, -this.keyRotateSpeed);
-                break;
-            case KeyAction.ROTATE_LEFT:
-                this.rotate(this.keyRotateSpeed, 0);
-                break;
-            case KeyAction.ROTATE_RIGHT:
-                this.rotate(-this.keyRotateSpeed, 0);
-                break;
-            default:
-                updated = false;
-        }
-        if (updated) {
+        if (event.code in this.keys) {
+            this.downKeys.add(event.code);
             event.preventDefault();
             this.update();
         }
+    }
+
+    protected handleKeyUp(event: KeyboardEvent) {
+        this.downKeys.delete(event.code);
     }
 
     handleTouchStartRotate() {
@@ -510,6 +505,10 @@ export class PlanetMapControls extends EventDispatcher {
         if (!this.enabled)
             return;
         this.handleKeyDown(event);
+    }
+
+    onKeyUp = (event: KeyboardEvent) => {
+        this.handleKeyUp(event);
     }
 
     onTouchStart(event: PointerEvent) {
