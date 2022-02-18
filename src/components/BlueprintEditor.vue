@@ -6,7 +6,7 @@
 import {
 	Group, LineSegments, InstancedMesh, WebGLRenderer,
 	LineBasicMaterial, MeshStandardMaterial, MeshLambertMaterial, CylinderGeometry, BoxGeometry,
-	Matrix4, DirectionalLight, Vector3, Object3D,
+	Matrix4, DirectionalLight, Vector3, Object3D, Color,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding } from '@/blueprint/parser';
@@ -14,6 +14,7 @@ import { findPosForAreas, gridAreas, calcBuildingTrans, PositionedBlueprint } fr
 import { beltColorMap, buildingMeta, inserterColorMap, isBelt, isInserter, noIconBuildings } from '@/data/items';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
+import { Cargos } from '@/cargos';
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -37,6 +38,22 @@ function buildPlanetGrid(radius = 1, segment = 200) {
 		allGrids.add(new LineSegments(geometry, material));
 	}
 	return allGrids;
+}
+
+class AllBuildings extends Object3D {
+
+	private _cargos: Cargos | null = null;
+	public get cargos() {
+		return this._cargos;
+	}
+	public set cargos(c: Cargos | null) {
+		if (this._cargos)
+			this.remove(this._cargos);
+		this._cargos = c;
+		if (c)
+			this.add(c);
+	}
+
 }
 
 function buildBuildings(R: number, pos: PositionedBlueprint, buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
@@ -63,7 +80,7 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		}
 		const linkThickness = 0.6 * thickness;
 		{ // links
-			const geometry = new BoxGeometry(0.2, linkThickness, 1.0);
+			const geometry = new BoxGeometry(0.15, linkThickness, 1.0);
 			const mesh = new InstancedMesh(geometry, material, belts.length);
 			let numLinks = 0;
 			const offset = new Matrix4().makeTranslation(0, linkThickness / 2, -0.5);
@@ -81,11 +98,15 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 				const len = dir.subVectors(pos1, pos2).length();
 				trans.identity();
 				trans.lookAt(pos1, pos2, pos1);
+				trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
+
+				const color = beltColorMap.get(b1.itemId)!;
+				addCargo(trans, color, len);
+
 				trans.multiply(temp.makeScale(1., 1., len));
 				trans.multiply(offset);
-				trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
 				mesh.setMatrixAt(numLinks, trans);
-				mesh.setColorAt(numLinks, beltColorMap.get(b1.itemId)!);
+				mesh.setColorAt(numLinks, color);
 				numLinks++;
 			}
 			if (numLinks) {
@@ -123,11 +144,15 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 			const len = dir.subVectors(pos1, pos2).length();
 			trans.identity();
 			trans.lookAt(pos1, pos2, pos1);
+			trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
+
+			const color = inserterColorMap.get(b1.itemId)!
+			addCargo(trans, color, len);
+
 			trans.multiply(temp.makeScale(1., 1., len));
 			trans.multiply(offset);
-			trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
 			mesh.setMatrixAt(i, trans);
-			mesh.setColorAt(i, inserterColorMap.get(b1.itemId)!);
+			mesh.setColorAt(i, color);
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
@@ -171,14 +196,32 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		return [mesh];
 	}
 
-	const allBuildings = new Group();
 	const belts = buildings.filter(b => isBelt(b.itemId));
+	const inserters = buildings.filter(b => isInserter(b.itemId));
+
+	const allBuildings = new AllBuildings();
+	const cargosMesh = new Cargos(belts.length + inserters.length);
+	let numCargos = 0;
+	const addCargo = (trans: Matrix4, color: Color, distance: number) => {
+		cargosMesh.setMatrixAt(numCargos, trans);
+		cargosMesh.setColorAt(numCargos, color);
+		cargosMesh.setCargoDistanceAt(numCargos, distance);
+		numCargos++;
+	}
+
 	if (belts)
 		allBuildings.add(...buildBelts(belts));
 
-	const inserters = buildings.filter(b => isInserter(b.itemId));
 	if (inserters)
 		allBuildings.add(...buildInserters(inserters));
+
+	if (numCargos) {
+		cargosMesh.count = numCargos;
+		cargosMesh.instanceMatrix.needsUpdate = true;
+		cargosMesh.instanceColor!.needsUpdate = true;
+		cargosMesh.geometry.cargoDistance.needsUpdate = true;
+		allBuildings.cargos = cargosMesh;
+	}
 
 	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
 	if (boxes)
@@ -225,7 +268,7 @@ onMounted(() => {
 	const camera = new PerspectiveCamera(90, rootEl.clientWidth / rootEl.clientHeight, 1, 10000);
 	const renderer = new WebGLRenderer({ antialias: true });
 
-	let buildings: Group | null = null
+	let buildings: AllBuildings | null = null
 	watchEffect(() => {
 		if (buildings !== null) {
 			scene.remove(buildings);
@@ -266,6 +309,8 @@ onMounted(() => {
 		if (lastTimeStamp) {
 			controls.updateTimeDelta((time - lastTimeStamp) / 1000);
 		}
+		if (buildings?.cargos)
+			buildings.cargos.cargoMove = (time % 1000) / 1000;
 		lastTimeStamp = time;
 		requestAnimationFrame(animate);
 		controls.update();
