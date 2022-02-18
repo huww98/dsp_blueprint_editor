@@ -134,7 +134,7 @@ function importBuilding(r: BufferReader): BlueprintBuilding {
 }
 
 const START = 'BLUEPRINT:';
-const TIME_BASE = (new Date('0001-01-01T00:00:00.000Z')).getTime();
+const TIME_BASE = new Date(0).setUTCFullYear(1);
 
 export function fromStr(strData: string): BlueprintData {
     if (!strData.startsWith(START))

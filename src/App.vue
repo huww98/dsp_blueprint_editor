@@ -30,7 +30,7 @@
           <span style="margin-right: auto;">创建版本号</span><span>{{data?.header.gameVersion}}</span>
         </div>
         <div class="row">
-        <span style="margin-right: auto;">创建时间</span><span>{{data?.header.time.toLocaleString()}}</span>
+        <span style="margin-right: auto;">创建时间</span><span>{{data?.header.time.toLocaleString([], { timeZone: 'UTC' })}}</span>
         </div>
       </section>
     </div>
