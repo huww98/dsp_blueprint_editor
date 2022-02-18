@@ -75,12 +75,12 @@ for (const [id, d] of buildingMetaRaw) {
     const iconTrans = new Matrix4();
     const temp = new Matrix4();
     unitBoxTrans.makeScale(d.box[0] * 0.9, d.box[1] * 0.9, d.box[2]);
-    unitBoxTrans.premultiply(temp.makeTranslation(...d.offset));
+    unitBoxTrans.premultiply(temp.makeTranslation(d.offset[0], d.offset[1], -d.offset[2]));
     unitBoxTrans.premultiply(temp.makeRotationX(Math.PI / 2));
 
     const iconHeight = d.box[1] < 4.0 ? d.box[1] / 2.0 : d.box[1] - 2.0;
     iconTrans.makeScale(2., 2., 1.)
-    iconTrans.premultiply(temp.makeTranslation(d.offset[0], -d.offset[2], iconHeight));
+    iconTrans.premultiply(temp.makeTranslation(d.offset[0], d.offset[2], iconHeight));
 
     buildingMeta.set(id, {
         color: new Color(d.color ?? 0xdddddd),

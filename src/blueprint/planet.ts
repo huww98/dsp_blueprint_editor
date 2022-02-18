@@ -198,7 +198,7 @@ export function calcBuildingTrans(R: number, pos: PositionedBlueprint, building:
         const latitude = (area.latitude + building.localOffset[i].y) * latitudeGridSize;
         const height = R + building.localOffset[i].z * HEIGHT_GRID_SIZE;
 
-        rotation.set(latitude, longitude, building.yaw[i] / 180.0 * Math.PI, 'YXZ')
+        rotation.set(-latitude, longitude, -building.yaw[i] / 180.0 * Math.PI, 'YXZ')
         const trans = new Matrix4();
         trans.makeTranslation(0, 0, height);
         trans.premultiply(temp.makeRotationFromEuler(rotation));
