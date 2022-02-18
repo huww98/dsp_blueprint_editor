@@ -1,4 +1,4 @@
-import { BufferGeometry, InstancedBufferAttribute, InstancedMesh, InterleavedBuffer, InterleavedBufferAttribute, UniformsUtils, ShaderMaterial, Texture, UniformsLib, Color } from "three";
+import { BufferGeometry, InstancedBufferAttribute, InstancedMesh, InterleavedBuffer, InterleavedBufferAttribute, UniformsUtils, ShaderMaterial, Texture, UniformsLib, Color, ShaderLib } from "three";
 
 class IconsMaterial extends ShaderMaterial {
 	sizeAttenuation = true;
@@ -16,7 +16,6 @@ class IconsMaterial extends ShaderMaterial {
             ]),
 			vertexShader: `
 attribute int iconId;
-flat varying int vIconId;
 
 #include <common>
 #include <uv_pars_vertex>
@@ -25,9 +24,10 @@ flat varying int vIconId;
 #include <clipping_planes_pars_vertex>
 
 void main() {
-	vIconId = iconId;
-
 	#include <uv_vertex>
+	const ivec2 iMapSize = ivec2(16, 16);
+	ivec2 iPosition = ivec2(iconId % iMapSize.x, iconId / iMapSize.x);
+	vUv = (vUv + vec2(iPosition)) / vec2(iMapSize);
 
 	vec4 mvPosition = vec4( 0.0, 0.0, 0.0, 1.0 );
 	#ifdef USE_INSTANCING
@@ -62,45 +62,7 @@ void main() {
 	#include <clipping_planes_vertex>
 	#include <fog_vertex>
 }`,
-			fragmentShader: `
-uniform vec3 diffuse;
-uniform float opacity;
-
-flat varying int vIconId;
-
-#include <common>
-#include <uv_pars_fragment>
-#include <map_pars_fragment>
-#include <alphamap_pars_fragment>
-#include <alphatest_pars_fragment>
-#include <fog_pars_fragment>
-#include <logdepthbuf_pars_fragment>
-#include <clipping_planes_pars_fragment>
-
-void main() {
-	#include <clipping_planes_fragment>
-
-	vec3 outgoingLight = vec3( 0.0 );
-	vec4 diffuseColor = vec4( diffuse, opacity );
-
-	#include <logdepthbuf_fragment>
-
-	const ivec2 iMapSize = ivec2(16, 16);
-	ivec2 iPosition = ivec2(vIconId % iMapSize.x, vIconId / iMapSize.x);
-	vec2 uvIcon = (vUv + vec2(iPosition)) / vec2(iMapSize);
-	#define vUv uvIcon
-
-	#include <map_fragment>
-	#include <alphamap_fragment>
-	#include <alphatest_fragment>
-
-	outgoingLight = diffuseColor.rgb;
-
-	#include <output_fragment>
-	#include <tonemapping_fragment>
-	#include <encodings_fragment>
-	#include <fog_fragment>
-}`,
+			fragmentShader: ShaderLib.sprite.fragmentShader,
         });
         this.map = map;
 		this.depthTest = true;
