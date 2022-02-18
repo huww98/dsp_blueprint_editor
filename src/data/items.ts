@@ -13,13 +13,19 @@ export function isBelt(id: number) {
 }
 
 export function isInserter(id: number) {
-    return id >= 2011 && id <= 2013;
+    return inserterColorMap.has(id);
 }
 
 export const beltColorMap = new Map<number, Color>([
-    [2001, new Color(0xd8ba25)],
-    [2002, new Color(0x56bfaa)],
-    [2003, new Color(0x66baef)],
+    [2001, new Color(0xE3A263)],
+    [2002, new Color(0x51A896)],
+    [2003, new Color(0x61A5D7)],
+]);
+
+export const inserterColorMap = new Map<number, Color>([
+    [2011, new Color(0xE3A263)],
+    [2012, new Color(0x51A896)],
+    [2013, new Color(0x61A5D7)],
 ]);
 
 export interface BuildingMeta {

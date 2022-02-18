@@ -11,7 +11,7 @@ import {
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans, PositionedBlueprint } from '@/blueprint/planet';
-import { beltColorMap, buildingMeta, isBelt, isInserter, noIconBuildings } from '@/data/items';
+import { beltColorMap, buildingMeta, inserterColorMap, isBelt, isInserter, noIconBuildings } from '@/data/items';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
 
@@ -42,8 +42,6 @@ function buildPlanetGrid(radius = 1, segment = 200) {
 function buildBuildings(R: number, pos: PositionedBlueprint, buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
 	const transforms = buildings.map(b => calcBuildingTrans(R, pos, b));
 	const buildBelts = (belts: BlueprintBuilding[]) => {
-		if (!belts)
-			return [];
 		const thickness = 0.1;
 		const material = new MeshLambertMaterial();
 		const objects: Object3D[] = [];
@@ -72,7 +70,6 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 			const pos1 = new Vector3();
 			const pos2 = new Vector3();
 			const dir = new Vector3();
-			const scale = new Vector3();
 			const temp = new Matrix4();
 			const trans = new Matrix4();
 			for (let i = 0; i < belts.length; i++) {
@@ -84,8 +81,7 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 				const len = dir.subVectors(pos1, pos2).length();
 				trans.identity();
 				trans.lookAt(pos1, pos2, pos1);
-				scale.setFromMatrixScale(transforms[b1.index][0]);
-				trans.multiply(temp.makeScale(scale.x, scale.y, len));
+				trans.multiply(temp.makeScale(1., 1., len));
 				trans.multiply(offset);
 				trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
 				mesh.setMatrixAt(numLinks, trans);
@@ -96,10 +92,46 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 				mesh.count = numLinks;
 				mesh.instanceMatrix.needsUpdate = true;
 				mesh.instanceColor!.needsUpdate = true;
-				allBuildings.add(mesh);
+				objects.push(mesh);
 			}
 		}
 		return objects;
+	}
+	const buildInserters = (inserters: BlueprintBuilding[]) => {
+		const inserterThickness = 0.06;
+		const inserterHeight = 0.3;
+		const geometry = new BoxGeometry(0.15, inserterThickness, 1.0);
+		const material = new MeshLambertMaterial();
+		const mesh = new InstancedMesh(geometry, material, inserters.length);
+		const offset = new Matrix4().makeTranslation(0, 0, -0.5);
+		const pos1 = new Vector3();
+		const pos2 = new Vector3();
+		const dir = new Vector3();
+		const temp = new Matrix4();
+		const trans = new Matrix4();
+		for (let i = 0; i < inserters.length; i++) {
+			const b1 = inserters[i];
+
+			pos1.setFromMatrixPosition(transforms[b1.index][0]);
+			dir.copy(pos1).normalize().multiplyScalar(inserterHeight);
+			pos1.add(dir);
+
+			pos2.setFromMatrixPosition(transforms[b1.index][1]);
+			dir.copy(pos2).normalize().multiplyScalar(inserterHeight);
+			pos2.add(dir);
+
+			const len = dir.subVectors(pos1, pos2).length();
+			trans.identity();
+			trans.lookAt(pos1, pos2, pos1);
+			trans.multiply(temp.makeScale(1., 1., len));
+			trans.multiply(offset);
+			trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
+			mesh.setMatrixAt(i, trans);
+			mesh.setColorAt(i, inserterColorMap.get(b1.itemId)!);
+		}
+		mesh.instanceMatrix.needsUpdate = true;
+		mesh.instanceColor!.needsUpdate = true;
+		return [mesh];
 	}
 	const buildBoxes = (boxes: BlueprintBuilding[]) => {
 		const geometry = new BoxGeometry(1.0, 1.0, 1.0);
@@ -143,6 +175,10 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 	const belts = buildings.filter(b => isBelt(b.itemId));
 	if (belts)
 		allBuildings.add(...buildBelts(belts));
+
+	const inserters = buildings.filter(b => isInserter(b.itemId));
+	if (inserters)
+		allBuildings.add(...buildInserters(inserters));
 
 	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
 	if (boxes)
