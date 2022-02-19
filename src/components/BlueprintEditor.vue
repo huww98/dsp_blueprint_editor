@@ -9,9 +9,9 @@ import {
 	Matrix4, DirectionalLight, Vector3, Object3D, Color,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
-import { BlueprintBuilding } from '@/blueprint/parser';
+import { BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans, PositionedBlueprint } from '@/blueprint/planet';
-import { beltColorMap, buildingMeta, inserterColorMap, isBelt, isInserter, noIconBuildings } from '@/data/items';
+import { beltColorMap, buildingMeta, inserterColorMap, isBelt, isInserter, isStation, noIconBuildings, stationSlotTrans } from '@/data/items';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
 import { Cargos } from '@/cargos';
@@ -176,9 +176,20 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		mesh.instanceColor!.needsUpdate = true;
 		return [mesh];
 	}
-	const buildIcons = (iconBuildings: BlueprintBuilding[], iconInsterters: BlueprintBuilding[]) => {
+	const buildIcons = (iconBuildings: BlueprintBuilding[], iconInsterters: BlueprintBuilding[], stations: BlueprintBuilding[]) => {
+		let count = iconBuildings.length + iconInsterters.length;
+		for (const b of stations) {
+			if (b.parameters === null)
+				continue;
+			for (const s of (b.parameters as StationParameters).slots) {
+				if (s.storageIdx > 0 && s.dir !== IODir.None)
+					count++;
+			}
+		}
+		if (count === 0)
+			return [];
+
 		const iconTexture = new IconTexture(renderer);
-		const count = iconBuildings.length + iconInsterters.length;
 		const mesh = new Icons(iconTexture.texture, count);
 		const trans = new Matrix4();
 		const iconIds = new Int32Array(count);
@@ -190,17 +201,39 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 			mesh.setMatrixAt(i, trans);
 			iconIds[i] = iconTexture.requestItemIcon(b.filterId);
 		}
+		let base = iconInsterters.length;
 		for (let i = 0; i < iconBuildings.length; i++) {
 			const b = iconBuildings[i];
 			const meta = buildingMeta.get(b.itemId);
 			if (meta === undefined)
 				continue
-			const idx = i + iconInsterters.length;
+			const idx = i + base;
 			trans.multiplyMatrices(transforms[b.index][0], meta.iconTrans);
 			mesh.setMatrixAt(idx, trans);
 			const iconId = b.recipeId > 0 ? iconTexture.requestRecipeIcon(b.recipeId) : iconTexture.requestItemIcon(b.itemId);
 			iconIds[idx] = iconId;
 		}
+		base += iconBuildings.length;
+
+		const stationIconTrans = new Matrix4().makeScale(0.9, 0.9, 1.);
+		stationIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., 0.4));
+		for (let i = 0; i < stations.length; i++) {
+			const b = stations[i];
+			if (b.parameters === null)
+				continue;
+			const p = b.parameters as StationParameters
+			for (let j = 0; j < p.slots.length; j++) {
+				const s = p.slots[j];
+				if (s.storageIdx <= 0 || s.dir === IODir.None)
+					continue;
+				trans.multiplyMatrices(stationSlotTrans[j], stationIconTrans);
+				trans.premultiply(transforms[b.index][0]);
+				mesh.setMatrixAt(base, trans);
+				iconIds[base] = iconTexture.requestItemIcon(p.storage[s.storageIdx - 1].itemId);
+				base++;
+			}
+		}
+
 		mesh.setIconIds(iconIds);
 		mesh.instanceMatrix.needsUpdate = true;
 		return [mesh];
@@ -239,8 +272,8 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 
 	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
 	const iconInsterters = inserters.filter(b => b.filterId > 0);
-	if (iconBuildings.length + iconInsterters.length)
-		allBuildings.add(...buildIcons(iconBuildings, iconInsterters));
+	const stations = boxes.filter(b => isStation(b.itemId));
+	allBuildings.add(...buildIcons(iconBuildings, iconInsterters, stations));
 
 	return allBuildings;
 }

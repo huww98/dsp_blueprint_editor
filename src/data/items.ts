@@ -103,3 +103,18 @@ export const noIconBuildings = new Set<number>([
     2201, // 电力感应塔
     2202, // 无线输电塔
 ])
+
+export function isStation(id: number) {
+    return id === 2103 || id === 2104;
+}
+
+export const stationSlotTrans = (function () {
+    const o1 = 1.256, o2 = 2.7;
+    const slots = [
+        [ o1,  o2], [  0,  o2], [-o1,  o2],
+        [-o2,  o1], [-o2,   0], [-o2, -o1],
+        [-o1, -o2], [  0, -o2], [ o1, -o2],
+        [ o2, -o1], [ o2,   0], [ o2,  o1],
+    ] as const;
+    return slots.map(s => new Matrix4().makeTranslation(s[0], s[1], 0.));
+})();

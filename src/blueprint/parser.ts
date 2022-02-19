@@ -35,7 +35,7 @@ export interface BlueprintBuilding {
     inputOffset: number,
     recipeId: number,
     filterId: number,
-    parameters: number[],
+    parameters: null | AllParameters,
 }
 
 export interface BlueprintData {
@@ -72,6 +72,12 @@ class BufferReader {
     getInt32() { return this._get(this.view.getInt32, 4); }
 
     getFloat32() { return this._get(this.view.getFloat32, 4); }
+
+    slice(length: number) {
+        const r = this.view.buffer.slice(this.pos, this.pos + length);
+        this.pos += length;
+        return r;
+    }
 }
 
 function atobUint8Array(a: string) {
@@ -100,6 +106,60 @@ function importArea(r: BufferReader): BlueprintArea {
     }
 }
 
+const stationDesc = {
+    maxItemKind: 3,
+}
+const interstellarStationDesc = {
+    maxItemKind: 5,
+}
+
+export enum IODir { None, Output, Input, }
+export enum LogisticRole { None, Supply, Demand, }
+export interface StationParameters {
+    storage: {
+        itemId: number;
+        max: number;
+        localRole: LogisticRole;
+        remoteRole: LogisticRole;
+    }[];
+    slots: { dir: IODir; storageIdx: number; }[];
+}
+type AllParameters = StationParameters;
+
+function stationParamsParser(desc: typeof stationDesc) {
+    return function (parameters: Int32Array) {
+        const result: StationParameters = {
+            storage: [],
+            slots: [],
+        };
+        {
+            const base = 0, stride = 6;
+            for (let i = 0; i < desc.maxItemKind; i++) {
+                result.storage.push({
+                    itemId:     parameters[base + i * stride + 0],
+                    localRole:  parameters[base + i * stride + 1],
+                    remoteRole: parameters[base + i * stride + 2],
+                    max:        parameters[base + i * stride + 3],
+                });
+            }
+        } {
+            const base = 192, stride = 4;
+            for (let i = 0; i < 12; i++) {
+                result.slots.push({
+                    dir:        parameters[base + i * stride + 0],
+                    storageIdx: parameters[base + i * stride + 1],
+                })
+            }
+        }
+        return result;
+    }
+}
+
+const parameterParsers = new Map<number, (p: Int32Array) => AllParameters>([
+    [2103, stationParamsParser(stationDesc)],
+    [2104, stationParamsParser(interstellarStationDesc)],
+]);
+
 function importBuilding(r: BufferReader): BlueprintBuilding {
     function readXYZ() {
         return {
@@ -125,11 +185,16 @@ function importBuilding(r: BufferReader): BlueprintBuilding {
         inputOffset: r.getInt8(),
         recipeId: r.getInt16(),
         filterId: r.getInt16(),
-        parameters: [],
+        parameters: null,
     };
     const length = r.getInt16();
-    for (let i = 0; i < length; i++)
-        b.parameters.push(r.getInt32());
+    if (length) {
+        const p = r.slice(length * Int32Array.BYTES_PER_ELEMENT);
+        const parser = parameterParsers.get(b.itemId);
+        if (parser !== undefined) {
+            b.parameters = parser(new Int32Array(p));
+        }
+    }
     return b;
 }
 
