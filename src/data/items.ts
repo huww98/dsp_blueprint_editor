@@ -80,7 +80,7 @@ for (const [id, d] of buildingMetaRaw) {
     const unitBoxTrans = new Matrix4();
     const iconTrans = new Matrix4();
     const temp = new Matrix4();
-    unitBoxTrans.makeScale(d.box[0] * 0.9, d.box[1] * 0.9, d.box[2]);
+    unitBoxTrans.makeScale(d.box[0] * 0.9, d.box[1], d.box[2] * 0.9);
     unitBoxTrans.premultiply(temp.makeTranslation(d.offset[0], d.offset[1], -d.offset[2]));
     unitBoxTrans.premultiply(temp.makeRotationX(Math.PI / 2));
 

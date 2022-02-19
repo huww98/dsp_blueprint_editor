@@ -1,4 +1,4 @@
-import { BoxGeometry, InstancedBufferAttribute, InstancedMesh, Material, MeshLambertMaterial, Shader } from "three";
+import { BoxGeometry, InstancedBufferAttribute, InstancedMesh, MeshLambertMaterial, Shader } from "three";
 
 class CargoGeometry extends BoxGeometry {
     cargoDistance

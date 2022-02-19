@@ -209,10 +209,10 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		numCargos++;
 	}
 
-	if (belts)
+	if (belts.length)
 		allBuildings.add(...buildBelts(belts));
 
-	if (inserters)
+	if (inserters.length)
 		allBuildings.add(...buildInserters(inserters));
 
 	if (numCargos) {
@@ -224,11 +224,11 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 	}
 
 	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
-	if (boxes)
+	if (boxes.length)
 		allBuildings.add(...buildBoxes(boxes));
 
 	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
-	if (iconBuildings)
+	if (iconBuildings.length)
 		allBuildings.add(...buildIcons(iconBuildings));
 
 	return allBuildings;
