@@ -118,9 +118,9 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		}
 		return objects;
 	}
+	const inserterHeight = 0.3;
 	const buildInserters = (inserters: BlueprintBuilding[]) => {
 		const inserterThickness = 0.06;
-		const inserterHeight = 0.3;
 		const geometry = new BoxGeometry(0.15, inserterThickness, 1.0);
 		const material = new MeshLambertMaterial();
 		const mesh = new InstancedMesh(geometry, material, inserters.length);
@@ -176,20 +176,30 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		mesh.instanceColor!.needsUpdate = true;
 		return [mesh];
 	}
-	const buildIcons = (iconBuildings: BlueprintBuilding[]) => {
+	const buildIcons = (iconBuildings: BlueprintBuilding[], iconInsterters: BlueprintBuilding[]) => {
 		const iconTexture = new IconTexture(renderer);
-		const mesh = new Icons(iconTexture.texture, iconBuildings.length);
+		const count = iconBuildings.length + iconInsterters.length;
+		const mesh = new Icons(iconTexture.texture, count);
 		const trans = new Matrix4();
-		const iconIds: number[] = []
+		const iconIds = new Int32Array(count);
+		const inserterIconTrans = new Matrix4().makeScale(0.9, 0.9, 1.);
+		inserterIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., inserterHeight));
+		for (let i = 0; i < iconInsterters.length; i++) {
+			const b = iconInsterters[i];
+			trans.multiplyMatrices(transforms[b.index][0], inserterIconTrans);
+			mesh.setMatrixAt(i, trans);
+			iconIds[i] = iconTexture.requestItemIcon(b.filterId);
+		}
 		for (let i = 0; i < iconBuildings.length; i++) {
 			const b = iconBuildings[i];
 			const meta = buildingMeta.get(b.itemId);
 			if (meta === undefined)
 				continue
+			const idx = i + iconInsterters.length;
 			trans.multiplyMatrices(transforms[b.index][0], meta.iconTrans);
-			mesh.setMatrixAt(i, trans);
+			mesh.setMatrixAt(idx, trans);
 			const iconId = b.recipeId > 0 ? iconTexture.requestRecipeIcon(b.recipeId) : iconTexture.requestItemIcon(b.itemId);
-			iconIds.push(iconId);
+			iconIds[idx] = iconId;
 		}
 		mesh.setIconIds(iconIds);
 		mesh.instanceMatrix.needsUpdate = true;
@@ -228,8 +238,9 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 		allBuildings.add(...buildBoxes(boxes));
 
 	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
-	if (iconBuildings.length)
-		allBuildings.add(...buildIcons(iconBuildings));
+	const iconInsterters = inserters.filter(b => b.filterId > 0);
+	if (iconBuildings.length + iconInsterters.length)
+		allBuildings.add(...buildIcons(iconBuildings, iconInsterters));
 
 	return allBuildings;
 }

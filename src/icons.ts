@@ -51,7 +51,7 @@ void main() {
 	mvPosition.xy += position.xy * scale;
 
     vec4 depthPosition = mvPosition;
-    depthPosition.z += 3.;
+    depthPosition.z += 5.;
 
     vec4 glDepthPosition = projectionMatrix * depthPosition;
 	gl_Position = projectionMatrix * mvPosition;
@@ -98,7 +98,7 @@ export class Icons extends InstancedMesh {
 		super(Icons.iconGeometry, material, length);
 	}
 
-	setIconIds(ids: number[]) {
-		this.geometry.setAttribute('iconId', new InstancedBufferAttribute(new Int32Array(ids), 1));
+	setIconIds(ids: Int32Array) {
+		this.geometry.setAttribute('iconId', new InstancedBufferAttribute(ids, 1));
 	}
 }
