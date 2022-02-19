@@ -273,7 +273,9 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
 	const iconInsterters = inserters.filter(b => b.filterId > 0);
 	const stations = boxes.filter(b => isStation(b.itemId));
-	allBuildings.add(...buildIcons(iconBuildings, iconInsterters, stations));
+	const icons = buildIcons(iconBuildings, iconInsterters, stations)
+	if (icons.length)
+		allBuildings.add(...icons);
 
 	return allBuildings;
 }
