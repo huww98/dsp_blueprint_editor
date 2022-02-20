@@ -6,12 +6,12 @@ module.exports = defineConfig({
     module: {
       rules: [
         {
-          test: /\.txt$/,
-          type: 'asset/source',
+          test: /\/assets\//,
+          type: 'asset',
         }, {
-          test: /assets\/icons/,
-          type: 'asset/resource'
-        }
+          test: /\/assets\/icons\/item_recipe\//,
+          type: 'asset/resource',
+        },
       ],
     }
   },
