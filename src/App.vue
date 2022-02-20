@@ -94,6 +94,7 @@ watchEffect(() => {
     data.value = null;
     parseErrorMessage.value = '';
   }
+  selectedBuildingIndex.value = null;
 });
 
 const onBpFile = async (e: Event) => {
