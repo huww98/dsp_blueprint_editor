@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-import { recipesMap } from '@/data';
+import { recipesMap } from '@/data/recipes';
 import { computed, defineProps } from 'vue';
 import ItemRecipeIcon from './ItemRecipeIcon.vue';
 

@@ -11,7 +11,7 @@ import {
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans } from '@/blueprint/planet';
-import { buildingMeta, isBelt, isInserter, isStation, noIconBuildings, stationSlotTrans } from '@/data/items';
+import { buildingMeta, isBelt, isInserter, isStation, noIconBuildings, stationSlotTrans } from '@/data/building';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
 import { Cargos } from '@/cargos';
