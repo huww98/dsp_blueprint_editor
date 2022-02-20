@@ -9,32 +9,27 @@ for (const i of items) {
 }
 
 export function isBelt(id: number) {
-    return beltColorMap.has(id);
+    return id >= 2001 && id <= 2003;
 }
 
 export function isInserter(id: number) {
-    return inserterColorMap.has(id);
+    return id >= 2011 && id <= 2013;
 }
-
-export const beltColorMap = new Map<number, Color>([
-    [2001, new Color(0xE3A263)],
-    [2002, new Color(0x51A896)],
-    [2003, new Color(0x61A5D7)],
-]);
-
-export const inserterColorMap = new Map<number, Color>([
-    [2011, new Color(0xE3A263)],
-    [2012, new Color(0x51A896)],
-    [2013, new Color(0x61A5D7)],
-]);
 
 export interface BuildingMeta {
     color: Color;
     unitBoxTrans: Matrix4;
+    selectUnitBoxTrans: Matrix4;
     iconTrans: Matrix4;
 }
 
 const buildingMetaRaw: [number, { color: number | null, box: [number, number, number], offset: [number, number, number] }][] = ([
+    [2001, { color: 0xE3A263, box: [0.64, 0.2, 0.64], offset: [0.0, 0.0, 0.0]}], // 低速传送带
+    [2002, { color: 0x51A896, box: [0.64, 0.2, 0.64], offset: [0.0, 0.0, 0.0]}], // 高速传送带
+    [2003, { color: 0x61A5D7, box: [0.64, 0.2, 0.64], offset: [0.0, 0.0, 0.0]}], // 极速传送带
+    [2011, { color: 0xE3A263, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 低速分拣器
+    [2012, { color: 0x51A896, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 高速分拣器
+    [2013, { color: 0x61A5D7, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 极速分拣器
     [2020, { color: 0x3B5666, box: [2.7, 2.4, 2.7], offset: [0.0, 1.2, 0.0] }], // 四向分流器
     [2040, { color: 0x42B4E7, box: [2.2, 2.0, 3.0], offset: [0.0, 1.0, 0.0] }], // 自动集装机
     [2030, { color: 0x57FF8F, box: [1.3, 1.4, 2.3], offset: [0.0, 0.7, 0.05] }], // 流速监测器
@@ -80,9 +75,12 @@ for (const [id, d] of buildingMetaRaw) {
     const unitBoxTrans = new Matrix4();
     const iconTrans = new Matrix4();
     const temp = new Matrix4();
-    unitBoxTrans.makeScale(d.box[0] * 0.9, d.box[1], d.box[2] * 0.9);
-    unitBoxTrans.premultiply(temp.makeTranslation(d.offset[0], d.offset[1], -d.offset[2]));
+    unitBoxTrans.makeTranslation(d.offset[0], d.offset[1], -d.offset[2]);
     unitBoxTrans.premultiply(temp.makeRotationX(Math.PI / 2));
+    const selectUnitBoxTrans = unitBoxTrans.clone();
+
+    unitBoxTrans.multiply(temp.makeScale(d.box[0] * 0.9, d.box[1], d.box[2] * 0.9));
+    selectUnitBoxTrans.multiply(temp.makeScale(d.box[0], d.box[1], d.box[2]));
 
     const iconHeight = d.box[1] < 4.0 ? d.box[1] / 2.0 : d.box[1] - 2.0;
     iconTrans.makeScale(2., 2., 1.)
@@ -91,6 +89,7 @@ for (const [id, d] of buildingMetaRaw) {
     buildingMeta.set(id, {
         color: new Color(d.color ?? 0xdddddd),
         unitBoxTrans,
+        selectUnitBoxTrans,
         iconTrans,
     });
 }

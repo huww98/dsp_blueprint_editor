@@ -1,0 +1,41 @@
+<template>
+    <div class="icon">
+        <img :src="src" :alt="props.name">
+        <div class="count">{{props.count === 1 ? '' : props.count}}</div>
+    </div>
+</template>
+
+<script lang="ts" setup>
+import { ref, defineProps } from 'vue';
+
+const props = defineProps<{
+    name: string,
+    count: number,
+}>();
+
+const src = ref('');
+(async function () {
+    src.value = (await import(/* webpackMode: "eager" */`@/assets/icons/item_recipe/${props.name}.png`)).default;
+})()
+</script>
+
+<style lang="scss">
+.icon {
+    display: inline-block;
+    position: relative;
+    height: 2.5rem;
+    width: 2.5rem;
+
+    img {
+        height: 100%;
+        width: 100%;
+    }
+
+    .count {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        font-size: 0.8em;
+    }
+}
+</style>

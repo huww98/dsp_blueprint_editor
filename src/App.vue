@@ -1,6 +1,7 @@
 <template>
   <div class="container">
-    <BlueprintEditor :blueprintData="data" />
+    <BlueprintEditor :blueprintData="data" v-model:selectedBuildingIndex="selectedBuildingIndex"
+                     @update:selectedBuildingIndex="i => expandSidebar = i !== null" />
     <div class="sidebar" :class="{ expanded: expandSidebar }">
       <section>
         <label for="shortDesc">缩略图文字</label>
@@ -33,6 +34,10 @@
         <span style="margin-right: auto;">创建时间</span><span>{{data?.header.time.toLocaleString([], { timeZone: 'UTC' })}}</span>
         </div>
       </section>
+      <section v-if="selectedBuilding !== null">
+        <h2>{{selectedBuildingItem!.name}} <small>#{{selectedBuilding.index}}</small></h2>
+        <Recipe v-if="selectedBuilding.recipeId > 0" :recipeId="selectedBuilding.recipeId"/>
+      </section>
     </div>
     <button class="expand-btn" :class="{ expanded: expandSidebar }" @click="expandSidebar = !expandSidebar"></button>
   </div>
@@ -41,6 +46,8 @@
 <script setup lang="ts">
 import { BlueprintData, fromStr } from './blueprint/parser';
 import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
+import { itemsMap } from './data';
+import Recipe from './components/Recipe.vue';
 
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
 
@@ -50,6 +57,18 @@ const expandSidebar = ref(true);
 const working = ref(false);
 const notSupport = ref(false);
 const parseErrorMessage = ref('');
+const selectedBuildingIndex = ref(null as number | null);
+
+const selectedBuilding = computed(() => {
+  if (data.value === null || selectedBuildingIndex.value === null)
+    return null;
+  return data.value.buildings[selectedBuildingIndex.value];
+})
+const selectedBuildingItem = computed(() => {
+  if (selectedBuilding.value === null)
+    return null;
+  return itemsMap.get(selectedBuilding.value.itemId)!;
+})
 
 const bpStrShort = computed({
   get() {
@@ -171,7 +190,7 @@ body {
   bottom: 0;
   width: 300px;
   box-sizing: border-box;
-  background: #000000A0;
+  background: #000000B0;
   color: white;
   display: none;
   padding-top: 60px;

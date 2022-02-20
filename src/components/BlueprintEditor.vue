@@ -6,15 +6,16 @@
 import {
 	Group, LineSegments, InstancedMesh, WebGLRenderer,
 	LineBasicMaterial, MeshStandardMaterial, MeshLambertMaterial, CylinderGeometry, BoxGeometry,
-	Matrix4, DirectionalLight, Vector3, Object3D, Color,
+	Matrix4, DirectionalLight, Vector3, Object3D, Color, Ray, Sphere,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser';
-import { findPosForAreas, gridAreas, calcBuildingTrans, PositionedBlueprint } from '@/blueprint/planet';
-import { beltColorMap, buildingMeta, inserterColorMap, isBelt, isInserter, isStation, noIconBuildings, stationSlotTrans } from '@/data/items';
+import { findPosForAreas, gridAreas, calcBuildingTrans } from '@/blueprint/planet';
+import { buildingMeta, isBelt, isInserter, isStation, noIconBuildings, stationSlotTrans } from '@/data/items';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
 import { Cargos } from '@/cargos';
+import { BVH } from '@/bvh';
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -56,8 +57,7 @@ class AllBuildings extends Object3D {
 
 }
 
-function buildBuildings(R: number, pos: PositionedBlueprint, buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
-	const transforms = buildings.map(b => calcBuildingTrans(R, pos, b));
+function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
 	const buildBelts = (belts: BlueprintBuilding[]) => {
 		const thickness = 0.1;
 		const material = new MeshLambertMaterial();
@@ -72,7 +72,7 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 				trans.copy(transforms[belts[i].index][0]);
 				trans.multiply(offset);
 				mesh.setMatrixAt(i, trans);
-				mesh.setColorAt(i, beltColorMap.get(belts[i].itemId)!);
+				mesh.setColorAt(i, buildingMeta.get(belts[i].itemId)!.color);
 			}
 			mesh.instanceMatrix.needsUpdate = true;
 			mesh.instanceColor!.needsUpdate = true;
@@ -100,7 +100,7 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 				trans.lookAt(pos1, pos2, pos1);
 				trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
 
-				const color = beltColorMap.get(b1.itemId)!;
+				const color = buildingMeta.get(b1.itemId)!.color;
 				addCargo(trans, color, len);
 
 				trans.multiply(temp.makeScale(1., 1., len));
@@ -146,7 +146,7 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 			trans.lookAt(pos1, pos2, pos1);
 			trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
 
-			const color = inserterColorMap.get(b1.itemId)!
+			const color = buildingMeta.get(b1.itemId)!.color;
 			addCargo(trans, color, len);
 
 			trans.multiply(temp.makeScale(1., 1., len));
@@ -280,20 +280,35 @@ function buildBuildings(R: number, pos: PositionedBlueprint, buildings: Blueprin
 	return allBuildings;
 }
 
+function buildBVH(transforms: Matrix4[][], buildings: BlueprintBuilding[]) {
+	const selectBoxes = buildings.map((b, i) => {
+		const meta = buildingMeta.get(b.itemId)!;
+		const box = new Matrix4();
+		box.multiplyMatrices(transforms[i][0], meta.selectUnitBoxTrans);
+		return box
+	});
+	return new BVH(selectBoxes);
+}
+
 const R = 200.2;
 const SEGMENT = 200;
 
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref, onUnmounted, defineProps, watchEffect } from 'vue'
+import { ref, onMounted, Ref, onUnmounted, defineProps, defineEmits, watchEffect } from 'vue'
 import { Scene, PerspectiveCamera, SphereGeometry, Mesh, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
 
 const props = defineProps<{
-  blueprintData: BlueprintData | null;
+  blueprintData: BlueprintData | null,
+  selectedBuildingIndex: number | null,
 }>();
+
+const emit = defineEmits<{
+  (e: 'update:selectedBuildingIndex', index: number | null): void
+}>()
 
 const scene = new Scene();
 scene.add(new AmbientLight(0xffffff, 0.2));
@@ -314,16 +329,22 @@ onMounted(() => {
 	const camera = new PerspectiveCamera(90, rootEl.clientWidth / rootEl.clientHeight, 1, 10000);
 	const renderer = new WebGLRenderer({ antialias: true });
 
-	let buildings: AllBuildings | null = null
+	let buildings: AllBuildings | null = null;
+	let bvh: BVH | null = null;
 	watchEffect(() => {
 		if (buildings !== null) {
 			scene.remove(buildings);
 			buildings = null;
+			bvh = null;
 		}
 		if (props.blueprintData) {
-			const pos = findPosForAreas(props.blueprintData.areas, SEGMENT);
-			buildings = buildBuildings(R, pos, props.blueprintData.buildings, renderer)
+			const d = props.blueprintData
+			const pos = findPosForAreas(d.areas, SEGMENT);
+			const transforms = d.buildings.map(b => calcBuildingTrans(R, pos, b));
+			buildings = buildBuildings(transforms, d.buildings, renderer)
 			scene.add(buildings);
+
+			bvh = buildBVH(transforms, d.buildings);
 		}
 	});
 
@@ -346,8 +367,38 @@ onMounted(() => {
 	}
 	onResize();
 	window.addEventListener('resize', onResize);
+	onUnmounted(() => { window.removeEventListener('resize', onResize); });
+
+	const ray = new Ray();
+	const planetSphere = new Sphere(new Vector3(), R);
+	const v = new Vector3();
+	const onClick = (e: MouseEvent) => {
+		if (bvh === null) {
+			emit('update:selectedBuildingIndex', null);
+			return;
+		}
+		ray.origin.setFromMatrixPosition(camera.matrixWorld);
+		ray.direction.x = (e.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+		ray.direction.y = -(e.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+		ray.direction.z = 1.;
+		ray.direction.unproject(camera).sub(ray.origin).normalize();
+		const intersects = bvh.raycast(ray)
+		if (intersects.length === 0) {
+			emit('update:selectedBuildingIndex', null);
+			return;
+		}
+
+		const intersectPlanet = ray.intersectSphere(planetSphere, v);
+		if (intersectPlanet !== null && intersectPlanet.distanceToSquared(ray.origin) < intersects[0].distanceSquared)
+			intersects.length = 0;
+
+		emit('update:selectedBuildingIndex', intersects.length === 0 ? null : intersects[0].index);
+	}
+	renderer.domElement.addEventListener('click', onClick);
+	onUnmounted(() => renderer.domElement.removeEventListener('click', onClick));
 
 	let mounted = true;
+	onUnmounted(() => { mounted = false; });
 	let lastTimeStamp : number | null = null
 	function animate(time: number) {
 		if (!mounted)
@@ -368,8 +419,6 @@ onMounted(() => {
 	onUnmounted(() => {
 		controls.dispose();
 		renderer.dispose();
-		window.removeEventListener('resize', onResize);
-		mounted = false;
 	});
 });
 
