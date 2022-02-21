@@ -42,7 +42,7 @@
         </div>
       </section>
       <footer>
-        {{version}}
+        {{version}} {{swStatus}}
       </footer>
     </div>
     <button class="expand-btn" :class="{ expanded: expandSidebar }" @click="expandSidebar = !expandSidebar"></button>
@@ -55,7 +55,8 @@ import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vu
 import { itemsMap } from './data';
 import Recipe from './components/Recipe.vue';
 import ItemRecipeIcon from './components/ItemRecipeIcon.vue';
-import { version } from '@/define'
+import { version } from '@/define';
+import { swStatus } from '@/registerServiceWorker';
 
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
 
