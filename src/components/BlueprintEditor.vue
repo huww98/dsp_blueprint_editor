@@ -409,9 +409,10 @@ onMounted(() => {
 			return;
 		}
 		ray.origin.setFromMatrixPosition(camera.matrixWorld);
-		ray.direction.x = (e.clientX / renderer.domElement.clientWidth ) * 2 - 1;
-		ray.direction.y = -(e.clientY / renderer.domElement.clientHeight ) * 2 + 1;
-		ray.direction.z = 1.;
+		const rect = renderer.domElement.getBoundingClientRect();
+		ray.direction.x = ((e.clientX - rect.left) / rect.width ) * 2 - 1;
+		ray.direction.y = -((e.clientY - rect.top) / rect.height ) * 2 + 1;
+		ray.direction.z = .5;
 		ray.direction.unproject(camera).sub(ray.origin).normalize();
 		const intersects = bvh.raycast(ray)
 		if (intersects.length === 0) {

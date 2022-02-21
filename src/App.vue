@@ -169,6 +169,9 @@ const paste = async () => {
 body {
   margin: 0;
   background: black;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
@@ -204,6 +207,7 @@ body {
   top: 0;
   bottom: 0;
   width: 300px;
+  overflow-y: auto;
   box-sizing: border-box;
   background: #000000B0;
   color: white;
