@@ -1,22 +1,22 @@
 <template>
     <div class="icon">
         <img :src="src" :alt="props.name">
-        <div class="count">{{props.count === 1 ? '' : props.count}}</div>
+        <div class="count">{{props.count === undefined || props.count === 1 ? '' : props.count}}</div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, defineProps } from 'vue';
+import { ref, defineProps, watchEffect } from 'vue';
 
 const props = defineProps<{
     name: string,
-    count: number,
+    count?: number,
 }>();
 
 const src = ref('');
-(async function () {
+watchEffect(async () => {
     src.value = (await import(/* webpackMode: "eager" */`@/assets/icons/item_recipe/${props.name}.png`)).default;
-})()
+});
 </script>
 
 <style lang="scss">

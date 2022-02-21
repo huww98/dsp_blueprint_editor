@@ -37,6 +37,9 @@
       <section v-if="selectedBuilding !== null">
         <h2>{{selectedBuildingItem!.name}} <small>#{{selectedBuilding.index}}</small></h2>
         <Recipe v-if="selectedBuilding.recipeId > 0" :recipeId="selectedBuilding.recipeId"/>
+        <div v-if="selectedBuilding.filterId">
+          过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}
+        </div>
       </section>
     </div>
     <button class="expand-btn" :class="{ expanded: expandSidebar }" @click="expandSidebar = !expandSidebar"></button>
@@ -48,6 +51,7 @@ import { BlueprintData, fromStr } from './blueprint/parser';
 import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
 import { itemsMap } from './data';
 import Recipe from './components/Recipe.vue';
+import ItemRecipeIcon from './components/ItemRecipeIcon.vue';
 
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
 
@@ -68,6 +72,11 @@ const selectedBuildingItem = computed(() => {
   if (selectedBuilding.value === null)
     return null;
   return itemsMap.get(selectedBuilding.value.itemId)!;
+})
+const selectedBuildingFilterItem = computed(() => {
+  if (selectedBuilding.value === null || selectedBuilding.value.filterId <= 0)
+    return null;
+  return itemsMap.get(selectedBuilding.value.filterId)!;
 })
 
 const bpStrShort = computed({
