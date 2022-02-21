@@ -16,9 +16,9 @@ export interface BuildingMeta {
 }
 
 const buildingMetaRaw: [number, { color: number | null, box: [number, number, number], offset: [number, number, number] }][] = ([
-    [2001, { color: 0xE3A263, box: [0.64, 0.2, 0.64], offset: [0.0, 0.0, 0.0]}], // 低速传送带
-    [2002, { color: 0x51A896, box: [0.64, 0.2, 0.64], offset: [0.0, 0.0, 0.0]}], // 高速传送带
-    [2003, { color: 0x61A5D7, box: [0.64, 0.2, 0.64], offset: [0.0, 0.0, 0.0]}], // 极速传送带
+    [2001, { color: 0xE3A263, box: [0.64, 0.12, 0.64], offset: [0.0, 0.05, 0.0]}], // 低速传送带
+    [2002, { color: 0x51A896, box: [0.64, 0.12, 0.64], offset: [0.0, 0.05, 0.0]}], // 高速传送带
+    [2003, { color: 0x61A5D7, box: [0.64, 0.12, 0.64], offset: [0.0, 0.05, 0.0]}], // 极速传送带
     [2011, { color: 0xE3A263, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 低速分拣器
     [2012, { color: 0x51A896, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 高速分拣器
     [2013, { color: 0x61A5D7, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 极速分拣器
@@ -71,7 +71,7 @@ for (const [id, d] of buildingMetaRaw) {
     unitBoxTrans.premultiply(temp.makeRotationX(Math.PI / 2));
     const selectUnitBoxTrans = unitBoxTrans.clone();
 
-    unitBoxTrans.multiply(temp.makeScale(d.box[0] * 0.9, d.box[1], d.box[2] * 0.9));
+    unitBoxTrans.multiply(temp.makeScale(d.box[0] * 0.9, d.box[1] * 0.999, d.box[2] * 0.9));
     selectUnitBoxTrans.multiply(temp.makeScale(d.box[0], d.box[1], d.box[2]));
 
     const iconHeight = d.box[1] < 4.0 ? d.box[1] / 2.0 : d.box[1] - 2.0;

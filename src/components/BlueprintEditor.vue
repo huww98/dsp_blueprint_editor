@@ -359,6 +359,25 @@ onMounted(() => {
 		}
 	});
 
+	{
+		const geometry = new BoxGeometry(1., 1., 1.);
+		const material = new MeshStandardMaterial({
+			color: 0x0074E8,
+			opacity: 0.5,
+			transparent: true,
+		});
+		const selectBox = new Mesh(geometry, material);
+		selectBox.matrixAutoUpdate = false;
+		watchEffect(() => {
+			if (props.blueprintData === null || props.selectedBuildingIndex === null) {
+				scene.remove(selectBox);
+				return;
+			}
+			selectBox.matrix.copy(bvh!.boxes[props.selectedBuildingIndex]);
+			scene.add(selectBox);
+		})
+	}
+
 	let controls = new PlanetMapControls(camera, renderer.domElement);
 	controls.listenToKeyEvents(rootEl);
 	controls.minDistance = R * 1.05;
