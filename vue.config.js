@@ -1,4 +1,7 @@
 const { defineConfig } = require('@vue/cli-service')
+const webpack = require('webpack')
+const { execSync } = require('child_process')
+
 module.exports = defineConfig({
   publicPath: '/dsp_blueprint_editor/',
   transpileDependencies: false,
@@ -13,7 +16,12 @@ module.exports = defineConfig({
           type: 'asset/resource',
         },
       ],
-    }
+    },
+    plugins: [
+      new webpack.DefinePlugin({
+        VERSION: JSON.stringify(execSync('git describe --always --dirty', { encoding: 'utf8' })),
+      }),
+    ],
   },
   pwa: {
     name: '戴森球计划蓝图预览',

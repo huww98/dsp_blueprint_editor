@@ -41,6 +41,9 @@
           过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}
         </div>
       </section>
+      <footer>
+        {{version}}
+      </footer>
     </div>
     <button class="expand-btn" :class="{ expanded: expandSidebar }" @click="expandSidebar = !expandSidebar"></button>
   </div>
@@ -52,6 +55,7 @@ import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vu
 import { itemsMap } from './data';
 import Recipe from './components/Recipe.vue';
 import ItemRecipeIcon from './components/ItemRecipeIcon.vue';
+import { version } from '@/define'
 
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
 
@@ -215,8 +219,15 @@ body {
     margin: 5px 0;
   }
 
+  footer {
+    margin-top: auto;
+    margin-bottom: 5px;
+    color: gray;
+  }
+
   &.expanded {
-    display: block;
+    display: flex;
+    flex-direction: column;
   }
 
   .error {
