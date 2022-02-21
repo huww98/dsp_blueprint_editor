@@ -124,7 +124,6 @@ export interface StationParameters {
     }[];
     slots: { dir: IODir; storageIdx: number; }[];
 }
-type AllParameters = StationParameters;
 
 function stationParamsParser(desc: typeof stationDesc) {
     return function (parameters: Int32Array) {
@@ -155,9 +154,26 @@ function stationParamsParser(desc: typeof stationDesc) {
     }
 }
 
+export interface SplitterParameters {
+    priority: boolean[];
+}
+
+function splitterParamParser(parameters: Int32Array) {
+    const result: SplitterParameters = {
+        priority: [],
+    };
+    for (let i = 0; i < 4; i++) {
+        result.priority[i] = parameters[i] > 0;
+    }
+    return result;
+}
+
+type AllParameters = StationParameters | SplitterParameters;
+
 const parameterParsers = new Map<number, (p: Int32Array) => AllParameters>([
     [2103, stationParamsParser(stationDesc)],
     [2104, stationParamsParser(interstellarStationDesc)],
+    [2020, splitterParamParser],
 ]);
 
 function importBuilding(r: BufferReader): BlueprintBuilding {
