@@ -57,6 +57,24 @@ class AllBuildings extends Object3D {
 
 }
 
+const pos1 = new Vector3();
+const pos2 = new Vector3();
+const dir = new Vector3();
+const inserterHeight = 0.3;
+function inserterTrans(transforms: Matrix4[], trans: Matrix4) {
+	pos1.setFromMatrixPosition(transforms[0]);
+	dir.copy(pos1).normalize().multiplyScalar(inserterHeight);
+	pos1.add(dir);
+
+	pos2.setFromMatrixPosition(transforms[1]);
+	dir.copy(pos2).normalize().multiplyScalar(inserterHeight);
+	pos2.add(dir);
+
+	trans.setPosition(pos1.x, pos1.y, pos1.z);
+	trans.lookAt(pos1, pos2, pos1);
+	return dir.subVectors(pos1, pos2).length();
+}
+
 function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
 	const buildBelts = (belts: BlueprintBuilding[]) => {
 		const thickness = 0.1;
@@ -118,34 +136,18 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		}
 		return objects;
 	}
-	const inserterHeight = 0.3;
 	const buildInserters = (inserters: BlueprintBuilding[]) => {
 		const inserterThickness = 0.06;
 		const geometry = new BoxGeometry(0.15, inserterThickness, 1.0);
 		const material = new MeshLambertMaterial();
 		const mesh = new InstancedMesh(geometry, material, inserters.length);
 		const offset = new Matrix4().makeTranslation(0, 0, -0.5);
-		const pos1 = new Vector3();
-		const pos2 = new Vector3();
-		const dir = new Vector3();
 		const temp = new Matrix4();
 		const trans = new Matrix4();
 		for (let i = 0; i < inserters.length; i++) {
 			const b1 = inserters[i];
 
-			pos1.setFromMatrixPosition(transforms[b1.index][0]);
-			dir.copy(pos1).normalize().multiplyScalar(inserterHeight);
-			pos1.add(dir);
-
-			pos2.setFromMatrixPosition(transforms[b1.index][1]);
-			dir.copy(pos2).normalize().multiplyScalar(inserterHeight);
-			pos2.add(dir);
-
-			const len = dir.subVectors(pos1, pos2).length();
-			trans.identity();
-			trans.lookAt(pos1, pos2, pos1);
-			trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
-
+			const len = inserterTrans(transforms[b1.index], trans);
 			const color = buildingMeta.get(b1.itemId)!.color;
 			addCargo(trans, color, len);
 
@@ -281,11 +283,20 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 }
 
 function buildBVH(transforms: Matrix4[][], buildings: BlueprintBuilding[]) {
+	const temp = new Matrix4();
+	const inserterOffset = new Matrix4().makeTranslation(0, 0, -0.5);
+
 	const selectBoxes = buildings.map((b, i) => {
 		const meta = buildingMeta.get(b.itemId)!;
 		const box = new Matrix4();
-		box.multiplyMatrices(transforms[i][0], meta.selectUnitBoxTrans);
-		return box
+		if (isInserter(b.itemId)) {
+			const len = inserterTrans(transforms[i], box);
+			box.multiply(temp.makeScale(0.5, 0.5, len));
+			box.multiply(inserterOffset);
+		} else {
+			box.multiplyMatrices(transforms[i][0], meta.selectUnitBoxTrans);
+		}
+		return box;
 	});
 	return new BVH(selectBoxes);
 }
