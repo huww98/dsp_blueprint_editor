@@ -365,6 +365,7 @@ onMounted(() => {
 			color: 0x0074E8,
 			opacity: 0.5,
 			transparent: true,
+			depthWrite: false,
 		});
 		const selectBox = new Mesh(geometry, material);
 		selectBox.matrixAutoUpdate = false;
