@@ -11,7 +11,8 @@ import {
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans } from '@/blueprint/planet';
-import { buildingMeta, isBelt, isInserter, isStation, noIconBuildings, stationSlotTrans } from '@/data/building';
+import { buildingMeta, noIconBuildings, stationSlotTrans } from '@/data/building';
+import { isBelt, isInserter, isStation } from '@/data/items';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
 import { Cargos } from '@/cargos';
@@ -307,7 +308,7 @@ const SEGMENT = 200;
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref, onUnmounted, defineProps, defineEmits, watchEffect } from 'vue'
+import { ref, onMounted, Ref, onUnmounted, defineProps, defineEmits, defineExpose, watchEffect, computed } from 'vue'
 import { Scene, PerspectiveCamera, SphereGeometry, Mesh, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
@@ -334,56 +335,61 @@ scene.add(dirLight);
 scene.add(buildPlanetGrid(R * 1.0001, SEGMENT));
 
 const root: Ref<HTMLDivElement | null> = ref(null);
+const renderer = new WebGLRenderer({ antialias: true });
+onUnmounted(() => renderer.dispose());
+
+const camera = new PerspectiveCamera(90);
+camera.near = 1;
+camera.far = 10000;
+
+const b = computed(() => {
+	if (!props.blueprintData)
+		return null;
+	const d = props.blueprintData
+	const pos = findPosForAreas(d.areas, SEGMENT);
+	const transforms = d.buildings.map(b => calcBuildingTrans(R, pos, b));
+	const buildings = buildBuildings(transforms, d.buildings, renderer)
+	const bvh = buildBVH(transforms, d.buildings);
+	return { buildings, bvh };
+});
+
+watchEffect(onCleanUp => {
+	if (b.value !== null) {
+		const buildings = b.value.buildings
+		scene.add(buildings);
+		onCleanUp(() => scene.remove(buildings));
+	}
+});
+
+{
+	const geometry = new BoxGeometry(1., 1., 1.);
+	const material = new MeshStandardMaterial({
+		color: 0x0074E8,
+		opacity: 0.5,
+		transparent: true,
+		depthWrite: false,
+	});
+	const selectBox = new Mesh(geometry, material);
+	selectBox.matrixAutoUpdate = false;
+	watchEffect(() => {
+		if (b.value === null || props.selectedBuildingIndex === null) {
+			scene.remove(selectBox);
+			return;
+		}
+		selectBox.matrix.copy(b.value.bvh.boxes[props.selectedBuildingIndex]);
+		scene.add(selectBox);
+	})
+}
 
 onMounted(() => {
 	const rootEl = root.value!;
-	const camera = new PerspectiveCamera(90, rootEl.clientWidth / rootEl.clientHeight, 1, 10000);
-	const renderer = new WebGLRenderer({ antialias: true });
-
-	let buildings: AllBuildings | null = null;
-	let bvh: BVH | null = null;
-	watchEffect(() => {
-		if (buildings !== null) {
-			scene.remove(buildings);
-			buildings = null;
-			bvh = null;
-		}
-		if (props.blueprintData) {
-			const d = props.blueprintData
-			const pos = findPosForAreas(d.areas, SEGMENT);
-			const transforms = d.buildings.map(b => calcBuildingTrans(R, pos, b));
-			buildings = buildBuildings(transforms, d.buildings, renderer)
-			scene.add(buildings);
-
-			bvh = buildBVH(transforms, d.buildings);
-		}
-	});
-
-	{
-		const geometry = new BoxGeometry(1., 1., 1.);
-		const material = new MeshStandardMaterial({
-			color: 0x0074E8,
-			opacity: 0.5,
-			transparent: true,
-			depthWrite: false,
-		});
-		const selectBox = new Mesh(geometry, material);
-		selectBox.matrixAutoUpdate = false;
-		watchEffect(() => {
-			if (props.blueprintData === null || props.selectedBuildingIndex === null) {
-				scene.remove(selectBox);
-				return;
-			}
-			selectBox.matrix.copy(bvh!.boxes[props.selectedBuildingIndex]);
-			scene.add(selectBox);
-		})
-	}
 
 	let controls = new PlanetMapControls(camera, renderer.domElement);
 	controls.listenToKeyEvents(rootEl);
 	controls.minDistance = R * 1.05;
 	controls.maxDistance = R * 5;
 	controls.targetRadius = R;
+	onUnmounted(() => controls.dispose());
 
 	rootEl.appendChild(renderer.domElement);
 
@@ -404,27 +410,26 @@ onMounted(() => {
 	const planetSphere = new Sphere(new Vector3(), R);
 	const v = new Vector3();
 	const onClick = (e: MouseEvent) => {
-		if (bvh === null) {
-			emit('update:selectedBuildingIndex', null);
-			return;
-		}
-		ray.origin.setFromMatrixPosition(camera.matrixWorld);
-		const rect = renderer.domElement.getBoundingClientRect();
-		ray.direction.x = ((e.clientX - rect.left) / rect.width ) * 2 - 1;
-		ray.direction.y = -((e.clientY - rect.top) / rect.height ) * 2 + 1;
-		ray.direction.z = .5;
-		ray.direction.unproject(camera).sub(ray.origin).normalize();
-		const intersects = bvh.raycast(ray)
-		if (intersects.length === 0) {
-			emit('update:selectedBuildingIndex', null);
-			return;
-		}
+		const pick = () => {
+			if (b.value === null)
+				return null;
+			ray.origin.setFromMatrixPosition(camera.matrixWorld);
+			const rect = renderer.domElement.getBoundingClientRect();
+			ray.direction.x = ((e.clientX - rect.left) / rect.width ) * 2 - 1;
+			ray.direction.y = -((e.clientY - rect.top) / rect.height ) * 2 + 1;
+			ray.direction.z = .5;
+			ray.direction.unproject(camera).sub(ray.origin).normalize();
+			const intersects = b.value.bvh.raycast(ray)
+			if (intersects.length === 0)
+				return null;
 
-		const intersectPlanet = ray.intersectSphere(planetSphere, v);
-		if (intersectPlanet !== null && intersectPlanet.distanceToSquared(ray.origin) < intersects[0].distanceSquared)
-			intersects.length = 0;
+			const intersectPlanet = ray.intersectSphere(planetSphere, v);
+			if (intersectPlanet !== null && intersectPlanet.distanceToSquared(ray.origin) < intersects[0].distanceSquared)
+				intersects.length = 0;
 
-		emit('update:selectedBuildingIndex', intersects.length === 0 ? null : intersects[0].index);
+			return intersects.length === 0 ? null : intersects[0].index
+		}
+		emit('update:selectedBuildingIndex', pick());
 	}
 	renderer.domElement.addEventListener('click', onClick);
 	onUnmounted(() => renderer.domElement.removeEventListener('click', onClick));
@@ -438,8 +443,8 @@ onMounted(() => {
 		if (lastTimeStamp) {
 			controls.updateTimeDelta((time - lastTimeStamp) / 1000);
 		}
-		if (buildings?.cargos)
-			buildings.cargos.cargoMove = (time % 1000) / 1000;
+		if (b.value?.buildings.cargos)
+			b.value.buildings.cargos.cargoMove = (time % 1000) / 1000;
 		lastTimeStamp = time;
 		requestAnimationFrame(animate);
 		controls.update();
@@ -447,13 +452,12 @@ onMounted(() => {
 		renderer.render(scene, camera);
 	}
 	requestAnimationFrame(animate);
-
-	onUnmounted(() => {
-		controls.dispose();
-		renderer.dispose();
-	});
 });
 
+defineExpose({
+	selectBoxes: computed(() => b.value?.bvh.boxes),
+	cameraPos: computed(() => camera.matrixWorld),
+});
 </script>
 
 <style lang="scss">

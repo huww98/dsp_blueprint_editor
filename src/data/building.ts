@@ -1,13 +1,5 @@
 import { Color, Matrix4 } from 'three';
 
-export function isBelt(id: number) {
-    return id >= 2001 && id <= 2003;
-}
-
-export function isInserter(id: number) {
-    return id >= 2011 && id <= 2013;
-}
-
 export interface BuildingMeta {
     color: Color;
     unitBoxTrans: Matrix4;
@@ -94,10 +86,6 @@ export const noIconBuildings = new Set<number>([
     2201, // 电力感应塔
     2202, // 无线输电塔
 ])
-
-export function isStation(id: number) {
-    return id === 2103 || id === 2104;
-}
 
 export const stationSlotTrans = (function () {
     const o1 = 1.256, o2 = 2.7;
