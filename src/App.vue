@@ -37,7 +37,9 @@
       <section v-if="selectedBuilding !== null">
         <h2>{{selectedBuildingItem!.name}} <small>#{{selectedBuilding.index}}</small></h2>
         <Recipe v-if="selectedBuilding.recipeId > 0" :recipeId="selectedBuilding.recipeId"/>
-        <div v-if="selectedBuilding.filterId">
+
+        <SplitterInfo v-if="splitterInfo !== undefined" :info="splitterInfo" :building="selectedBuilding"/>
+        <div v-else-if="selectedBuilding.filterId">
           过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}
         </div>
       </section>
@@ -53,10 +55,13 @@
 import { BlueprintData, fromStr } from './blueprint/parser';
 import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
 import { itemsMap } from './data';
-import Recipe from './components/Recipe.vue';
-import ItemRecipeIcon from './components/ItemRecipeIcon.vue';
 import { version } from '@/define';
 import { swStatus } from '@/registerServiceWorker';
+import { BuildingInfo } from './blueprint/buildingInfo';
+
+import Recipe from '@/components/Recipe.vue';
+import ItemRecipeIcon from '@/components/ItemRecipeIcon.vue';
+import SplitterInfo from '@/components/SpitterInfo.vue';
 
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
 
@@ -82,6 +87,16 @@ const selectedBuildingFilterItem = computed(() => {
   if (selectedBuilding.value === null || selectedBuilding.value.filterId <= 0)
     return null;
   return itemsMap.get(selectedBuilding.value.filterId)!;
+})
+const buildingInfo = computed(() => {
+  if (data.value === null)
+    return null;
+  return new BuildingInfo(data.value.buildings);
+})
+const splitterInfo = computed(() => {
+  if (selectedBuilding.value === null)
+    return undefined;
+  return buildingInfo.value!.splitterInfo.get(selectedBuilding.value.index)!
 })
 
 const bpStrShort = computed({
