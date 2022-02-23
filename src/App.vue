@@ -40,7 +40,7 @@
 
         <SplitterInfo v-if="splitterInfo !== undefined && renderer"
                       :info="splitterInfo" :building="selectedBuilding"
-                      :selectBox="renderer.selectBoxes![selectedBuilding.index]"
+                      :model="renderer.getModel(selectedBuilding.index)!"
                       :camera="renderer.camera" :cameraPosVersion="renderer.cameraPosVersion"/>
         <div v-else-if="selectedBuilding.filterId">
           过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}

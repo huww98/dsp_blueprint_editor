@@ -56,6 +56,8 @@ class AllBuildings extends Object3D {
 			this.add(c);
 	}
 
+	public modelRef: { mesh: InstancedMesh, instance: number }[] = [];
+
 }
 
 const pos1 = new Vector3();
@@ -93,6 +95,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				trans.multiply(offset);
 				mesh.setMatrixAt(i, trans);
 				mesh.setColorAt(i, buildingMeta.get(b.modelIndex)!.color);
+				allBuildings.modelRef[b.index] = { mesh, instance: i };
 			}
 			mesh.instanceMatrix.needsUpdate = true;
 			mesh.instanceColor!.needsUpdate = true;
@@ -157,6 +160,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			trans.multiply(offset);
 			mesh.setMatrixAt(i, trans);
 			mesh.setColorAt(i, color);
+			allBuildings.modelRef[b.index] = { mesh, instance: i };
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
@@ -175,6 +179,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			trans.multiplyMatrices(transforms[b.index][0], meta.unitBoxTrans);
 			mesh.setMatrixAt(i, trans);
 			mesh.setColorAt(i, meta.color);
+			allBuildings.modelRef[b.index] = { mesh, instance: i };
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
@@ -247,6 +252,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 	const inserters = buildings.filter(b => isInserter(b.itemId));
 
 	const allBuildings = new AllBuildings();
+	allBuildings.modelRef = new Array(buildings.length);
 	const cargosMesh = new Cargos(belts.length + inserters.length);
 	let numCargos = 0;
 	const addCargo = (trans: Matrix4, color: Color, distance: number) => {
@@ -313,6 +319,7 @@ import { ref, onMounted, Ref, onUnmounted, defineProps, defineEmits, defineExpos
 import { Scene, PerspectiveCamera, SphereGeometry, Mesh, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
+import { attachCamera, attachRenderer } from '@/utils';
 
 const props = defineProps<{
   blueprintData: BlueprintData | null,
@@ -337,11 +344,13 @@ scene.add(buildPlanetGrid(R * 1.0001, SEGMENT));
 
 const root: Ref<HTMLDivElement | null> = ref(null);
 const renderer = new WebGLRenderer({ antialias: true });
-onUnmounted(() => renderer.dispose());
+attachRenderer(root, renderer);
 
 const camera = new PerspectiveCamera(90);
 camera.near = 1;
 camera.far = 10000;
+camera.position.z = 1.5 * R;
+attachCamera(root, camera);
 
 const b = computed(() => {
 	if (!props.blueprintData)
@@ -391,21 +400,7 @@ onMounted(() => {
 	controls.maxDistance = R * 5;
 	controls.targetRadius = R;
 	onUnmounted(() => controls.dispose());
-
-	rootEl.appendChild(renderer.domElement);
-
-	camera.position.z = 1.5 * R;
 	controls.update();
-
-	const onResize = () => {
-		camera.aspect = rootEl.clientWidth / rootEl.clientHeight;
-		camera.updateProjectionMatrix();
-		renderer.setPixelRatio(window.devicePixelRatio);
-		renderer.setSize(rootEl.clientWidth, rootEl.clientHeight);
-	}
-	onResize();
-	window.addEventListener('resize', onResize);
-	onUnmounted(() => { window.removeEventListener('resize', onResize); });
 
 	const ray = new Ray();
 	const planetSphere = new Sphere(new Vector3(), R);
@@ -460,10 +455,19 @@ onMounted(() => {
 
 const selectBoxes = computed(() => b.value?.bvh.boxes);
 const cameraPosVersion = ref(0);
+const getModel = (index: number) => {
+	if (b.value === null)
+		return null
+	const ref = b.value.buildings.modelRef[index]
+	const m = new Matrix4();
+	ref.mesh.getMatrixAt(ref.instance, m)
+	return m;
+}
 defineExpose({
 	selectBoxes,
 	camera,
 	cameraPosVersion,
+	getModel,
 });
 </script>
 
