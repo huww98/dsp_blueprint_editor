@@ -42,6 +42,8 @@
                       :info="splitterInfo" :building="selectedBuilding"
                       :model="renderer.getModel(selectedBuilding.index)!"
                       :camera="renderer.camera" :cameraPosVersion="renderer.cameraPosVersion"/>
+        <StationInfo v-else-if="isStation(selectedBuilding.itemId)"
+                     :building="selectedBuilding"/>
         <div v-else-if="selectedBuilding.filterId">
           过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}
         </div>
@@ -57,13 +59,14 @@
 <script setup lang="ts">
 import { BlueprintData, fromStr } from './blueprint/parser';
 import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
-import { itemsMap } from './data';
+import { itemsMap, isStation } from './data/items';
 import { version } from '@/define';
 import { swStatus } from '@/registerServiceWorker';
 import { BuildingInfo } from './blueprint/buildingInfo';
 
 import Recipe from '@/components/Recipe.vue';
 import ItemRecipeIcon from '@/components/ItemRecipeIcon.vue';
+import StationInfo from './components/StationInfo.vue';
 
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/SpitterInfo.vue'))
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));

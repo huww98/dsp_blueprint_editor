@@ -1,0 +1,86 @@
+<template>
+    <template v-for="(s, i) in p.storage" :key="i">
+        <div class="station-storage" v-if="s.itemId > 0">
+            <ItemRecipeIcon :name="itemsMap.get(s.itemId)!.icon"/>
+            <div class="num">上限：{{s.max}}</div>
+            <div>
+                <div class="role" :class="roleClass.get(s.localRole)">本地{{roleText.get(s.localRole)}}</div>
+                <div v-if="inter" class="role" :class="roleClass.get(s.remoteRole)">星际{{roleText.get(s.remoteRole)}}</div>
+            </div>
+        </div>
+        <div class="station-storage" v-else>
+            <div class="icon-placeholder"></div>
+            <div class="placeholder">空栏位</div>
+        </div>
+    </template>
+</template>
+
+<script lang="ts" setup>
+import { computed, defineProps } from 'vue';
+import { BlueprintBuilding, LogisticRole, StationParameters } from '@/blueprint/parser';
+import ItemRecipeIcon from './ItemRecipeIcon.vue';
+import { itemsMap } from '@/data';
+import { isInterstellarStation } from '@/data/items';
+
+const props = defineProps<{
+    building: BlueprintBuilding,
+}>();
+
+const p = computed(() => props.building.parameters as StationParameters);
+
+const inter = computed(() => isInterstellarStation(props.building.itemId));
+
+const roleText = new Map([
+    [LogisticRole.None, '仓储'],
+    [LogisticRole.Demand, '需求'],
+    [LogisticRole.Supply, '供应'],
+])
+
+const roleClass = new Map([
+    [LogisticRole.None, 'role-none'],
+    [LogisticRole.Demand, 'role-demand'],
+    [LogisticRole.Supply, 'role-supply'],
+])
+</script>
+
+<style lang="scss">
+.station-storage {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 10px 0;
+
+    .num {
+        margin-left: 5px;
+        margin-right: auto;
+    }
+
+    .role {
+        padding: 2px 10px;
+        margin: 2px 0;
+        font-size: 0.8em;
+    }
+    .role-none {
+        background: #B2B2B2;
+    }
+    .role-demand {
+        background: #D98A59;
+    }
+    .role-supply {
+        background: #4A8BA8;
+    }
+
+    .icon-placeholder {
+        height: 2.5em;
+        width: 2.5em;
+        border-radius: 50%;
+        background: #e4e4e4;
+    }
+    .placeholder {
+        opacity: 0.3;
+        font-size: 1.8em;
+        text-align: center;
+        flex: auto;
+    }
+}
+</style>

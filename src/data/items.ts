@@ -19,6 +19,10 @@ export function isStation(id: number) {
     return id === 2103 || id === 2104;
 }
 
+export function isInterstellarStation(id: number) {
+    return id === 2104;
+}
+
 export function isSplitter(id: number) {
     return id === 2020;
 }

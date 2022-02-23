@@ -15,6 +15,7 @@ const props = defineProps<{
 
 const src = ref('');
 watchEffect(async () => {
+    src.value = '';
     src.value = (await import(/* webpackMode: "eager" */`@/assets/icons/item_recipe/${props.name}.png`)).default;
 });
 </script>
