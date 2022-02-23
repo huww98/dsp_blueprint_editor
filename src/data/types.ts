@@ -1,5 +1,6 @@
 export interface Item {
     id: number;
+    models: number[];
     name: string;
     icon: string;
 }

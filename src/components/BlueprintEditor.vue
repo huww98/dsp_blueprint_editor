@@ -88,10 +88,11 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			offset.premultiply(new Matrix4().makeTranslation(0, 0, thickness / 2));
 			const trans = new Matrix4();
 			for (let i = 0; i < belts.length; i++) {
-				trans.copy(transforms[belts[i].index][0]);
+				const b = belts[i];
+				trans.copy(transforms[b.index][0]);
 				trans.multiply(offset);
 				mesh.setMatrixAt(i, trans);
-				mesh.setColorAt(i, buildingMeta.get(belts[i].itemId)!.color);
+				mesh.setColorAt(i, buildingMeta.get(b.modelIndex)!.color);
 			}
 			mesh.instanceMatrix.needsUpdate = true;
 			mesh.instanceColor!.needsUpdate = true;
@@ -119,7 +120,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				trans.lookAt(pos1, pos2, pos1);
 				trans.premultiply(temp.makeTranslation(pos1.x, pos1.y, pos1.z));
 
-				const color = buildingMeta.get(b1.itemId)!.color;
+				const color = buildingMeta.get(b1.modelIndex)!.color;
 				addCargo(trans, color, len);
 
 				trans.multiply(temp.makeScale(1., 1., len));
@@ -146,10 +147,10 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		const temp = new Matrix4();
 		const trans = new Matrix4();
 		for (let i = 0; i < inserters.length; i++) {
-			const b1 = inserters[i];
+			const b = inserters[i];
 
-			const len = inserterTrans(transforms[b1.index], trans);
-			const color = buildingMeta.get(b1.itemId)!.color;
+			const len = inserterTrans(transforms[b.index], trans);
+			const color = buildingMeta.get(b.modelIndex)!.color;
 			addCargo(trans, color, len);
 
 			trans.multiply(temp.makeScale(1., 1., len));
@@ -168,7 +169,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		const trans = new Matrix4();
 		for (let i = 0; i < boxes.length; i++) {
 			const b = boxes[i];
-			const meta = buildingMeta.get(b.itemId);
+			const meta = buildingMeta.get(b.modelIndex);
 			if (meta === undefined)
 				continue
 			trans.multiplyMatrices(transforms[b.index][0], meta.unitBoxTrans);
@@ -207,7 +208,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		let base = iconInsterters.length;
 		for (let i = 0; i < iconBuildings.length; i++) {
 			const b = iconBuildings[i];
-			const meta = buildingMeta.get(b.itemId);
+			const meta = buildingMeta.get(b.modelIndex);
 			if (meta === undefined)
 				continue
 			const idx = i + base;
@@ -288,7 +289,7 @@ function buildBVH(transforms: Matrix4[][], buildings: BlueprintBuilding[]) {
 	const inserterOffset = new Matrix4().makeTranslation(0, 0, -0.5);
 
 	const selectBoxes = buildings.map((b, i) => {
-		const meta = buildingMeta.get(b.itemId)!;
+		const meta = buildingMeta.get(b.modelIndex)!;
 		const box = new Matrix4();
 		if (isInserter(b.itemId)) {
 			const len = inserterTrans(transforms[i], box);
