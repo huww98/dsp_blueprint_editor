@@ -1,4 +1,4 @@
-import { isSplitter } from "@/data/items";
+import { isBelt, isSplitter } from "@/data/items";
 import { BlueprintBuilding, IODir } from "./parser";
 
 export interface SplitterInfo {
@@ -19,20 +19,22 @@ export class BuildingInfo {
             }
         }
         for (const b of buildings) {
-            if (b.outputObjIdx >= 0) {
-                const si = this.splitterInfo.get(b.outputObjIdx)
-                if (si !== undefined) {
-                    const slot = si.slots[b.outputToSlot];
-                    slot.beltIndex = b.index;
-                    slot.dir = IODir.Input;
+            if (isBelt(b.itemId)) {
+                if (b.outputObjIdx >= 0) {
+                    const si = this.splitterInfo.get(b.outputObjIdx)
+                    if (si !== undefined) {
+                        const slot = si.slots[b.outputToSlot];
+                        slot.beltIndex = b.index;
+                        slot.dir = IODir.Input;
+                    }
                 }
-            }
-            if (b.inputObjIdx >= 0) {
-                const si = this.splitterInfo.get(b.inputObjIdx)
-                if (si !== undefined) {
-                    const slot = si.slots[b.inputFromSlot];
-                    slot.beltIndex = b.index;
-                    slot.dir = IODir.Output;
+                if (b.inputObjIdx >= 0) {
+                    const si = this.splitterInfo.get(b.inputObjIdx)
+                    if (si !== undefined) {
+                        const slot = si.slots[b.inputFromSlot];
+                        slot.beltIndex = b.index;
+                        slot.dir = IODir.Output;
+                    }
                 }
             }
         }

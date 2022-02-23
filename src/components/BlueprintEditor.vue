@@ -447,16 +447,22 @@ onMounted(() => {
 			b.value.buildings.cargos.cargoMove = (time % 1000) / 1000;
 		lastTimeStamp = time;
 		requestAnimationFrame(animate);
-		controls.update();
+		const cameraUpdated = controls.update();
 		dirLight.position.copy(camera.position);
 		renderer.render(scene, camera);
+		if (cameraUpdated) {
+			cameraPosVersion.value++;
+		}
 	}
 	requestAnimationFrame(animate);
 });
 
+const selectBoxes = computed(() => b.value?.bvh.boxes);
+const cameraPosVersion = ref(0);
 defineExpose({
-	selectBoxes: computed(() => b.value?.bvh.boxes),
-	cameraPos: computed(() => camera.matrixWorld),
+	selectBoxes,
+	camera,
+	cameraPosVersion,
 });
 </script>
 

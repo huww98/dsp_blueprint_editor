@@ -212,8 +212,6 @@ export class PlanetMapControls extends EventDispatcher {
         if (this.lastPosition.distanceToSquared(this.object.position) > EPS ||
             8 * (1 - this.lastQuaternion.dot(this.object.quaternion)) > EPS) {
 
-            this.dispatchEvent(PlanetMapControls.changeEvent);
-
             this.lastPosition.copy(this.object.position);
             this.lastQuaternion.copy(this.object.quaternion);
 
@@ -297,13 +295,11 @@ export class PlanetMapControls extends EventDispatcher {
         this.rotate(this.rotateDelta.x, this.rotateDelta.y);
 
         this.rotateStart.copy(this.rotateEnd);
-        this.update();
     }
 
 
     handleMouseWheel(event: WheelEvent) {
         this.dollyOut(Math.pow(this.wheelDollyBase, event.deltaY));
-        this.update();
     }
 
     private downKeys = new Set<string>();
@@ -312,7 +308,6 @@ export class PlanetMapControls extends EventDispatcher {
         if (event.code in this.keys) {
             this.downKeys.add(event.code);
             event.preventDefault();
-            this.update();
         }
     }
 
@@ -551,13 +546,11 @@ export class PlanetMapControls extends EventDispatcher {
                 if (!this.enableRotate)
                     return;
                 this.handleTouchMoveRotate(event);
-                this.update();
                 break;
             case STATE.TOUCH_DOLLY_ROTATE:
                 if (!this.enableDolly && !this.enableRotate)
                     return;
                 this.handleTouchMoveDollyRotate(event);
-                this.update();
                 break;
             default:
                 this.state = STATE.NONE;

@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <BlueprintEditor :blueprintData="data" v-model:selectedBuildingIndex="selectedBuildingIndex"
+    <BlueprintEditor ref="renderer" :blueprintData="data" v-model:selectedBuildingIndex="selectedBuildingIndex"
                      @update:selectedBuildingIndex="i => expandSidebar = i !== null" />
     <div class="sidebar" :class="{ expanded: expandSidebar }">
       <section>
@@ -38,7 +38,10 @@
         <h2>{{selectedBuildingItem!.name}} <small>#{{selectedBuilding.index}}</small></h2>
         <Recipe v-if="selectedBuilding.recipeId > 0" :recipeId="selectedBuilding.recipeId"/>
 
-        <SplitterInfo v-if="splitterInfo !== undefined" :info="splitterInfo" :building="selectedBuilding"/>
+        <SplitterInfo v-if="splitterInfo !== undefined && renderer"
+                      :info="splitterInfo" :building="selectedBuilding"
+                      :selectBox="renderer.selectBoxes![selectedBuilding.index]"
+                      :camera="renderer.camera" :cameraPosVersion="renderer.cameraPosVersion"/>
         <div v-else-if="selectedBuilding.filterId">
           过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}
         </div>
@@ -64,6 +67,8 @@ import ItemRecipeIcon from '@/components/ItemRecipeIcon.vue';
 import SplitterInfo from '@/components/SpitterInfo.vue';
 
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
+
+const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null)
 
 const bpStr = ref('');
 const data = shallowRef(null as BlueprintData | null);
