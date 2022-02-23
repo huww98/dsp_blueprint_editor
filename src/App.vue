@@ -64,9 +64,9 @@ import { BuildingInfo } from './blueprint/buildingInfo';
 
 import Recipe from '@/components/Recipe.vue';
 import ItemRecipeIcon from '@/components/ItemRecipeIcon.vue';
-import SplitterInfo from '@/components/SpitterInfo.vue';
 
-const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "editor" */'./components/BlueprintEditor.vue'));
+const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/SpitterInfo.vue'))
+const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
 
 const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null)
 
