@@ -13,6 +13,17 @@
             <div class="placeholder">空栏位</div>
         </div>
     </template>
+    <div class="station-params">
+        <div><label>最大充能功率</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
+        <div><label>运输机最远路程</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
+        <div v-if="inter"><label>运输船最远路程</label><span class="v">{{tripRangeOfShips}}</span></div>
+        <div v-if="inter"><label>轨道采集器</label><span class="v">{{truth(p.includeOrbitCollector)}}</span></div>
+        <div v-if="inter"><label>曲速启用路程</label><span class="v">{{p.warpEnableDistance / 40000}} AU</span></div>
+        <div v-if="inter"><label>翘曲器必备</label><span class="v">{{truth(p.warperNecessary)}}</span></div>
+        <div><label>运输机起送量</label><span class="v">{{p.deliveryAmountOfDrones}}%</span></div>
+        <div v-if="inter"><label>运输船起送量</label><span class="v">{{p.deliveryAmountOfShips}}%</span></div>
+        <div><label>输出货物集装数量</label><span class="v">{{p.pilerCount === 0 ? '使用科技上限' : p.pilerCount}}</span></div>
+    </div>
 </template>
 
 <script lang="ts" setup>
@@ -28,6 +39,14 @@ const props = defineProps<{
 
 const p = computed(() => props.building.parameters as StationParameters);
 
+const tripRangeOfShips = computed(() => {
+    const ly = p.value.tripRangeOfShips / 2400000.0;
+    if (ly > 9999.0)
+        return '∞';
+    else
+        return ly.toLocaleString([], { maximumFractionDigits: 0 }) + ' ly';
+})
+
 const inter = computed(() => isInterstellarStation(props.building.itemId));
 
 const roleText = new Map([
@@ -41,6 +60,8 @@ const roleClass = new Map([
     [LogisticRole.Demand, 'role-demand'],
     [LogisticRole.Supply, 'role-supply'],
 ])
+
+const truth = (v: boolean) => v ? '√' : '×';
 </script>
 
 <style lang="scss">
@@ -80,6 +101,21 @@ const roleClass = new Map([
         opacity: 0.3;
         font-size: 1.8em;
         text-align: center;
+        flex: auto;
+    }
+
+}
+.station-params {
+    >div {
+        display: flex;
+        flex-direction: row;
+    }
+    label {
+        display: inline-block;
+    }
+    .v {
+        display: inline-block;
+        text-align: right;
         flex: auto;
     }
 }

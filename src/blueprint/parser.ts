@@ -123,13 +123,33 @@ export interface StationParameters {
         remoteRole: LogisticRole;
     }[];
     slots: { dir: IODir; storageIdx: number; }[];
+
+    workEnergyPerTick: number;
+    tripRangeOfDrones: number;
+    tripRangeOfShips: number;
+    includeOrbitCollector: boolean;
+    warpEnableDistance: number;
+    warperNecessary: boolean;
+    deliveryAmountOfDrones: number;
+    deliveryAmountOfShips: number;
+    pilerCount: number;
 }
 
 function stationParamsParser(desc: typeof stationDesc) {
     return function (parameters: Int32Array) {
+        const base = 320;
         const result: StationParameters = {
             storage: [],
             slots: [],
+            workEnergyPerTick:      parameters[base + 0],
+            tripRangeOfDrones:      parameters[base + 1] / 100000000.0,
+            tripRangeOfShips:       parameters[base + 2] * 100.0,
+            includeOrbitCollector:  parameters[base + 3] > 0,
+            warpEnableDistance:     parameters[base + 4],
+            warperNecessary:        parameters[base + 5] > 0,
+            deliveryAmountOfDrones: parameters[base + 6],
+            deliveryAmountOfShips:  parameters[base + 7],
+            pilerCount:             parameters[base + 8],
         };
         {
             const base = 0, stride = 6;
