@@ -42,10 +42,16 @@
                       :info="splitterInfo" :building="selectedBuilding"
                       :model="renderer.getModel(selectedBuilding.index)!"
                       :camera="renderer.camera" :cameraPosVersion="renderer.cameraPosVersion"/>
-        <StationInfo v-else-if="isStation(selectedBuilding.itemId)"
-                     :building="selectedBuilding"/>
         <div v-else-if="selectedBuilding.filterId">
           过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}
+        </div>
+        <StationInfo v-if="isStation(selectedBuilding.itemId)"
+                     :building="selectedBuilding"/>
+        <div v-if="isLab(selectedBuilding.itemId)">
+          矩阵研究站模式：{{LabModeText}}
+        </div>
+        <div v-if="accModeText !== undefined">
+          增产效果：{{accModeText}}
         </div>
       </section>
       <footer>
@@ -57,9 +63,9 @@
 </template>
 
 <script setup lang="ts">
-import { BlueprintData, fromStr } from './blueprint/parser';
+import { BlueprintData, fromStr, LabParamerters, AssembleParamerters, AcceleratorMode, ResearchMode } from './blueprint/parser';
 import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
-import { itemsMap, isStation } from './data/items';
+import { itemsMap, isStation, isLab, allAssemblers } from './data/items';
 import { version } from '@/define';
 import { swStatus } from '@/registerServiceWorker';
 import { BuildingInfo } from './blueprint/buildingInfo';
@@ -105,6 +111,33 @@ const splitterInfo = computed(() => {
   if (selectedBuilding.value === null)
     return undefined;
   return buildingInfo.value!.splitterInfo.get(selectedBuilding.value.index)!
+})
+
+const labModeTexts = new Map([
+  [ResearchMode.None, '未选择模式'],
+  [ResearchMode.Compose, '矩阵合成'],
+  [ResearchMode.Research, '科研模式'],
+]);
+
+const accModeTexts = new Map([
+  [AcceleratorMode.ExtraOutput, '额外产出'],
+  [AcceleratorMode.Accelerate, '生产加速'],
+]);
+
+const LabModeText = computed(() => {
+  const mode = (selectedBuilding.value!.parameters as LabParamerters).researchMode;
+  return labModeTexts.get(mode)!;
+})
+const accModeText = computed(() => {
+  if (selectedBuilding.value === null)
+    return undefined;
+  const itemId = selectedBuilding.value.itemId
+  if(isLab(itemId) && (selectedBuilding.value!.parameters as LabParamerters).researchMode === ResearchMode.Compose ||
+      allAssemblers.has(itemId)) {
+    const mode = (selectedBuilding.value!.parameters as AssembleParamerters).acceleratorMode;
+    return accModeTexts.get(mode)!;
+  }
+  return undefined;
 })
 
 const bpStrShort = computed({

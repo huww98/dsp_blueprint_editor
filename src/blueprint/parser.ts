@@ -1,3 +1,4 @@
+import { allAssemblers } from '@/data/items';
 import pako from 'pako';
 
 export interface BlueprintArea {
@@ -188,13 +189,41 @@ function splitterParamParser(parameters: Int32Array) {
     return result;
 }
 
-type AllParameters = StationParameters | SplitterParameters;
+export enum AcceleratorMode { ExtraOutput, Accelerate }
+export enum ResearchMode { None, Compose, Research }
+
+export interface AssembleParamerters {
+    acceleratorMode: AcceleratorMode,
+}
+
+export interface LabParamerters extends AssembleParamerters {
+    researchMode: ResearchMode,
+}
+
+function labParamParser(parameters: Int32Array): LabParamerters {
+    return {
+        researchMode: parameters[0],
+        acceleratorMode: parameters[1],
+    }
+}
+
+function assembleParamParser(parameters: Int32Array): AssembleParamerters {
+    return {
+        acceleratorMode: parameters[0],
+    }
+}
+
+type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters;
 
 const parameterParsers = new Map<number, (p: Int32Array) => AllParameters>([
     [2103, stationParamsParser(stationDesc)],
     [2104, stationParamsParser(interstellarStationDesc)],
     [2020, splitterParamParser],
+    [2901, labParamParser],
 ]);
+for (const id of allAssemblers) {
+    parameterParsers.set(id, assembleParamParser);
+}
 
 function importBuilding(r: BufferReader): BlueprintBuilding {
     function readXYZ() {

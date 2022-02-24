@@ -26,9 +26,25 @@
     </div>
 </template>
 
+<script lang="ts">
+import { LogisticRole } from '@/blueprint/parser';
+
+const roleText = new Map([
+    [LogisticRole.None, '仓储'],
+    [LogisticRole.Demand, '需求'],
+    [LogisticRole.Supply, '供应'],
+])
+
+const roleClass = new Map([
+    [LogisticRole.None, 'role-none'],
+    [LogisticRole.Demand, 'role-demand'],
+    [LogisticRole.Supply, 'role-supply'],
+])
+</script>
+
 <script lang="ts" setup>
 import { computed, defineProps } from 'vue';
-import { BlueprintBuilding, LogisticRole, StationParameters } from '@/blueprint/parser';
+import { BlueprintBuilding, StationParameters } from '@/blueprint/parser';
 import ItemRecipeIcon from './ItemRecipeIcon.vue';
 import { itemsMap } from '@/data';
 import { isInterstellarStation } from '@/data/items';
@@ -48,18 +64,6 @@ const tripRangeOfShips = computed(() => {
 })
 
 const inter = computed(() => isInterstellarStation(props.building.itemId));
-
-const roleText = new Map([
-    [LogisticRole.None, '仓储'],
-    [LogisticRole.Demand, '需求'],
-    [LogisticRole.Supply, '供应'],
-])
-
-const roleClass = new Map([
-    [LogisticRole.None, 'role-none'],
-    [LogisticRole.Demand, 'role-demand'],
-    [LogisticRole.Supply, 'role-supply'],
-])
 
 const truth = (v: boolean) => v ? '√' : '×';
 </script>

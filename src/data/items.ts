@@ -26,3 +26,18 @@ export function isInterstellarStation(id: number) {
 export function isSplitter(id: number) {
     return id === 2020;
 }
+
+export function isLab(id: number) {
+    return id === 2901;
+}
+
+export const allAssemblers = new Set([
+    2303, // 制造台
+    2304,
+    2305,
+    2302, // 熔炉
+    2315,
+    2308, // 原油精炼厂
+    2309, // 化工厂
+    2310, // 对撞机
+]);
