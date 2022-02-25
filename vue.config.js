@@ -17,6 +17,11 @@ module.exports = defineConfig({
         },
       ],
     },
+    resolve: {
+      alias: {
+        three$: 'three/src/Three.js',
+      }
+    },
     plugins: [
       new webpack.DefinePlugin({
         VERSION: JSON.stringify(execSync('git describe --always --dirty', { encoding: 'utf8' })),
