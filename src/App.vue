@@ -55,7 +55,7 @@
         </div>
       </section>
       <footer>
-        {{version}} {{swStatus}}
+        {{version}} <SWStatus/>
       </footer>
     </div>
     <button class="expand-btn" :class="{ expanded: expandSidebar }" @click="expandSidebar = !expandSidebar"></button>
@@ -67,9 +67,9 @@ import { BlueprintData, fromStr, LabParamerters, AssembleParamerters, Accelerato
 import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
 import { itemsMap, isStation, isLab, allAssemblers } from './data/items';
 import { version } from '@/define';
-import { swStatus } from '@/registerServiceWorker';
 import { BuildingInfo } from './blueprint/buildingInfo';
 
+import SWStatus from '@/swStatus.vue';
 import Recipe from '@/components/Recipe.vue';
 import ItemRecipeIcon from '@/components/ItemRecipeIcon.vue';
 import StationInfo from './components/StationInfo.vue';
