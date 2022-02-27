@@ -238,7 +238,10 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				trans.multiplyMatrices(stationSlotTrans[j], stationIconTrans);
 				trans.premultiply(transforms[b.index][0]);
 				mesh.setMatrixAt(base, trans);
-				iconIds[base] = iconTexture.requestItemIcon(p.storage[s.storageIdx - 1].itemId);
+				const itemId = s.storageIdx === 6 ?
+						1210 /* 空间翘曲器 */ :
+						p.storage[s.storageIdx - 1].itemId;
+				iconIds[base] = iconTexture.requestItemIcon(itemId);
 				base++;
 			}
 		}
