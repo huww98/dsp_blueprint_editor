@@ -1,5 +1,6 @@
 import { allAssemblers } from '@/data/items';
 import pako from 'pako';
+import { digest } from './md5';
 
 export interface BlueprintArea {
     index: number;
@@ -87,6 +88,19 @@ function btoUint8Array(b: string) {
         arr[i] = b.charCodeAt(i);
     }
     return arr;
+}
+
+const uint8ToHex = new Array(0x100);
+for (let i = 0; i < uint8ToHex.length; i++) {
+    uint8ToHex[i] = i.toString(16).toUpperCase().padStart(2, '0');
+}
+function hex(buffer: ArrayBuffer) {
+    const view = new Uint8Array(buffer);
+    const hexBytes = new Array(view.length);
+    for (let i = 0; i < view.length; i++) {
+        hexBytes[i] = uint8ToHex[view[i]];
+    }
+    return hexBytes.join('');
 }
 
 function importArea(r: BufferReader): BlueprintArea {
@@ -269,7 +283,8 @@ export function fromStr(strData: string): BlueprintData {
     if (!strData.startsWith(START))
         throw Error('Invalid start');
 
-    const cells = strData.substring(START.length, strData.indexOf('"', START.length)).split(',');
+    const p1 = strData.indexOf('"', START.length);
+    const cells = strData.substring(START.length, p1).split(',');
     if (cells.length < 12)
         throw Error('Header too short');
     const header = {
@@ -281,10 +296,16 @@ export function fromStr(strData: string): BlueprintData {
         desc: decodeURIComponent(cells[11]),
     }
 
-    const encoded = strData.match(/"(.+)"/);
-    if (!encoded)
-        throw Error('Content not found')
-    const decoded = pako.inflate(btoUint8Array(atob(encoded[1])));
+    const p2 = strData.length - 33;
+    if (strData[p2] !== '"')
+        throw Error('Checksum not found')
+    const d = hex(digest(btoUint8Array(strData.substring(0, p2)).buffer));
+    const expectedD = strData.substring(p2 + 1);
+    if (d !== expectedD)
+        throw Error('Checksum mismatch')
+
+    const encoded = strData.substring(p1 + 1, p2);
+    const decoded = pako.inflate(btoUint8Array(atob(encoded)));
     const reader = new BufferReader(new DataView(decoded.buffer));
 
     const meta = {

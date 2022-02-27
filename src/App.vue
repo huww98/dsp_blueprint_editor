@@ -155,7 +155,7 @@ const bpStrShort = computed({
 watchEffect(() => {
   if (bpStr.value) {
     try {
-      data.value = fromStr(bpStr.value);
+      data.value = fromStr(bpStr.value.trim());
       parseErrorMessage.value = '';
     } catch(e) {
       parseErrorMessage.value = String(e);
