@@ -12,9 +12,10 @@ describe('findPosForAreas', () => {
             size: { x: 1, y: 1 },
         }];
         const pos = findPosForAreas(areas);
-        expect(pos).toEqual([{
+        expect(pos.areas).toEqual([{
             latitude: 105,
             longitude: 0,
+            segment: 160,
         }]);
     });
     test('1 area cross the equator', () => {
@@ -27,9 +28,10 @@ describe('findPosForAreas', () => {
             size: { x: 1, y: 1 },
         }];
         const pos = findPosForAreas(areas);
-        expect(pos).toEqual([{
+        expect(pos.areas).toEqual([{
             latitude: 0,
             longitude: 0,
+            segment: 200,
         }]);
     });
     test('root at high positive cross the equator', () => {
@@ -51,9 +53,9 @@ describe('findPosForAreas', () => {
             }
         ];
         const pos = findPosForAreas(areas);
-        expect(pos).toEqual([
-            { latitude: 77, longitude: 0 },
-            { latitude: 81, longitude: 0 },
+        expect(pos.areas).toEqual([
+            { latitude: 77, longitude: 0, segment: 200 },
+            { latitude: 81, longitude: 0, segment: 160 },
         ]);
     });
     test('root at high positive', () => {
@@ -75,9 +77,9 @@ describe('findPosForAreas', () => {
             }
         ];
         const pos = findPosForAreas(areas);
-        expect(pos).toEqual([
-            { latitude: 127, longitude: 0 },
-            { latitude: 131, longitude: 0 },
+        expect(pos.areas).toEqual([
+            { latitude: 127, longitude: 0, segment: 160 },
+            { latitude: 131, longitude: 0, segment: 120 },
         ]);
     });
     test('root at low positive', () => {
@@ -99,9 +101,9 @@ describe('findPosForAreas', () => {
             },
         ];
         const pos = findPosForAreas(areas);
-        expect(pos).toEqual([
-            { latitude: 127, longitude: 0 },
-            { latitude: 131, longitude: 0 },
+        expect(pos.areas).toEqual([
+            { latitude: 127, longitude: 0, segment: 160 },
+            { latitude: 131, longitude: 0, segment: 120 },
         ]);
     });
     test('root at negative', () => {
@@ -123,9 +125,9 @@ describe('findPosForAreas', () => {
             }
         ];
         const pos = findPosForAreas(areas);
-        expect(pos).toEqual([
-            { latitude: -160, longitude: 0 },
-            { latitude: -130, longitude: 0 },
+        expect(pos.areas).toEqual([
+            { latitude: -160, longitude: 0, segment: 120 },
+            { latitude: -130, longitude: 0, segment: 160 },
         ]);
     });
     test('multiple area cross the equator', () => {
@@ -168,12 +170,12 @@ describe('findPosForAreas', () => {
             }
         ];
         const pos = findPosForAreas(areas);
-        expect(pos).toEqual([
-            { latitude: -158, longitude: 1 },
-            { latitude: -155, longitude: 2 },
-            { latitude: -130, longitude: 2 },
-            { latitude: - 80, longitude: 3 },
-            { latitude:   81, longitude: 2 },
+        expect(pos.areas).toEqual([
+            { latitude: -158, longitude: 1, segment: 100 },
+            { latitude: -155, longitude: 2, segment: 120 },
+            { latitude: -130, longitude: 2, segment: 160 },
+            { latitude: - 80, longitude: 3, segment: 200 },
+            { latitude:   81, longitude: 2, segment: 160 },
         ]);
     })
 });
