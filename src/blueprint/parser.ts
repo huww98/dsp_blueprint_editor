@@ -58,28 +58,33 @@ export interface BlueprintData {
     buildings: BlueprintBuilding[];
 }
 
-class BufferReader {
-    private pos = 0;
-    constructor(private view: DataView) {}
+abstract class BufferIO {
+    protected pos = 0;
+    constructor(protected view: DataView) { }
 
-    private _get(func: (this: DataView, byteOffset: number, littleEndian: boolean) => number, size: number) {
-        const v = func.call(this.view, this.pos, true);
-        this.pos += size;
-        return v;
-    }
-
-    getUint8() { return this._get(this.view.getUint8, 1); }
-    getInt8()  { return this._get(this.view.getInt8,  1); }
-    getInt16() { return this._get(this.view.getInt16, 2); }
-    getInt32() { return this._get(this.view.getInt32, 4); }
-
-    getFloat32() { return this._get(this.view.getFloat32, 4); }
-
-    slice(length: number) {
-        const r = this.view.buffer.slice(this.pos, this.pos + length);
+    getView(length: number) {
+        const r = new DataView(this.view.buffer, this.view.byteOffset + this.pos, length);
         this.pos += length;
         return r;
     }
+}
+
+class BufferReader extends BufferIO {
+    getUint8() { const v = this.view.getUint8(this.pos);       this.pos += 1; return v }
+    getInt8()  { const v = this.view.getInt8(this.pos);        this.pos += 1; return v }
+    getInt16() { const v = this.view.getInt16(this.pos, true); this.pos += 2; return v }
+    getInt32() { const v = this.view.getInt32(this.pos, true); this.pos += 4; return v }
+
+    getFloat32() { const v = this.view.getFloat32(this.pos, true); this.pos += 4; return v }
+}
+
+class BufferWriter extends BufferIO {
+    setUint8(value: number) { this.view.setUint8(this.pos, value);       this.pos += 1; }
+    setInt8(value: number)  { this.view.setInt8(this.pos, value);        this.pos += 1; }
+    setInt16(value: number) { this.view.setInt16(this.pos, value, true); this.pos += 2; }
+    setInt32(value: number) { this.view.setInt32(this.pos, value, true); this.pos += 4; }
+
+    setFloat32(value: number) { this.view.setFloat32(this.pos, value, true); this.pos += 4; }
 }
 
 function btoUint8Array(b: string) {
@@ -88,6 +93,14 @@ function btoUint8Array(b: string) {
         arr[i] = b.charCodeAt(i);
     }
     return arr;
+}
+
+function Uint8ArrayTob(a: Uint8Array) {
+    let out = '';
+    for (let i = 0; i < a.length; i++) {
+        out += String.fromCharCode(a[i]);
+    }
+    return out;
 }
 
 const uint8ToHex = new Array(0x100);
@@ -120,6 +133,30 @@ function importArea(r: BufferReader): BlueprintArea {
     }
 }
 
+function exportArea(w: BufferWriter, area: BlueprintArea) {
+    w.setInt8(area.index);
+    w.setInt8(area.parentIndex);
+    w.setInt16(area.tropicAnchor);
+    w.setInt16(area.areaSegments);
+    w.setInt16(area.anchorLocalOffset.x);
+    w.setInt16(area.anchorLocalOffset.y);
+    w.setInt16(area.size.x);
+    w.setInt16(area.size.y);
+}
+
+interface ParamParser<TParam extends AllParameters> {
+    encodedSize(p: TParam): number;
+    encode(p: TParam, a: DataView): void;
+    decode(a: DataView): TParam;
+}
+
+function getParam(v: DataView, pos: number) {
+    return v.getInt32(pos * Int32Array.BYTES_PER_ELEMENT, true);
+}
+function setParam(v: DataView, pos: number, value: number) {
+    v.setInt32(pos * Int32Array.BYTES_PER_ELEMENT, value, true);
+}
+
 const stationDesc = {
     maxItemKind: 3,
 }
@@ -149,42 +186,74 @@ export interface StationParameters {
     pilerCount: number;
 }
 
-function stationParamsParser(desc: typeof stationDesc) {
-    return function (parameters: Int32Array) {
-        const base = 320;
-        const result: StationParameters = {
-            storage: [],
-            slots: [],
-            workEnergyPerTick:      parameters[base + 0],
-            tripRangeOfDrones:      parameters[base + 1] / 100000000.0,
-            tripRangeOfShips:       parameters[base + 2] * 100.0,
-            includeOrbitCollector:  parameters[base + 3] > 0,
-            warpEnableDistance:     parameters[base + 4],
-            warperNecessary:        parameters[base + 5] > 0,
-            deliveryAmountOfDrones: parameters[base + 6],
-            deliveryAmountOfShips:  parameters[base + 7],
-            pilerCount:             parameters[base + 8],
-        };
-        {
-            const base = 0, stride = 6;
-            for (let i = 0; i < desc.maxItemKind; i++) {
-                result.storage.push({
-                    itemId:     parameters[base + i * stride + 0],
-                    localRole:  parameters[base + i * stride + 1],
-                    remoteRole: parameters[base + i * stride + 2],
-                    max:        parameters[base + i * stride + 3],
-                });
+function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParameters> {
+    return {
+        encodedSize() { return 2048; },
+        encode(p, a) {
+            const base = 320;
+            setParam(a, base + 0, p.workEnergyPerTick);
+            setParam(a, base + 1, p.tripRangeOfDrones * 100000000.0);
+            setParam(a, base + 2, p.tripRangeOfShips / 100.0);
+            setParam(a, base + 3, p.includeOrbitCollector ? 1 : -1);
+            setParam(a, base + 4, p.warpEnableDistance);
+            setParam(a, base + 5, p.warperNecessary ? 1 : -1);
+            setParam(a, base + 6, p.deliveryAmountOfDrones);
+            setParam(a, base + 7, p.deliveryAmountOfShips);
+            setParam(a, base + 8, p.pilerCount);
+            {
+                const base = 0, stride = 6;
+                for (let i = 0; i < desc.maxItemKind; i++) {
+                    const s = p.storage[i];
+                    setParam(a, base + i * stride + 0, s.itemId);
+                    setParam(a, base + i * stride + 1, s.localRole);
+                    setParam(a, base + i * stride + 2, s.remoteRole);
+                    setParam(a, base + i * stride + 3, s.max);
+                }
+            } {
+                const base = 192, stride = 4;
+                for (let i = 0; i < 12; i++) {
+                    const s = p.slots[i];
+                    setParam(a, base + i * stride + 0, s.dir);
+                    setParam(a, base + i * stride + 1, s.storageIdx);
+                }
             }
-        } {
-            const base = 192, stride = 4;
-            for (let i = 0; i < 12; i++) {
-                result.slots.push({
-                    dir:        parameters[base + i * stride + 0],
-                    storageIdx: parameters[base + i * stride + 1],
-                })
+        },
+        decode(a) {
+            const base = 320;
+            const result: StationParameters = {
+                storage: [],
+                slots: [],
+                workEnergyPerTick:      getParam(a, base + 0),
+                tripRangeOfDrones:      getParam(a, base + 1) / 100000000.0,
+                tripRangeOfShips:       getParam(a, base + 2) * 100.0,
+                includeOrbitCollector:  getParam(a, base + 3) > 0,
+                warpEnableDistance:     getParam(a, base + 4),
+                warperNecessary:        getParam(a, base + 5) > 0,
+                deliveryAmountOfDrones: getParam(a, base + 6),
+                deliveryAmountOfShips:  getParam(a, base + 7),
+                pilerCount:             getParam(a, base + 8),
+            };
+            {
+                const base = 0, stride = 6;
+                for (let i = 0; i < desc.maxItemKind; i++) {
+                    result.storage.push({
+                        itemId:     getParam(a, base + i * stride + 0),
+                        localRole:  getParam(a, base + i * stride + 1),
+                        remoteRole: getParam(a, base + i * stride + 2),
+                        max:        getParam(a, base + i * stride + 3),
+                    });
+                }
+            } {
+                const base = 192, stride = 4;
+                for (let i = 0; i < 12; i++) {
+                    result.slots.push({
+                        dir:        getParam(a, base + i * stride + 0),
+                        storageIdx: getParam(a, base + i * stride + 1),
+                    })
+                }
             }
+            return result;
         }
-        return result;
     }
 }
 
@@ -192,14 +261,22 @@ export interface SplitterParameters {
     priority: boolean[];
 }
 
-function splitterParamParser(parameters: Int32Array) {
-    const result: SplitterParameters = {
-        priority: [],
-    };
-    for (let i = 0; i < 4; i++) {
-        result.priority[i] = parameters[i] > 0;
+const splitterParamParser: ParamParser<SplitterParameters> = {
+    encodedSize() { return 4; },
+    encode(p, a) {
+        for (let i = 0; i < 4; i++) {
+            setParam(a, i, p.priority[i] ? 1 : 0);
+        }
+    },
+    decode(a) {
+        const result: SplitterParameters = {
+            priority: [],
+        };
+        for (let i = 0; i < 4; i++) {
+            result.priority[i] = getParam(a, i) > 0;
+        }
+        return result;
     }
-    return result;
 }
 
 export enum AcceleratorMode { ExtraOutput, Accelerate }
@@ -213,22 +290,55 @@ export interface LabParamerters extends AssembleParamerters {
     researchMode: ResearchMode,
 }
 
-function labParamParser(parameters: Int32Array): LabParamerters {
-    return {
-        researchMode: parameters[0],
-        acceleratorMode: parameters[1],
+const labParamParser: ParamParser<LabParamerters> = {
+    encodedSize() { return 2; },
+    encode(p, a) {
+        setParam(a, 0, p.researchMode);
+        setParam(a, 1, p.acceleratorMode);
+    },
+    decode(a) {
+        return {
+            researchMode: getParam(a, 0),
+            acceleratorMode: getParam(a, 1),
+        }
     }
 }
 
-function assembleParamParser(parameters: Int32Array): AssembleParamerters {
-    return {
-        acceleratorMode: parameters[0],
-    }
+const assembleParamParser: ParamParser<AssembleParamerters> = {
+    encodedSize() { return 1; },
+    encode(p, a) {
+        setParam(a, 0, p.acceleratorMode);
+    },
+    decode(a) {
+        return {
+            acceleratorMode: getParam(a, 0),
+        };
+    },
 }
 
-type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters;
+interface UnknownParamerters {
+    parameters: Int32Array,
+}
 
-const parameterParsers = new Map<number, (p: Int32Array) => AllParameters>([
+const unknownParamParser: ParamParser<UnknownParamerters> = {
+    encodedSize(p) { return p.parameters.length; },
+    encode(p, a) {
+        for (let i = 0; i < p.parameters.length; i++)
+            setParam(a, i, p.parameters[i]);
+    },
+    decode(a) {
+        const p: UnknownParamerters = {
+            parameters: new Int32Array(a.byteLength / Int32Array.BYTES_PER_ELEMENT),
+        };
+        for (let i = 0; i < p.parameters.length; i++)
+            p.parameters[i] = getParam(a, i);
+        return p;
+    },
+}
+
+type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters | UnknownParamerters;
+
+const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
     [2104, stationParamsParser(interstellarStationDesc)],
     [2020, splitterParamParser],
@@ -236,6 +346,13 @@ const parameterParsers = new Map<number, (p: Int32Array) => AllParameters>([
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);
+}
+
+function parserFor(itemId: number) {
+    const parser = parameterParsers.get(itemId);
+    if (parser !== undefined)
+        return parser;
+    return unknownParamParser;
 }
 
 function importBuilding(r: BufferReader): BlueprintBuilding {
@@ -266,14 +383,44 @@ function importBuilding(r: BufferReader): BlueprintBuilding {
         parameters: null,
     };
     const length = r.getInt16();
-    if (length) {
-        const p = r.slice(length * Int32Array.BYTES_PER_ELEMENT);
-        const parser = parameterParsers.get(b.itemId);
-        if (parser !== undefined) {
-            b.parameters = parser(new Int32Array(p));
-        }
+    if (length > 0) {
+        const p = r.getView(length * Int32Array.BYTES_PER_ELEMENT);
+        b.parameters = parserFor(b.itemId).decode(p);
     }
     return b;
+}
+
+function exportBuilding(w: BufferWriter, b: BlueprintBuilding) {
+    function writeXYZ(v: {x: number, y: number, z: number}) {
+        w.setFloat32(v.x);
+        w.setFloat32(v.y);
+        w.setFloat32(v.z);
+    }
+    w.setInt32(b.index);
+    w.setInt8(b.areaIndex);
+    writeXYZ(b.localOffset[0]); writeXYZ(b.localOffset[1]);
+    w.setFloat32(b.yaw[0]); w.setFloat32(b.yaw[1]);
+    w.setInt16(b.itemId);
+    w.setInt16(b.modelIndex);
+    w.setInt32(b.outputObjIdx);
+    w.setInt32(b.inputObjIdx);
+    w.setInt8(b.outputToSlot);
+    w.setInt8(b.inputFromSlot);
+    w.setInt8(b.outputFromSlot);
+    w.setInt8(b.inputToSlot);
+    w.setInt8(b.outputOffset);
+    w.setInt8(b.inputOffset);
+    w.setInt16(b.recipeId);
+    w.setInt16(b.filterId);
+
+    if (b.parameters !== null) {
+        const parser = parserFor(b.itemId);
+        const length = parser.encodedSize(b.parameters);
+        w.setInt16(length);
+        parser.encode(b.parameters, w.getView(length * Int32Array.BYTES_PER_ELEMENT));
+    } else {
+        w.setInt16(0);
+    }
 }
 
 const START = 'BLUEPRINT:';
@@ -305,7 +452,7 @@ export function fromStr(strData: string): BlueprintData {
         throw Error('Checksum mismatch')
 
     const encoded = strData.substring(p1 + 1, p2);
-    const decoded = pako.inflate(btoUint8Array(atob(encoded)));
+    const decoded = pako.ungzip(btoUint8Array(atob(encoded)));
     const reader = new BufferReader(new DataView(decoded.buffer));
 
     const meta = {
@@ -338,4 +485,65 @@ export function fromStr(strData: string): BlueprintData {
         areas,
         buildings,
     };
+}
+
+function encodedSize(bp: BlueprintData): number {
+    let result = 28 // meta
+        + 1 // numAreas
+        + 14 * bp.areas.length
+        + 4 // numBuildings
+        + 61 * bp.buildings.length;
+    for (const b of bp.buildings) {
+        if (b.parameters === null)
+            continue;
+        const parser = parserFor(b.itemId);
+        result += parser.encodedSize(b.parameters) * Int32Array.BYTES_PER_ELEMENT;
+    }
+    return result;
+}
+
+export function toStr(bp: BlueprintData): string {
+    let result = START;
+    result += '0,';
+    result += bp.header.layout;
+    result += ',';
+    for (const i of bp.header.icons) {
+        result += i;
+        result += ',';
+    }
+    result += '0,';
+    result += (bp.header.time.getTime() - TIME_BASE) * 10000;
+    result += ',';
+    result += bp.header.gameVersion;
+    result += ',';
+    result += encodeURIComponent(bp.header.shortDesc);
+    result += ',';
+    result += encodeURIComponent(bp.header.desc);
+    result += '"';
+
+    const decoded = new Uint8Array(encodedSize(bp));
+    const writer = new BufferWriter(new DataView(decoded.buffer));
+    writer.setInt32(bp.version);
+    writer.setInt32(bp.cursorOffset.x);
+    writer.setInt32(bp.cursorOffset.y);
+    writer.setInt32(bp.cursorTargetArea);
+    writer.setInt32(bp.dragBoxSize.x);
+    writer.setInt32(bp.dragBoxSize.y);
+    writer.setInt32(bp.primaryAreaIdx);
+
+    writer.setUint8(bp.areas.length);
+    for (const a of bp.areas)
+        exportArea(writer, a);
+
+    writer.setInt32(bp.buildings.length);
+    for (const b of bp.buildings)
+        exportBuilding(writer, b);
+
+    result += btoa(Uint8ArrayTob(pako.gzip(decoded)));
+    const d = hex(digest(btoUint8Array(result).buffer));
+
+    result += '"'
+    result += d;
+
+    return result;
 }
