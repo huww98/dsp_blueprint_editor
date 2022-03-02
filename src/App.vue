@@ -5,11 +5,13 @@
     <div class="sidebar" :class="{ expanded: expandSidebar }">
       <section>
         <label for="shortDesc">缩略图文字</label>
-        <input type="text" id="shortDesc" disabled :value="data?.header.shortDesc">
+        <input type="text" id="shortDesc" :disabled="!data"
+               :value="data?.header.shortDesc" @input="e => data!.header.shortDesc = (e.target as HTMLInputElement).value">
       </section>
       <section>
         <label for="desc">蓝图介绍</label>
-        <textarea rows="2" id="desc" disabled :value="data?.header.desc"></textarea>
+        <textarea rows="2" id="desc" :disabled="!data"
+                  :value="data?.header.desc" @input="e => data!.header.desc = (e.target as HTMLInputElement).value"></textarea>
       </section>
       <section>
         <div class="row">
@@ -18,8 +20,9 @@
           <button style="margin: 0 2px;" @click="copy" :disabled="working || !bpStr">复制</button>
           <button style="margin: 0 2px;" @click="paste" :disabled="working">粘贴</button>
         </div>
-        <textarea rows="3" id="bp-str" @copy="onCopy" @cut="onCut" @paste="onPaste" v-model.lazy.trim="bpStrShort"></textarea>
-        <button @click="bpStr = ''" style="width: 100%; position: relative;" :disabled="working">
+        <textarea rows="3" id="bp-str" @copy="onCopy" @cut="onCut" @paste="onPaste" @focus="encodeBp"
+                  v-model="bpStrInput" @change="e => parseBp((e.target as HTMLTextAreaElement).value)"></textarea>
+        <button @click="parseBp('')" style="width: 100%; position: relative;" :disabled="working">
           {{bpStr ? "清空" : "选择文件"}}
           <input v-if="!bpStr" @change="onBpFile" :disabled="working"
                  type="file" id="blueprint-file" style="position: absolute; inset: 0; opacity: 0;" accept="text/plain">
@@ -63,8 +66,8 @@
 </template>
 
 <script setup lang="ts">
-import { BlueprintData, fromStr, LabParamerters, AssembleParamerters, AcceleratorMode, ResearchMode } from './blueprint/parser';
-import { computed, defineAsyncComponent, ref, shallowRef, watchEffect } from 'vue';
+import { BlueprintData, fromStr, LabParamerters, AssembleParamerters, AcceleratorMode, ResearchMode, toStr } from './blueprint/parser';
+import { computed, defineAsyncComponent, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
 import { itemsMap, isStation, isLab, allAssemblers } from './data/items';
 import { version } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
@@ -84,6 +87,7 @@ const data = shallowRef(null as BlueprintData | null);
 const expandSidebar = ref(true);
 const working = ref(false);
 const notSupport = ref(false);
+const codeExpired = ref(false);
 const parseErrorMessage = ref('');
 const selectedBuildingIndex = ref(null as number | null);
 
@@ -140,23 +144,37 @@ const accModeText = computed(() => {
   return undefined;
 })
 
-const bpStrShort = computed({
-  get() {
-    const len = bpStr.value.length
-    if (len < 1000)
-      return bpStr.value;
-    return bpStr.value.substring(0, 400) + '\n...\n' + bpStr.value.substring(len - 400, len);
-  },
-  set(s: string) {
-    bpStr.value = s;
-  }
+const encodeBp = () => {
+  if (!codeExpired.value || !data.value)
+    return;
+  bpStr.value = toStr(data.value)
+  codeExpired.value = false;
+}
+const bpStrLatest = () => {
+  encodeBp();
+  return bpStr.value;
+}
+
+const bpStrInput = ref('');
+const bpStrDisplay = () => {
+  if (codeExpired.value)
+    return 'BLUEPRINT:...';
+  const len = bpStr.value.length
+  if (len < 1000)
+    return bpStr.value;
+  return bpStr.value.substring(0, 400) + '\n...\n' + bpStr.value.substring(len - 400, len);
+}
+watchEffect(() => {
+  bpStrInput.value = bpStrDisplay();
 });
 
-watchEffect(() => {
-  if (bpStr.value) {
+const parseBp = (s: string) => {
+  if (s) {
     try {
-      data.value = fromStr(bpStr.value.trim());
+      data.value = shallowReactive(fromStr(s.trim()));
+      data.value.header = reactive(data.value.header);
       parseErrorMessage.value = '';
+      watch(data.value, () => codeExpired.value = true);
     } catch(e) {
       parseErrorMessage.value = String(e);
     }
@@ -165,13 +183,15 @@ watchEffect(() => {
     parseErrorMessage.value = '';
   }
   selectedBuildingIndex.value = null;
-});
+  bpStr.value = s;
+  codeExpired.value = false;
+}
 
 const onBpFile = async (e: Event) => {
   const input = e.target as HTMLInputElement;
   if (input.files && input.files[0]) {
     working.value = true;
-    bpStr.value = await input.files[0].text();
+    parseBp(await input.files[0].text());
     working.value = false;
   }
   input.value = '';
@@ -181,15 +201,15 @@ const onCopy = (e: ClipboardEvent) => {
   if (!e.clipboardData)
     return;
   e.preventDefault();
-  e.clipboardData.setData('text/plain', bpStr.value);
+  e.clipboardData.setData('text/plain', bpStrLatest());
 }
 
 const onCut = (e: ClipboardEvent) => {
   if (!e.clipboardData)
     return;
   e.preventDefault();
-  e.clipboardData.setData('text/plain', bpStr.value);
-  bpStr.value = '';
+  e.clipboardData.setData('text/plain', bpStrLatest());
+  parseBp('');
 }
 
 const onPaste = (e: ClipboardEvent) => {
@@ -197,13 +217,14 @@ const onPaste = (e: ClipboardEvent) => {
     return;
   e.preventDefault();
   (e.target as HTMLElement).blur();
-  bpStr.value = e.clipboardData.getData('text/plain');
+  parseBp(e.clipboardData.getData('text/plain'));
 }
 
 const copy = async () => {
   working.value = true;
   try {
-    await navigator.clipboard.writeText(bpStr.value);
+    await navigator.clipboard.writeText(bpStrLatest());
+    notSupport.value = false;
   } catch {
     notSupport.value = true;
   }
@@ -213,7 +234,8 @@ const copy = async () => {
 const paste = async () => {
   working.value = true;
   try {
-    bpStr.value = await navigator.clipboard.readText();
+    parseBp(await navigator.clipboard.readText());
+    notSupport.value = false;
   } catch {
     notSupport.value = true;
   }
