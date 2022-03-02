@@ -17,16 +17,21 @@
         <div class="row">
           <label for="bp-str" style="margin-right: auto;">代码</label>
           <span class="error" v-if="notSupport">不支持，请手动复制</span>
-          <button style="margin: 0 2px;" @click="copy" :disabled="working || !bpStr">复制</button>
-          <button style="margin: 0 2px;" @click="paste" :disabled="working">粘贴</button>
+          <button style="margin-left: 4px;" @click="copy" :disabled="working || !bpStr">复制</button>
+          <button style="margin-left: 4px;" @click="paste" :disabled="working">粘贴</button>
         </div>
         <textarea rows="3" id="bp-str" @copy="onCopy" @cut="onCut" @paste="onPaste" @focus="encodeBp"
                   v-model="bpStrInput" @change="e => parseBp((e.target as HTMLTextAreaElement).value)"></textarea>
-        <button @click="parseBp('')" style="width: 100%; position: relative;" :disabled="working">
-          {{bpStr ? "清空" : "选择文件"}}
-          <input v-if="!bpStr" @change="onBpFile" :disabled="working"
-                 type="file" id="blueprint-file" style="position: absolute; inset: 0; opacity: 0;" accept="text/plain">
-        </button>
+        <div class="row" style="align-items: stretch; column-gap: 4px;">
+          <button @click="parseBp('')" style="position: relative; flex: auto; width: 50px;" :disabled="working">
+            {{bpStr ? "清空" : "选择文件"}}
+            <input v-if="!bpStr" @change="onBpFile" :disabled="working"
+                   type="file" id="blueprint-file" style="position: absolute; inset: 0; opacity: 0;" accept="text/plain">
+          </button>
+          <a class="button" style="flex: auto; width: 50px;" :download="data!.header.shortDesc + '.txt'" v-if="!working && bpUrl" :href="bpUrl">
+            保存文件
+          </a>
+        </div>
         <div class="error">{{parseErrorMessage}}</div>
       </section>
       <section>
@@ -167,6 +172,16 @@ const bpStrDisplay = () => {
 watchEffect(() => {
   bpStrInput.value = bpStrDisplay();
 });
+
+const bpUrl = ref('');
+watchEffect(onCleanup => {
+  if (bpStr.value) {
+    const url = bpUrl.value = URL.createObjectURL(new Blob([bpStr.value], {type: 'text/plain'}));
+    onCleanup(() => URL.revokeObjectURL(url));
+  } else {
+    bpUrl.value = '';
+  }
+})
 
 const parseBp = (s: string) => {
   if (s) {
@@ -317,13 +332,20 @@ body {
     color: red;
   }
 
-  button {
+  button, .button {
     color: inherit;
     background: #64A0DC;
     border: 0;
+    box-sizing: border-box;
+    font-size: 0.9em;
+    padding: 1px 4px;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
 
     &[disabled] {
       background: gray;
+      cursor: default;
     }
   }
 
