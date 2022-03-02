@@ -339,8 +339,10 @@ body {
     box-sizing: border-box;
     font-size: 0.9em;
     padding: 1px 4px;
+    margin: 0;
     text-decoration: none;
     text-align: center;
+    user-select: none;
     cursor: pointer;
 
     &[disabled] {
@@ -353,6 +355,7 @@ body {
     background: #FFFFFF40;
     border: 0;
     width: 100%;
+    font-size: 0.9em;
     box-sizing: border-box;
     resize: none;
     color: inherit;
