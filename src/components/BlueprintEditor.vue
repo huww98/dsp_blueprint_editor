@@ -13,6 +13,7 @@ import { BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser'
 import { findPosForAreas, gridAreas, calcBuildingTrans } from '@/blueprint/planet';
 import { buildingMeta, noIconBuildings, stationSlotTrans } from '@/data/building';
 import { isBelt, isInserter, isStation } from '@/data/items';
+import { itemIconId, recipeIconId } from '@/data/icons';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
 import { Cargos } from '@/cargos';
@@ -208,7 +209,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			const b = iconInsterters[i];
 			trans.multiplyMatrices(transforms[b.index][0], inserterIconTrans);
 			mesh.setMatrixAt(i, trans);
-			iconIds[i] = iconTexture.requestItemIcon(b.filterId);
+			iconIds[i] = iconTexture.requestIcon(itemIconId(b.filterId));
 		}
 		let base = iconInsterters.length;
 		for (let i = 0; i < iconBuildings.length; i++) {
@@ -219,7 +220,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			const idx = i + base;
 			trans.multiplyMatrices(transforms[b.index][0], meta.iconTrans);
 			mesh.setMatrixAt(idx, trans);
-			const iconId = b.recipeId > 0 ? iconTexture.requestRecipeIcon(b.recipeId) : iconTexture.requestItemIcon(b.itemId);
+			const iconId = iconTexture.requestIcon(b.recipeId > 0 ? recipeIconId(b.recipeId) : itemIconId(b.itemId));
 			iconIds[idx] = iconId;
 		}
 		base += iconBuildings.length;
@@ -241,7 +242,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				const itemId = s.storageIdx === 6 ?
 						1210 /* 空间翘曲器 */ :
 						p.storage[s.storageIdx - 1].itemId;
-				iconIds[base] = iconTexture.requestItemIcon(itemId);
+				iconIds[base] = iconTexture.requestIcon(itemIconId(itemId));
 				base++;
 			}
 		}

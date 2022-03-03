@@ -19,3 +19,12 @@ export interface Recipe {
     from: ItemStack[];
     to: ItemStack[];
 }
+
+export interface Tech {
+    id: number;
+}
+
+export interface Signal {
+    id: number;
+    gridPos: [row: number, column: number];
+}

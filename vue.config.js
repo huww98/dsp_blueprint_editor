@@ -12,7 +12,7 @@ module.exports = defineConfig({
           test: /\/assets\//,
           type: 'asset',
         }, {
-          test: /\/assets\/icons\/item_recipe\//,
+          test: /\/assets\/icons\/(item_recipe|signal|tech)\//,
           type: 'asset/resource',
         },
       ],

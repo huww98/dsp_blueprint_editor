@@ -32,6 +32,7 @@ import { BlueprintBuilding, IODir, SplitterParameters } from "@/blueprint/parser
 import { itemsMap } from '@/data';
 import { AmbientLight, BoxGeometry, Camera, DirectionalLight, Matrix4, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import { attachRenderer } from '@/utils';
+import { itemRecipeIconUrl } from '@/data/icons';
 
 const props = defineProps<{
     info: SplitterInfo,
@@ -93,7 +94,7 @@ watchEffect(async () => {
     if (props.building.filterId <= 0)
         return;
     const name = itemsMap.get(props.building.filterId)!.icon;
-    filterIcon.value = (await import(/* webpackMode: "eager" */`@/assets/icons/item_recipe/${name}.png`)).default;
+    filterIcon.value = await itemRecipeIconUrl(name);
 });
 
 const camera = new PerspectiveCamera(50.0);

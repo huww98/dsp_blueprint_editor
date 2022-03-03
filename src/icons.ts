@@ -1,4 +1,5 @@
 import { BufferGeometry, InstancedBufferAttribute, InstancedMesh, InterleavedBuffer, InterleavedBufferAttribute, UniformsUtils, ShaderMaterial, Texture, UniformsLib, Color, ShaderLib } from "three";
+import { IconTexture } from "./iconTexture";
 
 class IconsMaterial extends ShaderMaterial {
 	sizeAttenuation = true;
@@ -25,7 +26,7 @@ attribute int iconId;
 
 void main() {
 	#include <uv_vertex>
-	const ivec2 iMapSize = ivec2(16, 16);
+	const ivec2 iMapSize = ivec2(${IconTexture.WIDTH}, ${IconTexture.HEIGHT});
 	ivec2 iPosition = ivec2(iconId % iMapSize.x, iconId / iMapSize.x);
 	vUv = (vUv + vec2(iPosition)) / vec2(iMapSize);
 

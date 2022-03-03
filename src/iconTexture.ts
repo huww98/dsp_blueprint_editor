@@ -1,14 +1,16 @@
 import { TextureLoader, WebGLRenderer, Texture, RGBAFormat, UnsignedByteType, Vector2, DataTexture } from 'three';
-import { itemsMap, recipesMap } from '@/data';
+import { allIconIds, iconUrl } from './data/icons';
 
-const WIDTH = 16;
-const HEIGHT = 16;
+const WIDTH = 20;
+const HEIGHT = 20;
 const ICON_SIZE = 80;
 
 export class IconTexture {
+    static readonly WIDTH = WIDTH;
+    static readonly HEIGHT = HEIGHT;
+
     texture: Texture;
-    private itemIds = new Map<number, number>();
-    private recipeIds = new Map<number, number>();
+    private iconIds = new Map<number, number>();
     private loaded = new Array<boolean>(WIDTH * HEIGHT);
     private loader = new TextureLoader();
 
@@ -24,59 +26,35 @@ export class IconTexture {
         this.texture.needsUpdate = true;
         this.renderer.initTexture(this.texture);
 
-        let nextId = 0;
-        const getNextId = () => {
-            if (nextId >= WIDTH * HEIGHT)
+        let nextIndex = 0;
+        for (const i of allIconIds()) {
+            if (nextIndex >= WIDTH * HEIGHT)
                 throw new Error('IconTexture too small');
-            return nextId++;
-        }
-        for (const i of itemsMap.values())
-            this.itemIds.set(i.id, getNextId());
-
-        for (const r of recipesMap.values()) {
-            const iconId = r.icon === undefined ? this.itemIds.get(r.to[0].item.id)! : getNextId();
-            this.recipeIds.set(r.id, iconId);
+            this.iconIds.set(i, nextIndex);
+            nextIndex++;
         }
 
         for (let i = 0; i < this.loaded.length; i++)
             this.loaded[i] = false;
     }
 
-    private async loadItemRecipeIcon(iconId: number, name: string) {
-        const url = await import(/* webpackMode: "eager" */`@/assets/icons/item_recipe/${name}.png`);
-        const texture = await this.loader.loadAsync(url.default);
-        const pos = new Vector2(iconId % WIDTH, Math.floor(iconId / WIDTH));
-        pos.multiplyScalar(ICON_SIZE);
-        // console.log(pos, texture, this.texture);
-        this.renderer.copyTextureToTexture(pos, texture, this.texture);
-        texture.dispose();
-    }
+    requestIcon(iconId: number) {
+        const index = this.iconIds.get(iconId);
+        if (index === undefined)
+            throw new Error('unknown icon ' + iconId);
 
-    private requestIcon(iconId: number, loadFn: () => Promise<void>) {
         if (this.loaded[iconId])
-            return;
-
+            return index;
         this.loaded[iconId] = true;
-        loadFn();
-    }
 
-    requestItemIcon(itemId: number) {
-        const iconId = this.itemIds.get(itemId);
-        if (iconId === undefined)
-            throw new Error('unknown item ' + itemId);
-        this.requestIcon(iconId, () => this.loadItemRecipeIcon(iconId, itemsMap.get(itemId)!.icon));
-        return iconId;
-    }
+        (async () => {
+            const texture = await this.loader.loadAsync(await iconUrl(iconId));
+            const pos = new Vector2(index % WIDTH, Math.floor(index / WIDTH));
+            pos.multiplyScalar(ICON_SIZE);
+            this.renderer.copyTextureToTexture(pos, texture, this.texture);
+            texture.dispose();
+        })();
 
-    requestRecipeIcon(recipeId: number) {
-        const iconId = this.recipeIds.get(recipeId);
-        if (iconId === undefined)
-            throw new Error('unknown recipe ' + recipeId);
-
-        this.requestIcon(iconId, () => {
-            const r = recipesMap.get(recipeId)!;
-            return this.loadItemRecipeIcon(iconId, r.icon ?? itemsMap.get(r.to[0].item.id)!.icon);
-        });
-        return iconId;
+        return index;
     }
 }

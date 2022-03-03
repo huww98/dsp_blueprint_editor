@@ -7,6 +7,7 @@
 
 <script lang="ts" setup>
 import { ref, defineProps, watchEffect } from 'vue';
+import { itemRecipeIconUrl } from '@/data/icons';
 
 const props = defineProps<{
     name: string,
@@ -16,7 +17,7 @@ const props = defineProps<{
 const src = ref('');
 watchEffect(async () => {
     src.value = '';
-    src.value = (await import(/* webpackMode: "eager" */`@/assets/icons/item_recipe/${props.name}.png`)).default;
+    src.value = await itemRecipeIconUrl(props.name);
 });
 </script>
 
