@@ -201,6 +201,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 
 		const iconTexture = new IconTexture(renderer);
 		const mesh = new Icons(iconTexture.texture, count);
+		mesh.renderOrder = 10;
 		const trans = new Matrix4();
 		const iconIds = new Int32Array(count);
 

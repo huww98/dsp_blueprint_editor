@@ -51,7 +51,7 @@
                       :model="renderer.getModel(selectedBuilding.index)!"
                       :camera="renderer.camera" :cameraPosVersion="renderer.cameraPosVersion"/>
         <div v-else-if="selectedBuilding.filterId">
-          过滤器：<ItemRecipeIcon :name="selectedBuildingFilterItem!.icon" />{{selectedBuildingFilterItem!.name}}
+          过滤器：<Icon :icon-id="itemIconId(selectedBuilding.filterId)" :alt="selectedBuildingFilterItem!.name"/>{{selectedBuildingFilterItem!.name}}
         </div>
         <StationInfo v-if="isStation(selectedBuilding.itemId)"
                      :building="selectedBuilding"/>
@@ -60,6 +60,10 @@
         </div>
         <div v-if="accModeText !== undefined">
           增产效果：{{accModeText}}
+        </div>
+        <div v-if="selectedBeltIcon">
+          <Icon :icon-id="selectedBeltIcon.iconId" />
+          {{selectedBeltIcon.count}}
         </div>
       </section>
       <footer>
@@ -71,15 +75,16 @@
 </template>
 
 <script setup lang="ts">
-import { BlueprintData, fromStr, LabParamerters, AssembleParamerters, AcceleratorMode, ResearchMode, toStr } from './blueprint/parser';
 import { computed, defineAsyncComponent, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
-import { itemsMap, isStation, isLab, allAssemblers } from './data/items';
+import { BlueprintData, fromStr, LabParamerters, BeltParameters, AssembleParamerters, AcceleratorMode, ResearchMode, toStr } from '@/blueprint/parser';
+import { itemsMap, isStation, isLab, isBelt, allAssemblers } from '@/data/items';
+import { itemIconId } from '@/data/icons';
 import { version } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
 
 import SWStatus from '@/swStatus.vue';
 import Recipe from '@/components/Recipe.vue';
-import ItemRecipeIcon from '@/components/ItemRecipeIcon.vue';
+import Icon from '@/components/Icon.vue';
 import StationInfo from './components/StationInfo.vue';
 
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/SpitterInfo.vue'))
@@ -147,6 +152,11 @@ const accModeText = computed(() => {
     return accModeTexts.get(mode)!;
   }
   return undefined;
+})
+const selectedBeltIcon = computed(() => {
+  if (selectedBuilding.value && isBelt(selectedBuilding.value.itemId) && selectedBuilding.value.parameters)
+    return selectedBuilding.value.parameters as BeltParameters;
+  return null;
 })
 
 const encodeBp = () => {

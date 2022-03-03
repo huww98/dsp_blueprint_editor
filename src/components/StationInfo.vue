@@ -1,7 +1,7 @@
 <template>
     <template v-for="(s, i) in p.storage" :key="i">
         <div class="station-storage" v-if="s.itemId > 0">
-            <ItemRecipeIcon :name="itemsMap.get(s.itemId)!.icon"/>
+            <Icon :icon-id="itemIconId(s.itemId)" :alt="itemsMap.get(s.itemId)!.name"/>
             <div class="num">上限：{{s.max}}</div>
             <div>
                 <div class="role" :class="roleClass.get(s.localRole)">本地{{roleText.get(s.localRole)}}</div>
@@ -45,9 +45,10 @@ const roleClass = new Map([
 <script lang="ts" setup>
 import { computed, defineProps } from 'vue';
 import { BlueprintBuilding, StationParameters } from '@/blueprint/parser';
-import ItemRecipeIcon from './ItemRecipeIcon.vue';
+import Icon from './Icon.vue';
 import { itemsMap } from '@/data';
 import { isInterstellarStation } from '@/data/items';
+import { itemIconId } from '@/data/icons';
 
 const props = defineProps<{
     building: BlueprintBuilding,

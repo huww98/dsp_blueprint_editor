@@ -1,23 +1,24 @@
 <template>
     <div class="icon">
-        <img :src="src" :alt="props.name">
+        <img :src="src" :alt="props.alt">
         <div class="count">{{props.count === undefined || props.count === 1 ? '' : props.count}}</div>
     </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, defineProps, watchEffect } from 'vue';
-import { itemRecipeIconUrl } from '@/data/icons';
+import { iconUrl } from '@/data/icons';
 
 const props = defineProps<{
-    name: string,
+    iconId: number,
+    alt?: string,
     count?: number,
 }>();
 
 const src = ref('');
 watchEffect(async () => {
     src.value = '';
-    src.value = await itemRecipeIconUrl(props.name);
+    src.value = await iconUrl(props.iconId);
 });
 </script>
 
