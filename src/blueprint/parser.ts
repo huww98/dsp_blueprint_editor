@@ -316,6 +316,25 @@ const assembleParamParser: ParamParser<AssembleParamerters> = {
     },
 }
 
+export interface BeltParameters {
+    iconId: number;
+    count: number;
+}
+
+const beltParamParser: ParamParser<BeltParameters> = {
+    encodedSize() { return 2; },
+    encode(p, a) {
+        setParam(a, 0, p.iconId);
+        setParam(a, 1, p.count);
+    },
+    decode(a) {
+        return {
+            iconId: getParam(a, 0),
+            count: getParam(a, 1),
+        };
+    },
+}
+
 interface UnknownParamerters {
     parameters: Int32Array,
 }
@@ -336,13 +355,16 @@ const unknownParamParser: ParamParser<UnknownParamerters> = {
     },
 }
 
-type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters | UnknownParamerters;
+type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters | BeltParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
     [2104, stationParamsParser(interstellarStationDesc)],
     [2020, splitterParamParser],
     [2901, labParamParser],
+    [2001, beltParamParser],
+    [2002, beltParamParser],
+    [2003, beltParamParser],
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);
