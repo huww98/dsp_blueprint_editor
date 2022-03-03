@@ -9,7 +9,7 @@ import {
 	Matrix4, DirectionalLight, Vector3, Object3D, Color, Ray, Sphere,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
-import { BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser';
+import { BeltParameters, BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans } from '@/blueprint/planet';
 import { buildingMeta, noIconBuildings, stationSlotTrans } from '@/data/building';
 import { isBelt, isInserter, isStation } from '@/data/items';
@@ -186,8 +186,8 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		mesh.instanceColor!.needsUpdate = true;
 		return [mesh];
 	}
-	const buildIcons = (iconBuildings: BlueprintBuilding[], iconInsterters: BlueprintBuilding[], stations: BlueprintBuilding[]) => {
-		let count = iconBuildings.length + iconInsterters.length;
+	const buildIcons = (iconBuildings: BlueprintBuilding[], iconBelts: BlueprintBuilding[], iconInsterters: BlueprintBuilding[], stations: BlueprintBuilding[]) => {
+		let count = iconBuildings.length + iconBelts.length + iconInsterters.length;
 		for (const b of stations) {
 			if (b.parameters === null)
 				continue;
@@ -203,15 +203,30 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		const mesh = new Icons(iconTexture.texture, count);
 		const trans = new Matrix4();
 		const iconIds = new Int32Array(count);
-		const inserterIconTrans = new Matrix4().makeScale(0.9, 0.9, 1.);
+
+		let base = 0;
+		const beltIconTrans = new Matrix4().makeScale(1.1, 1.1, 1.);
+		beltIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., 0.5));
+		for (let i = 0; i < iconBelts.length; i++) {
+			const b = iconBelts[i];
+			trans.multiplyMatrices(transforms[b.index][0], beltIconTrans);
+			const idx = i + base;
+			mesh.setMatrixAt(idx, trans);
+			iconIds[idx] = iconTexture.requestIcon((b.parameters as BeltParameters).iconId);
+		}
+		base += iconBelts.length;
+
+		const inserterIconTrans = new Matrix4().makeScale(0.8, 0.8, 1.);
 		inserterIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., inserterHeight));
 		for (let i = 0; i < iconInsterters.length; i++) {
 			const b = iconInsterters[i];
 			trans.multiplyMatrices(transforms[b.index][0], inserterIconTrans);
-			mesh.setMatrixAt(i, trans);
-			iconIds[i] = iconTexture.requestIcon(itemIconId(b.filterId));
+			const idx = i + base;
+			mesh.setMatrixAt(idx, trans);
+			iconIds[idx] = iconTexture.requestIcon(itemIconId(b.filterId));
 		}
-		let base = iconInsterters.length;
+		base += iconInsterters.length
+
 		for (let i = 0; i < iconBuildings.length; i++) {
 			const b = iconBuildings[i];
 			const meta = buildingMeta.get(b.modelIndex);
@@ -225,8 +240,8 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		}
 		base += iconBuildings.length;
 
-		const stationIconTrans = new Matrix4().makeScale(0.9, 0.9, 1.);
-		stationIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., 0.4));
+		const stationIconTrans = new Matrix4().makeScale(1.1, 1.1, 1.);
+		stationIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., 0.6));
 		for (let i = 0; i < stations.length; i++) {
 			const b = stations[i];
 			if (b.parameters === null)
@@ -285,9 +300,10 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		allBuildings.add(...buildBoxes(boxes));
 
 	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
+	const iconBelts = belts.filter(b => b.parameters && (b.parameters as BeltParameters).iconId > 0);
 	const iconInsterters = inserters.filter(b => b.filterId > 0);
 	const stations = boxes.filter(b => isStation(b.itemId));
-	const icons = buildIcons(iconBuildings, iconInsterters, stations)
+	const icons = buildIcons(iconBuildings, iconBelts, iconInsterters, stations)
 	if (icons.length)
 		allBuildings.add(...icons);
 
