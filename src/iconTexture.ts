@@ -1,4 +1,4 @@
-import { TextureLoader, WebGLRenderer, Texture, RGBAFormat, UnsignedByteType, Vector2, DataTexture } from 'three';
+import { TextureLoader, WebGLRenderer, Texture, RGBAFormat, UnsignedByteType, Vector2 } from 'three';
 import { allIconIds, iconUrl } from './data/icons';
 
 const WIDTH = 20;
@@ -15,10 +15,10 @@ export class IconTexture {
     private loader = new TextureLoader();
 
     constructor(private renderer: WebGLRenderer) {
-        this.texture = new DataTexture(
-            new Uint8Array(WIDTH * ICON_SIZE * HEIGHT * ICON_SIZE * 4),
-            WIDTH * ICON_SIZE, HEIGHT * ICON_SIZE,
-        );
+        const emptyCanvas = document.createElement('canvas');
+        emptyCanvas.width = WIDTH * ICON_SIZE;
+        emptyCanvas.height = HEIGHT * ICON_SIZE;
+        this.texture = new Texture(emptyCanvas);
         this.texture.name = 'icons';
         this.texture.format = RGBAFormat;
         this.texture.type = UnsignedByteType;

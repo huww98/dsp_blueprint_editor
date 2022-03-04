@@ -347,7 +347,7 @@ body {
     background: #64A0DC;
     border: 0;
     box-sizing: border-box;
-    font-size: 0.9em;
+    font-size: 0.9rem;
     padding: 1px 4px;
     margin: 0;
     text-decoration: none;
@@ -365,7 +365,7 @@ body {
     background: #FFFFFF40;
     border: 0;
     width: 100%;
-    font-size: 0.9em;
+    font-size: 0.9rem;
     box-sizing: border-box;
     resize: none;
     color: inherit;

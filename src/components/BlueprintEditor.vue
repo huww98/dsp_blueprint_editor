@@ -9,10 +9,10 @@ import {
 	Matrix4, DirectionalLight, Vector3, Object3D, Color, Ray, Sphere,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
-import { BeltParameters, BlueprintBuilding, IODir, StationParameters } from '@/blueprint/parser';
+import { BeltParameters, BlueprintBuilding } from '@/blueprint/parser';
 import { findPosForAreas, gridAreas, calcBuildingTrans } from '@/blueprint/planet';
-import { buildingMeta, noIconBuildings, stationSlotTrans } from '@/data/building';
-import { isBelt, isInserter, isStation } from '@/data/items';
+import { buildingMeta, noIconBuildings } from '@/data/building';
+import { isBelt, isInserter } from '@/data/items';
 import { itemIconId, recipeIconId } from '@/data/icons';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
