@@ -16,6 +16,7 @@ import { isBelt, isInserter } from '@/data/items';
 import { itemIconId, recipeIconId } from '@/data/icons';
 import { IconTexture } from '@/iconTexture';
 import { Icons } from '@/icons';
+import { IconSubscript } from '@/iconSubscript';
 import { Cargos } from '@/cargos';
 import { BVH } from '@/bvh';
 
@@ -190,14 +191,39 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		let count = iconBuildings.length + iconBelts.length + iconInsterters.length;
 		if (count === 0)
 			return [];
+		let subscripts = new Map<BlueprintBuilding, string>();
+		for (const b of iconBelts) {
+			if (b.parameters === null)
+				continue;
+			const p = b.parameters as BeltParameters;
+			if (p.count === 0)
+				continue;
+			let s;
+			if (p.count >= 100000)
+				s = Math.floor(p.count / 1000).toFixed(0) + 'k';
+			else
+				s = p.count.toFixed(0);
+			subscripts.set(b, s);
+		}
 
 		const iconTexture = new IconTexture(renderer);
 		const mesh = new Icons(iconTexture.texture, count);
 		mesh.renderOrder = 10;
+
+		let subscriptsMesh: null | IconSubscript = null;
+		if (subscripts.size > 0) {
+			let numChars = 0;
+			for (const s of subscripts.values()) {
+				numChars += s.length;
+			}
+			subscriptsMesh = new IconSubscript(numChars);
+			subscriptsMesh.renderOrder = 11;
+		}
 		const trans = new Matrix4();
 		const pos = new Vector3();
 
 		let base = 0;
+		let subscriptIdx = 0;
 		const beltIconScale = new Vector2(1.1, 1.1);
 		const beltIconTrans = new Matrix4().makeTranslation(0., 0., 0.5);
 		for (let i = 0; i < iconBelts.length; i++) {
@@ -205,7 +231,14 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			trans.multiplyMatrices(transforms[b.index][0], beltIconTrans);
 			const idx = i + base;
 			const iconId = iconTexture.requestIcon((b.parameters as BeltParameters).iconId);
-			mesh.setIcon(idx, iconId, pos.setFromMatrixPosition(trans), beltIconScale);
+			pos.setFromMatrixPosition(trans);
+			mesh.setIcon(idx, iconId, pos, beltIconScale);
+
+			const sub = subscripts.get(b);
+			if (sub !== undefined) {
+				subscriptsMesh!.setText(subscriptIdx, pos, beltIconScale, sub);
+				subscriptIdx += sub.length;
+			}
 		}
 		base += iconBelts.length;
 
@@ -236,8 +269,13 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		}
 		base += iconBuildings.length;
 
+		const result: Object3D[] = [mesh];
 		mesh.needsUpdate();
-		return [mesh];
+		if (subscriptsMesh !== null) {
+			subscriptsMesh.needsUpdate();
+			result.push(subscriptsMesh);
+		}
+		return result;
 	}
 
 	const belts = buildings.filter(b => isBelt(b.itemId));

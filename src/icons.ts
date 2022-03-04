@@ -72,7 +72,8 @@ void main() {
         this.depthWrite = false;
         this.transparent = true;
         this.fog = true;
-	}
+        this.defaultAttributeValues.iconScale = Float32Array.of(1.0, 1.0);
+    }
 }
 
 export class IconGeometry extends BufferGeometry {
