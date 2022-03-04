@@ -2,28 +2,28 @@ import { BufferGeometry, InstancedBufferAttribute, InstancedMesh, InterleavedBuf
 import { IconTexture } from "./iconTexture";
 
 export class IconsMaterial extends ShaderMaterial {
-	sizeAttenuation = true;
+    sizeAttenuation = true;
 
     get map() { return this.uniforms.map.value as Texture; }
     set map(m: Texture) { this.uniforms.map.value = m; }
 
     get color() { return this.uniforms.diffuse.value as Color; }
-	set color(m: Color) { this.uniforms.diffuse.value = m; }
+    set color(m: Color) { this.uniforms.diffuse.value = m; }
 
-	get iMapSize() { return this.uniforms.iMapSize.value as Vector2; }
+    get iMapSize() { return this.uniforms.iMapSize.value as Vector2; }
     set iMapSize(m: Vector2) { this.uniforms.iMapSize.value = m; }
 
-	constructor(map: Texture) {
-		super({
+    constructor(map: Texture) {
+        super({
             uniforms: UniformsUtils.merge([
-				UniformsLib.common,
-				{
-					iMapSize: {
-						value: new Vector2(IconTexture.WIDTH, IconTexture.HEIGHT),
-					},
-				},
+                UniformsLib.common,
+                {
+                    iMapSize: {
+                        value: new Vector2(IconTexture.WIDTH, IconTexture.HEIGHT),
+                    },
+                },
             ]),
-			vertexShader: `
+            vertexShader: `
 attribute vec3 iconPos;
 attribute vec2 iconScale;
 
@@ -53,22 +53,22 @@ void main() {
 
 	mvPosition.xy += position.xy * scale + offset;
 
-    vec4 depthPosition = mvPosition;
-    depthPosition.z += 5.;
+	vec4 depthPosition = mvPosition;
+	depthPosition.z += 5.;
 
-    vec4 glDepthPosition = projectionMatrix * depthPosition;
+	vec4 glDepthPosition = projectionMatrix * depthPosition;
 	gl_Position = projectionMatrix * mvPosition;
-    gl_Position /= gl_Position.w;
-    gl_Position.z = glDepthPosition.z / glDepthPosition.w;
+	gl_Position /= gl_Position.w;
+	gl_Position.z = glDepthPosition.z / glDepthPosition.w;
 
 	#include <logdepthbuf_vertex>
 	#include <clipping_planes_vertex>
 	#include <fog_vertex>
 }`,
-			fragmentShader: ShaderLib.sprite.fragmentShader,
+            fragmentShader: ShaderLib.sprite.fragmentShader,
         });
         this.map = map;
-		this.depthTest = true;
+        this.depthTest = true;
         this.depthWrite = false;
         this.transparent = true;
         this.fog = true;
@@ -95,25 +95,25 @@ export class IconGeometry extends BufferGeometry {
 }
 
 export class Icons extends InstancedMesh {
-	constructor(map: Texture, length: number) {
-		const material = new IconsMaterial(map);
-		const geometry = new IconGeometry()
-		super(geometry, material, length);
+    constructor(map: Texture, length: number) {
+        const material = new IconsMaterial(map);
+        const geometry = new IconGeometry()
+        super(geometry, material, length);
 
-		this.geometry.setAttribute('iconId', new InstancedBufferAttribute(new Int32Array(length), 1));
-		this.geometry.setAttribute('iconPos', new InstancedBufferAttribute(new Float32Array(length * 3), 3));
-		this.geometry.setAttribute('iconScale', new InstancedBufferAttribute(new Float32Array(length * 2), 2));
-	}
+        this.geometry.setAttribute('iconId', new InstancedBufferAttribute(new Int32Array(length), 1));
+        this.geometry.setAttribute('iconPos', new InstancedBufferAttribute(new Float32Array(length * 3), 3));
+        this.geometry.setAttribute('iconScale', new InstancedBufferAttribute(new Float32Array(length * 2), 2));
+    }
 
-	setIcon(index: number, iconId: number, pos: Vector3, scale: Vector2) {
-		(this.geometry.getAttribute('iconId').array as Int32Array)[index] = iconId;
-		pos.toArray(this.geometry.getAttribute('iconPos').array, index * 3);
-		scale.toArray(this.geometry.getAttribute('iconScale').array, index * 2);
-	}
+    setIcon(index: number, iconId: number, pos: Vector3, scale: Vector2) {
+        (this.geometry.getAttribute('iconId').array as Int32Array)[index] = iconId;
+        pos.toArray(this.geometry.getAttribute('iconPos').array, index * 3);
+        scale.toArray(this.geometry.getAttribute('iconScale').array, index * 2);
+    }
 
-	needsUpdate() {
-		this.geometry.getAttribute('iconId').needsUpdate = true;
-		this.geometry.getAttribute('iconPos').needsUpdate = true;
-		this.geometry.getAttribute('iconScale').needsUpdate = true;
-	}
+    needsUpdate() {
+        this.geometry.getAttribute('iconId').needsUpdate = true;
+        this.geometry.getAttribute('iconPos').needsUpdate = true;
+        this.geometry.getAttribute('iconScale').needsUpdate = true;
+    }
 }
