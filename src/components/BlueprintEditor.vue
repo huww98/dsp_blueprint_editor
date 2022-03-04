@@ -186,16 +186,8 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		mesh.instanceColor!.needsUpdate = true;
 		return [mesh];
 	}
-	const buildIcons = (iconBuildings: BlueprintBuilding[], iconBelts: BlueprintBuilding[], iconInsterters: BlueprintBuilding[], stations: BlueprintBuilding[]) => {
+	const buildIcons = (iconBuildings: BlueprintBuilding[], iconBelts: BlueprintBuilding[], iconInsterters: BlueprintBuilding[]) => {
 		let count = iconBuildings.length + iconBelts.length + iconInsterters.length;
-		for (const b of stations) {
-			if (b.parameters === null)
-				continue;
-			for (const s of (b.parameters as StationParameters).slots) {
-				if (s.storageIdx > 0 && s.dir !== IODir.None)
-					count++;
-			}
-		}
 		if (count === 0)
 			return [];
 
@@ -241,28 +233,6 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		}
 		base += iconBuildings.length;
 
-		const stationIconTrans = new Matrix4().makeScale(1.1, 1.1, 1.);
-		stationIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., 0.6));
-		for (let i = 0; i < stations.length; i++) {
-			const b = stations[i];
-			if (b.parameters === null)
-				continue;
-			const p = b.parameters as StationParameters
-			for (let j = 0; j < p.slots.length; j++) {
-				const s = p.slots[j];
-				if (s.storageIdx <= 0 || s.dir === IODir.None)
-					continue;
-				trans.multiplyMatrices(stationSlotTrans[j], stationIconTrans);
-				trans.premultiply(transforms[b.index][0]);
-				mesh.setMatrixAt(base, trans);
-				const itemId = s.storageIdx === 6 ?
-						1210 /* 空间翘曲器 */ :
-						p.storage[s.storageIdx - 1].itemId;
-				iconIds[base] = iconTexture.requestIcon(itemIconId(itemId));
-				base++;
-			}
-		}
-
 		mesh.setIconIds(iconIds);
 		mesh.instanceMatrix.needsUpdate = true;
 		return [mesh];
@@ -303,8 +273,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
 	const iconBelts = belts.filter(b => b.parameters && (b.parameters as BeltParameters).iconId > 0);
 	const iconInsterters = inserters.filter(b => b.filterId > 0);
-	const stations = boxes.filter(b => isStation(b.itemId));
-	const icons = buildIcons(iconBuildings, iconBelts, iconInsterters, stations)
+	const icons = buildIcons(iconBuildings, iconBelts, iconInsterters)
 	if (icons.length)
 		allBuildings.add(...icons);
 
