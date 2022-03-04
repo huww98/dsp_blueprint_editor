@@ -66,7 +66,7 @@ const tripRangeOfShips = computed(() => {
 
 const inter = computed(() => isInterstellarStation(props.building.itemId));
 
-const truth = (v: boolean) => v ? '√' : '×';
+const truth = (v: boolean) => v ? '✓' : '✗';
 </script>
 
 <style lang="scss">
