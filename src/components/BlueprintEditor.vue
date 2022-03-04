@@ -6,7 +6,7 @@
 import {
 	Group, LineSegments, InstancedMesh, WebGLRenderer,
 	LineBasicMaterial, MeshStandardMaterial, MeshLambertMaterial, CylinderGeometry, BoxGeometry,
-	Matrix4, DirectionalLight, Vector3, Object3D, Color, Ray, Sphere,
+	Matrix4, DirectionalLight, Vector3, Object3D, Color, Ray, Sphere, Vector2,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BeltParameters, BlueprintBuilding } from '@/blueprint/parser';
@@ -195,31 +195,33 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		const mesh = new Icons(iconTexture.texture, count);
 		mesh.renderOrder = 10;
 		const trans = new Matrix4();
-		const iconIds = new Int32Array(count);
+		const pos = new Vector3();
 
 		let base = 0;
-		const beltIconTrans = new Matrix4().makeScale(1.1, 1.1, 1.);
-		beltIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., 0.5));
+		const beltIconScale = new Vector2(1.1, 1.1);
+		const beltIconTrans = new Matrix4().makeTranslation(0., 0., 0.5);
 		for (let i = 0; i < iconBelts.length; i++) {
 			const b = iconBelts[i];
 			trans.multiplyMatrices(transforms[b.index][0], beltIconTrans);
 			const idx = i + base;
-			mesh.setMatrixAt(idx, trans);
-			iconIds[idx] = iconTexture.requestIcon((b.parameters as BeltParameters).iconId);
+			const iconId = iconTexture.requestIcon((b.parameters as BeltParameters).iconId);
+			mesh.setIcon(idx, iconId, pos.setFromMatrixPosition(trans), beltIconScale);
 		}
 		base += iconBelts.length;
 
-		const inserterIconTrans = new Matrix4().makeScale(0.8, 0.8, 1.);
-		inserterIconTrans.premultiply(new Matrix4().makeTranslation(0., 0., inserterHeight));
+		const inserterIconScale = new Vector2(0.8, 0.8);
+		const inserterIconTrans = new Matrix4().makeTranslation(0., 0., inserterHeight);
 		for (let i = 0; i < iconInsterters.length; i++) {
 			const b = iconInsterters[i];
 			trans.multiplyMatrices(transforms[b.index][0], inserterIconTrans);
 			const idx = i + base;
-			mesh.setMatrixAt(idx, trans);
-			iconIds[idx] = iconTexture.requestIcon(itemIconId(b.filterId));
+			const iconId = iconTexture.requestIcon(itemIconId(b.filterId));
+			mesh.setIcon(idx, iconId, pos.setFromMatrixPosition(trans), inserterIconScale);
 		}
 		base += iconInsterters.length
 
+		const buildingIconScale3 = new Vector3();
+		const buildingIconScale = new Vector2();
 		for (let i = 0; i < iconBuildings.length; i++) {
 			const b = iconBuildings[i];
 			const meta = buildingMeta.get(b.modelIndex);
@@ -227,14 +229,14 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				continue
 			const idx = i + base;
 			trans.multiplyMatrices(transforms[b.index][0], meta.iconTrans);
-			mesh.setMatrixAt(idx, trans);
 			const iconId = iconTexture.requestIcon(b.recipeId > 0 ? recipeIconId(b.recipeId) : itemIconId(b.itemId));
-			iconIds[idx] = iconId;
+			buildingIconScale3.setFromMatrixScale(trans);
+			buildingIconScale.set(buildingIconScale3.x, buildingIconScale3.y);
+			mesh.setIcon(idx, iconId, pos.setFromMatrixPosition(trans), buildingIconScale);
 		}
 		base += iconBuildings.length;
 
-		mesh.setIconIds(iconIds);
-		mesh.instanceMatrix.needsUpdate = true;
+		mesh.needsUpdate();
 		return [mesh];
 	}
 

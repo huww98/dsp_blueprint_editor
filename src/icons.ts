@@ -1,22 +1,36 @@
-import { BufferGeometry, InstancedBufferAttribute, InstancedMesh, InterleavedBuffer, InterleavedBufferAttribute, UniformsUtils, ShaderMaterial, Texture, UniformsLib, Color, ShaderLib } from "three";
+import { BufferGeometry, InstancedBufferAttribute, InstancedMesh, InterleavedBuffer, InterleavedBufferAttribute, UniformsUtils, ShaderMaterial, Texture, UniformsLib, Color, ShaderLib, Vector2, Vector3 } from "three";
 import { IconTexture } from "./iconTexture";
 
-class IconsMaterial extends ShaderMaterial {
+export class IconsMaterial extends ShaderMaterial {
 	sizeAttenuation = true;
 
     get map() { return this.uniforms.map.value as Texture; }
     set map(m: Texture) { this.uniforms.map.value = m; }
 
     get color() { return this.uniforms.diffuse.value as Color; }
-    set color(m: Color) { this.uniforms.diffuse.value = m; }
+	set color(m: Color) { this.uniforms.diffuse.value = m; }
+
+	get iMapSize() { return this.uniforms.iMapSize.value as Vector2; }
+    set iMapSize(m: Vector2) { this.uniforms.iMapSize.value = m; }
 
 	constructor(map: Texture) {
 		super({
             uniforms: UniformsUtils.merge([
-                UniformsLib.common,
+				UniformsLib.common,
+				{
+					iMapSize: {
+						value: new Vector2(IconTexture.WIDTH, IconTexture.HEIGHT),
+					},
+				},
             ]),
 			vertexShader: `
+attribute vec3 iconPos;
+attribute vec2 iconScale;
+
 attribute int iconId;
+attribute vec2 offset;
+
+uniform ivec2 iMapSize;
 
 #include <common>
 #include <uv_pars_vertex>
@@ -26,30 +40,18 @@ attribute int iconId;
 
 void main() {
 	#include <uv_vertex>
-	const ivec2 iMapSize = ivec2(${IconTexture.WIDTH}, ${IconTexture.HEIGHT});
 	ivec2 iPosition = ivec2(iconId % iMapSize.x, iconId / iMapSize.x);
 	vUv = (vUv + vec2(iPosition)) / vec2(iMapSize);
 
-	vec4 mvPosition = vec4( 0.0, 0.0, 0.0, 1.0 );
-	#ifdef USE_INSTANCING
-		mvPosition = instanceMatrix * mvPosition;
-	#endif
-	mvPosition = modelViewMatrix * mvPosition;
+	vec4 mvPosition = modelViewMatrix * vec4(iconPos, 1.0);
 
-	mat3 worldMatrix = mat3(modelMatrix);
-	#ifdef USE_INSTANCING
-		worldMatrix *= mat3(instanceMatrix);
-	#endif
-	vec2 scale;
-	scale.x = length(worldMatrix[0]);
-	scale.y = length(worldMatrix[1]);
-
+	vec2 scale = iconScale;
 	#ifndef USE_SIZEATTENUATION
 		bool isPerspective = isPerspectiveMatrix( projectionMatrix );
 		if ( isPerspective ) scale *= - mvPosition.z;
 	#endif
 
-	mvPosition.xy += position.xy * scale;
+	mvPosition.xy += position.xy * scale + offset;
 
     vec4 depthPosition = mvPosition;
     depthPosition.z += 5.;
@@ -73,7 +75,7 @@ void main() {
 	}
 }
 
-class IconGeometry extends BufferGeometry {
+export class IconGeometry extends BufferGeometry {
     constructor() {
         super();
         const float32Array = new Float32Array([
@@ -92,14 +94,25 @@ class IconGeometry extends BufferGeometry {
 }
 
 export class Icons extends InstancedMesh {
-    static iconGeometry = new IconGeometry()
-
 	constructor(map: Texture, length: number) {
 		const material = new IconsMaterial(map);
-		super(Icons.iconGeometry, material, length);
+		const geometry = new IconGeometry()
+		super(geometry, material, length);
+
+		this.geometry.setAttribute('iconId', new InstancedBufferAttribute(new Int32Array(length), 1));
+		this.geometry.setAttribute('iconPos', new InstancedBufferAttribute(new Float32Array(length * 3), 3));
+		this.geometry.setAttribute('iconScale', new InstancedBufferAttribute(new Float32Array(length * 2), 2));
 	}
 
-	setIconIds(ids: Int32Array) {
-		this.geometry.setAttribute('iconId', new InstancedBufferAttribute(ids, 1));
+	setIcon(index: number, iconId: number, pos: Vector3, scale: Vector2) {
+		(this.geometry.getAttribute('iconId').array as Int32Array)[index] = iconId;
+		pos.toArray(this.geometry.getAttribute('iconPos').array, index * 3);
+		scale.toArray(this.geometry.getAttribute('iconScale').array, index * 2);
+	}
+
+	needsUpdate() {
+		this.geometry.getAttribute('iconId').needsUpdate = true;
+		this.geometry.getAttribute('iconPos').needsUpdate = true;
+		this.geometry.getAttribute('iconScale').needsUpdate = true;
 	}
 }
