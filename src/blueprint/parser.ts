@@ -370,6 +370,22 @@ const tankParamParser: ParamParser<TankParameters> = {
     },
 }
 
+export interface StorageParameters {
+    automationLimit: number
+}
+
+const storageParamParser: ParamParser<StorageParameters> = {
+    encodedSize() { return 1; },
+    encode(p, a) {
+        setParam(a, 0, p.automationLimit);
+    },
+    decode(a) {
+        return {
+            automationLimit: getParam(a, 0),
+        };
+    },
+}
+
 interface UnknownParamerters {
     parameters: Int32Array,
 }
@@ -391,7 +407,7 @@ const unknownParamParser: ParamParser<UnknownParamerters> = {
 }
 
 type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters |
-    BeltParameters | InserterParameters | TankParameters | UnknownParamerters;
+    BeltParameters | InserterParameters | TankParameters | StorageParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
@@ -404,6 +420,8 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2011, inserterParamParser],
     [2012, inserterParamParser],
     [2013, inserterParamParser],
+    [2101, storageParamParser],
+    [2102, storageParamParser],
     [2106, tankParamParser],
 ]);
 for (const id of allAssemblers) {

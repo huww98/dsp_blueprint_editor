@@ -31,6 +31,10 @@ export function isLab(id: number) {
     return id === 2901;
 }
 
+export function isStorage(id: number) {
+    return id === 2101 || id === 2102;
+}
+
 export function isTank(id: number) {
     return id === 2106
 }

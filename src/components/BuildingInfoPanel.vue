@@ -19,6 +19,9 @@
     <div v-if="isInserter(building.itemId)">
         分拣长度：{{ inserterParams.length }}
     </div>
+    <div class="building-params" v-if="isStorage(building.itemId)">
+        <div><label>自动化容量限制</label><span class="v">{{storageParams.automationLimit}}</span></div>
+    </div>
     <div class="tank-io" v-if="isTank(building.itemId)">
         <div :class="{opened: tankParams.output}">输出</div>
         <div :class="{opened: tankParams.input }">输入</div>
@@ -26,7 +29,7 @@
 </template>
 
 <script lang="ts">
-import { ResearchMode, AcceleratorMode, BlueprintBuilding, BeltParameters, InserterParameters } from '@/blueprint/parser';
+import { ResearchMode, AcceleratorMode, BlueprintBuilding, BeltParameters, InserterParameters, StorageParameters } from '@/blueprint/parser';
 
 const labModeTexts = new Map([
     [ResearchMode.None, '未选择模式'],
@@ -46,7 +49,7 @@ import { computed, defineAsyncComponent, defineProps } from 'vue';
 import { LabParamerters, AssembleParamerters, TankParameters } from '@/blueprint/parser';
 import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
-import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isTank } from '@/data/items';
+import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank } from '@/data/items';
 
 import Recipe from './Recipe.vue';
 import Icon from './Icon.vue';
@@ -94,13 +97,30 @@ const beltParams = computed(() => {
 const inserterParams = computed(() => {
     return props.building.parameters as InserterParameters;
 })
-
+const storageParams = computed(() => {
+    return props.building.parameters as StorageParameters;
+})
 const tankParams = computed(() => {
     return props.building.parameters as TankParameters;
 })
 </script>
 
 <style lang="scss">
+.building-params {
+    >div {
+        display: flex;
+        flex-direction: row;
+    }
+    label {
+        display: inline-block;
+    }
+    .v {
+        display: inline-block;
+        text-align: right;
+        flex: auto;
+    }
+}
+
 .tank-io {
     display: flex;
     flex-direction: row;

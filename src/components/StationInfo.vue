@@ -13,7 +13,7 @@
             <div class="placeholder">空栏位</div>
         </div>
     </template>
-    <div class="station-params">
+    <div class="building-params">
         <div><label>最大充能功率</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
         <div><label>运输机最远路程</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
         <div v-if="inter"><label>运输船最远路程</label><span class="v">{{tripRangeOfShips}}</span></div>
@@ -109,19 +109,5 @@ const truth = (v: boolean) => v ? '✓' : '✗';
         flex: auto;
     }
 
-}
-.station-params {
-    >div {
-        display: flex;
-        flex-direction: row;
-    }
-    label {
-        display: inline-block;
-    }
-    .v {
-        display: inline-block;
-        text-align: right;
-        flex: auto;
-    }
 }
 </style>
