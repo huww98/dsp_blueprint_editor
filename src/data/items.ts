@@ -31,6 +31,10 @@ export function isLab(id: number) {
     return id === 2901;
 }
 
+export function isTank(id: number) {
+    return id === 2106
+}
+
 export const allAssemblers = new Set([
     2303, // 制造台
     2304,

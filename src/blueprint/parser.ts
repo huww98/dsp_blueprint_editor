@@ -351,6 +351,25 @@ const inserterParamParser: ParamParser<InserterParameters> = {
     },
 }
 
+export interface TankParameters {
+    input: boolean;
+    output: boolean;
+}
+
+const tankParamParser: ParamParser<TankParameters> = {
+    encodedSize() { return 2; },
+    encode(p, a) {
+        setParam(a, 0, p.output ? 1 : -1);
+        setParam(a, 1, p.input ? 1 : -1);
+    },
+    decode(a) {
+        return {
+            output: getParam(a, 0) > 0,
+            input: getParam(a, 1) > 0,
+        };
+    },
+}
+
 interface UnknownParamerters {
     parameters: Int32Array,
 }
@@ -371,7 +390,8 @@ const unknownParamParser: ParamParser<UnknownParamerters> = {
     },
 }
 
-type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters | BeltParameters | InserterParameters | UnknownParamerters;
+type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters |
+    BeltParameters | InserterParameters | TankParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
@@ -384,6 +404,7 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2011, inserterParamParser],
     [2012, inserterParamParser],
     [2013, inserterParamParser],
+    [2106, tankParamParser],
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);

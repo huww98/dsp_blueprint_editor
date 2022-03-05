@@ -19,6 +19,10 @@
     <div v-if="isInserter(building.itemId)">
         分拣长度：{{ inserterParams.length }}
     </div>
+    <div class="tank-io" v-if="isTank(building.itemId)">
+        <div :class="{opened: tankParams.output}">输出</div>
+        <div :class="{opened: tankParams.input }">输入</div>
+    </div>
 </template>
 
 <script lang="ts">
@@ -39,10 +43,10 @@ const accModeTexts = new Map([
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, defineProps } from 'vue';
 
-import { LabParamerters, AssembleParamerters } from '@/blueprint/parser';
+import { LabParamerters, AssembleParamerters, TankParameters } from '@/blueprint/parser';
 import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
-import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter } from '@/data/items';
+import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isTank } from '@/data/items';
 
 import Recipe from './Recipe.vue';
 import Icon from './Icon.vue';
@@ -90,4 +94,36 @@ const beltParams = computed(() => {
 const inserterParams = computed(() => {
     return props.building.parameters as InserterParameters;
 })
+
+const tankParams = computed(() => {
+    return props.building.parameters as TankParameters;
+})
 </script>
+
+<style lang="scss">
+.tank-io {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+
+    div {
+        flex: auto;
+        width: 50px;
+        padding: 2px 10px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+
+        background: #B2B2B2;
+        &::after {
+            content: '关';
+        }
+        &.opened {
+            background: #4A8BA8;
+            &::after {
+                content: '开';
+            }
+        }
+    }
+}
+</style>
