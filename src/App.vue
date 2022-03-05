@@ -43,28 +43,7 @@
         </div>
       </section>
       <section v-if="selectedBuilding !== null">
-        <h2>{{selectedBuildingItem!.name}} <small>#{{selectedBuilding.index}}</small></h2>
-        <Recipe v-if="selectedBuilding.recipeId > 0" :recipeId="selectedBuilding.recipeId"/>
-
-        <SplitterInfo v-if="splitterInfo !== undefined && renderer"
-                      :info="splitterInfo" :building="selectedBuilding"
-                      :model="renderer.getModel(selectedBuilding.index)!"
-                      :camera="renderer.camera" :cameraPosVersion="renderer.cameraPosVersion"/>
-        <div v-else-if="selectedBuilding.filterId">
-          过滤器：<Icon :icon-id="itemIconId(selectedBuilding.filterId)" :alt="selectedBuildingFilterItem!.name"/>{{selectedBuildingFilterItem!.name}}
-        </div>
-        <StationInfo v-if="isStation(selectedBuilding.itemId)"
-                     :building="selectedBuilding"/>
-        <div v-if="isLab(selectedBuilding.itemId)">
-          矩阵研究站模式：{{LabModeText}}
-        </div>
-        <div v-if="accModeText !== undefined">
-          增产效果：{{accModeText}}
-        </div>
-        <div v-if="selectedBeltIcon">
-          <Icon :icon-id="selectedBeltIcon.iconId" />
-          {{selectedBeltIcon.count}}
-        </div>
+        <BuildingInfoPanel :building="selectedBuilding" :info="buildingInfo!"/>
       </section>
       <footer>
         {{version}} <SWStatus/>
@@ -75,22 +54,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
-import { BlueprintData, fromStr, LabParamerters, BeltParameters, AssembleParamerters, AcceleratorMode, ResearchMode, toStr } from '@/blueprint/parser';
-import { itemsMap, isStation, isLab, isBelt, allAssemblers } from '@/data/items';
-import { itemIconId } from '@/data/icons';
-import { version } from '@/define';
+import { computed, defineAsyncComponent, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
+import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
+import { version, rendererKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
 
+import BuildingInfoPanel from './components/BuildingInfoPanel.vue';
 import SWStatus from '@/swStatus.vue';
-import Recipe from '@/components/Recipe.vue';
-import Icon from '@/components/Icon.vue';
-import StationInfo from './components/StationInfo.vue';
-
-const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/SpitterInfo.vue'))
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
 
-const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null)
+const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);
+provide(rendererKey, renderer);
 
 const bpStr = ref('');
 const data = shallowRef(null as BlueprintData | null);
@@ -106,57 +80,10 @@ const selectedBuilding = computed(() => {
     return null;
   return data.value.buildings[selectedBuildingIndex.value];
 })
-const selectedBuildingItem = computed(() => {
-  if (selectedBuilding.value === null)
-    return null;
-  return itemsMap.get(selectedBuilding.value.itemId)!;
-})
-const selectedBuildingFilterItem = computed(() => {
-  if (selectedBuilding.value === null || selectedBuilding.value.filterId <= 0)
-    return null;
-  return itemsMap.get(selectedBuilding.value.filterId)!;
-})
 const buildingInfo = computed(() => {
   if (data.value === null)
     return null;
   return new BuildingInfo(data.value.buildings);
-})
-const splitterInfo = computed(() => {
-  if (selectedBuilding.value === null)
-    return undefined;
-  return buildingInfo.value!.splitterInfo.get(selectedBuilding.value.index)!
-})
-
-const labModeTexts = new Map([
-  [ResearchMode.None, '未选择模式'],
-  [ResearchMode.Compose, '矩阵合成'],
-  [ResearchMode.Research, '科研模式'],
-]);
-
-const accModeTexts = new Map([
-  [AcceleratorMode.ExtraOutput, '额外产出'],
-  [AcceleratorMode.Accelerate, '生产加速'],
-]);
-
-const LabModeText = computed(() => {
-  const mode = (selectedBuilding.value!.parameters as LabParamerters).researchMode;
-  return labModeTexts.get(mode)!;
-})
-const accModeText = computed(() => {
-  if (selectedBuilding.value === null)
-    return undefined;
-  const itemId = selectedBuilding.value.itemId
-  if(isLab(itemId) && (selectedBuilding.value!.parameters as LabParamerters).researchMode === ResearchMode.Compose ||
-      allAssemblers.has(itemId)) {
-    const mode = (selectedBuilding.value!.parameters as AssembleParamerters).acceleratorMode;
-    return accModeTexts.get(mode)!;
-  }
-  return undefined;
-})
-const selectedBeltIcon = computed(() => {
-  if (selectedBuilding.value && isBelt(selectedBuilding.value.itemId) && selectedBuilding.value.parameters)
-    return selectedBuilding.value.parameters as BeltParameters;
-  return null;
 })
 
 const encodeBp = () => {

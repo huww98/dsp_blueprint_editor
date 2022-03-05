@@ -26,21 +26,21 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, defineProps, ref, watch, watchEffect } from 'vue';
+import { computed, defineProps, inject, ref, watch, watchEffect } from 'vue';
 import { SplitterInfo } from '@/blueprint/buildingInfo';
 import { BlueprintBuilding, IODir, SplitterParameters } from "@/blueprint/parser";
 import { itemsMap } from '@/data';
-import { AmbientLight, BoxGeometry, Camera, DirectionalLight, Matrix4, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, BoxGeometry, DirectionalLight, Matrix4, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import { attachRenderer } from '@/utils';
 import { itemRecipeIconUrl } from '@/data/icons';
+import { rendererKey } from '@/define';
 
 const props = defineProps<{
     info: SplitterInfo,
     building: BlueprintBuilding,
-    model: Matrix4,
-    camera: Camera,
-    cameraPosVersion: number,
 }>();
+
+const mainRenderer = inject(rendererKey)!.value;
 
 const color = (i: number) => {
     return props.info.slots[i].dir === IODir.Input ? '#AFFFFF' : '#FCE88F';
@@ -48,8 +48,8 @@ const color = (i: number) => {
 
 const posFromCamera = computed(() => {
     const pos = new Matrix4();
-    props.cameraPosVersion;
-    pos.multiplyMatrices(props.camera.matrixWorldInverse, props.model);
+    mainRenderer.cameraPosVersion;
+    pos.multiplyMatrices(mainRenderer.camera.matrixWorldInverse, mainRenderer.getModel(props.building.index)!);
     return pos;
 });
 
