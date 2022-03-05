@@ -473,6 +473,75 @@ const energyExchangerParamParser: ParamParser<EnergyExchangerParameters> = {
     },
 }
 
+export interface MonitorParameters {
+    targetBeltId: number;
+    offset: number;
+    targetCargoAmount: number;
+    periodTicksCount: number;
+    passColorId: number;
+    failColorId: number;
+    passOperator: number;
+    alarmMode: number;
+    cargoFilter: number;
+    systemWarningMode: number;
+    systemWarningIconId: number;
+    tone: number;
+    volume: number;
+    pitch: number;
+    repeat: boolean;
+    length: number;
+    falloffRadius: [number, number];
+}
+
+const MonitorParamParser: ParamParser<MonitorParameters> = {
+    encodedSize() { return 128; },
+    encode(p, a) {
+        setParam(a, 0, p.targetBeltId);
+        setParam(a, 1, p.offset);
+        setParam(a, 2, p.targetCargoAmount);
+        setParam(a, 3, p.periodTicksCount);
+        setParam(a, 4, p.passOperator);
+        setParam(a, 5, p.passColorId);
+        setParam(a, 6, p.failColorId);
+        setParam(a, 14, p.cargoFilter);
+
+        setParam(a, 7, p.tone);
+        setParam(a, 8, p.volume);
+        setParam(a, 9, p.pitch);
+        setParam(a, 11, p.repeat ? 1 : 0);
+        setParam(a, 13, p.length * 10000);
+        setParam(a, 18, p.falloffRadius[0] * 10);
+        setParam(a, 19, p.falloffRadius[1] * 10);
+
+        setParam(a, 10, p.systemWarningMode);
+        setParam(a, 17, p.systemWarningIconId);
+        setParam(a, 12, p.alarmMode);
+    },
+    decode(a) {
+        return {
+            targetBeltId: getParam(a, 0),
+            offset: getParam(a, 1),
+            targetCargoAmount: getParam(a, 2),
+            periodTicksCount: getParam(a, 3),
+            passOperator: getParam(a, 4),
+            passColorId: getParam(a, 5),
+            failColorId: getParam(a, 6),
+            cargoFilter: getParam(a, 14),
+
+            tone: getParam(a, 7),
+            volume: getParam(a, 8),
+            pitch: getParam(a, 9),
+            repeat: getParam(a, 11) > 0,
+            length: getParam(a, 13) / 10000,
+            falloffRadius: [getParam(a, 18) / 10, getParam(a, 19) / 10],
+
+            systemWarningMode: getParam(a, 10),
+            systemWarningIconId: getParam(a, 17),
+            alarmMode: getParam(a, 12),
+        }
+    }
+}
+
 interface UnknownParamerters {
     parameters: Int32Array,
 }
@@ -493,9 +562,10 @@ const unknownParamParser: ParamParser<UnknownParamerters> = {
     },
 }
 
-type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters |
-    BeltParameters | InserterParameters | TankParameters | StorageParameters | EjectorParameters |
-    PowerGeneratorParameters | EnergyExchangerParameters | UnknownParamerters;
+type AllParameters = AssembleParamerters | StationParameters | AdvancedMiningMachineParameters |
+    SplitterParameters | LabParamerters | BeltParameters | InserterParameters |
+    TankParameters | StorageParameters | EjectorParameters |
+    PowerGeneratorParameters | EnergyExchangerParameters | MonitorParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
@@ -515,6 +585,7 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2311, ejectorParamParser],
     [2208, powerGeneratorParamParser],
     [2209, energyExchangerParamParser],
+    [2030, MonitorParamParser],
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);

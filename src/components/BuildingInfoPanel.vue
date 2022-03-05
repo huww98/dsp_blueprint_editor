@@ -7,6 +7,7 @@
         过滤器：<Icon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
     </div>
     <StationInfo v-if="isStation(building.itemId)" :building="building" />
+    <MonitorInfo v-if="isMonitor(building.itemId)" :building="building" />
     <div v-if="isLab(building.itemId)">
         矩阵研究站模式：{{ LabModeText }}
     </div>
@@ -68,11 +69,15 @@ import {
 } from '@/blueprint/parser';
 import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
-import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank, isEjector, isEnergyExchanger, isRayReciver } from '@/data/items';
+import {
+    isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank,
+    isEjector, isEnergyExchanger, isRayReciver, isMonitor
+} from '@/data/items';
 
 import Recipe from './Recipe.vue';
 import Icon from './Icon.vue';
 import StationInfo from './StationInfo.vue';
+import MonitorInfo from './MonitorInfo.vue';
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));
 
 const props = defineProps<{
@@ -126,9 +131,15 @@ const energyExchangerMode = computed(() => {
 
 <style lang="scss">
 .building-params {
-    >div {
+    >div, .p {
         display: flex;
         flex-direction: row;
+    }
+    .r {
+        gap: 10px;
+    }
+    .p {
+        gap: 5px;
     }
     label {
         display: inline-block;

@@ -28,3 +28,9 @@ export interface Signal {
     id: number;
     gridPos: [row: number, column: number];
 }
+
+export interface MIDI {
+    id: number;
+    isInstrument: boolean;
+    pitchRange: [number, number];
+}

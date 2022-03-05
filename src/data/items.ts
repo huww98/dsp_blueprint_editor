@@ -55,6 +55,10 @@ export function isAdvancedMiningMachine(id: number) {
     return id === 2316;
 }
 
+export function isMonitor(id: number) {
+    return id === 2030;
+}
+
 export const allAssemblers = new Set([
     2303, // 制造台
     2304,
