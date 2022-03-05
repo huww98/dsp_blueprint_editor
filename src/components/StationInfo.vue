@@ -14,20 +14,21 @@
         </div>
     </template>
     <div class="building-params">
-        <div><label>最大充能功率</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
-        <div><label>运输机最远路程</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
+        <div v-if="!collector"><label>最大充能功率</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
+        <div v-if="!collector"><label>运输机最远路程</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
         <div v-if="inter"><label>运输船最远路程</label><span class="v">{{tripRangeOfShips}}</span></div>
         <div v-if="inter"><label>轨道采集器</label><span class="v">{{truth(p.includeOrbitCollector)}}</span></div>
         <div v-if="inter"><label>曲速启用路程</label><span class="v">{{p.warpEnableDistance / 40000}} AU</span></div>
         <div v-if="inter"><label>翘曲器必备</label><span class="v">{{truth(p.warperNecessary)}}</span></div>
-        <div><label>运输机起送量</label><span class="v">{{p.deliveryAmountOfDrones}}%</span></div>
+        <div v-if="!collector"><label>运输机起送量</label><span class="v">{{p.deliveryAmountOfDrones}}%</span></div>
         <div v-if="inter"><label>运输船起送量</label><span class="v">{{p.deliveryAmountOfShips}}%</span></div>
+        <div v-if="collector"><label>采集速度</label><span class="v">{{(pc.miningSpeed / 100).toLocaleString([], { maximumFractionDigits: 0 })}}%</span></div>
         <div><label>输出货物集装数量</label><span class="v">{{p.pilerCount === 0 ? '使用科技上限' : p.pilerCount}}</span></div>
     </div>
 </template>
 
 <script lang="ts">
-import { LogisticRole } from '@/blueprint/parser';
+import { AdvancedMiningMachineParameters, LogisticRole } from '@/blueprint/parser';
 
 const roleText = new Map([
     [LogisticRole.None, '仓储'],
@@ -47,7 +48,7 @@ import { computed, defineProps } from 'vue';
 import { BlueprintBuilding, StationParameters } from '@/blueprint/parser';
 import Icon from './Icon.vue';
 import { itemsMap } from '@/data';
-import { isInterstellarStation } from '@/data/items';
+import { isAdvancedMiningMachine, isInterstellarStation } from '@/data/items';
 import { itemIconId } from '@/data/icons';
 
 const props = defineProps<{
@@ -55,6 +56,7 @@ const props = defineProps<{
 }>();
 
 const p = computed(() => props.building.parameters as StationParameters);
+const pc = computed(() => props.building.parameters as AdvancedMiningMachineParameters);
 
 const tripRangeOfShips = computed(() => {
     const ly = p.value.tripRangeOfShips / 2400000.0;
@@ -65,6 +67,7 @@ const tripRangeOfShips = computed(() => {
 })
 
 const inter = computed(() => isInterstellarStation(props.building.itemId));
+const collector = computed(() => isAdvancedMiningMachine(props.building.itemId));
 
 const truth = (v: boolean) => v ? '✓' : '✗';
 </script>

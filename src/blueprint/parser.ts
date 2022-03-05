@@ -159,10 +159,16 @@ function setParam(v: DataView, pos: number, value: number) {
 
 const stationDesc = {
     maxItemKind: 3,
-}
+    numSlots: 12,
+};
 const interstellarStationDesc = {
     maxItemKind: 5,
-}
+    numSlots: 12,
+};
+const AdvancedMiningMachineDesc = {
+    maxItemKind: 1,
+    numSlots: 9,
+};
 
 export enum IODir { None, Output, Input, }
 export enum LogisticRole { None, Supply, Demand, }
@@ -185,12 +191,20 @@ export interface StationParameters {
     deliveryAmountOfShips: number;
     pilerCount: number;
 }
+export interface AdvancedMiningMachineParameters extends StationParameters {
+    miningSpeed: number;
+}
 
+const stationParamsMeta = {
+    base: 320,
+    storage: { base: 0, stride: 4 },
+    slots: { base: 192, stride: 4 },
+} as const;
 function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParameters> {
     return {
         encodedSize() { return 2048; },
         encode(p, a) {
-            const base = 320;
+            const base = stationParamsMeta.base;
             setParam(a, base + 0, p.workEnergyPerTick);
             setParam(a, base + 1, p.tripRangeOfDrones * 100000000.0);
             setParam(a, base + 2, p.tripRangeOfShips / 100.0);
@@ -201,7 +215,7 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
             setParam(a, base + 7, p.deliveryAmountOfShips);
             setParam(a, base + 8, p.pilerCount);
             {
-                const base = 0, stride = 6;
+                const {base, stride} = stationParamsMeta.storage;
                 for (let i = 0; i < desc.maxItemKind; i++) {
                     const s = p.storage[i];
                     setParam(a, base + i * stride + 0, s.itemId);
@@ -210,7 +224,7 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                     setParam(a, base + i * stride + 3, s.max);
                 }
             } {
-                const base = 192, stride = 4;
+                const {base, stride} = stationParamsMeta.slots;
                 for (let i = 0; i < 12; i++) {
                     const s = p.slots[i];
                     setParam(a, base + i * stride + 0, s.dir);
@@ -219,7 +233,7 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
             }
         },
         decode(a) {
-            const base = 320;
+            const base = stationParamsMeta.base;
             const result: StationParameters = {
                 storage: [],
                 slots: [],
@@ -234,7 +248,7 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                 pilerCount:             getParam(a, base + 8),
             };
             {
-                const base = 0, stride = 6;
+                const {base, stride} = stationParamsMeta.storage;
                 for (let i = 0; i < desc.maxItemKind; i++) {
                     result.storage.push({
                         itemId:     getParam(a, base + i * stride + 0),
@@ -244,7 +258,7 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                     });
                 }
             } {
-                const base = 192, stride = 4;
+                const {base, stride} = stationParamsMeta.slots;
                 for (let i = 0; i < 12; i++) {
                     result.slots.push({
                         dir:        getParam(a, base + i * stride + 0),
@@ -253,6 +267,25 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                 }
             }
             return result;
+        }
+    }
+}
+
+function advancedMiningMachineParamParser(): ParamParser<AdvancedMiningMachineParameters> {
+    const stationParser = stationParamsParser(AdvancedMiningMachineDesc);
+    return {
+        encodedSize: stationParser.encodedSize,
+        encode(p, a) {
+            stationParser.encode(p, a);
+            const base = stationParamsMeta.base;
+            setParam(a, base + 9, p.miningSpeed);
+        },
+        decode(a) {
+            const p = stationParser.decode(a);
+            const base = stationParamsMeta.base;
+            return Object.assign(p, {
+                miningSpeed: getParam(a, base + 9),
+            });
         }
     }
 }
@@ -467,6 +500,7 @@ type AllParameters = AssembleParamerters | StationParameters | SplitterParameter
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
     [2104, stationParamsParser(interstellarStationDesc)],
+    [2316, advancedMiningMachineParamParser()],
     [2020, splitterParamParser],
     [2901, labParamParser],
     [2001, beltParamParser],

@@ -16,7 +16,7 @@ export function isInserter(id: number) {
 }
 
 export function isStation(id: number) {
-    return id === 2103 || id === 2104;
+    return id === 2103 || id === 2104 || id === 2316;
 }
 
 export function isInterstellarStation(id: number) {
@@ -49,6 +49,10 @@ export function isRayReciver(id: number) {
 
 export function isEnergyExchanger(id: number) {
     return id === 2209;
+}
+
+export function isAdvancedMiningMachine(id: number) {
+    return id === 2316;
 }
 
 export const allAssemblers = new Set([
