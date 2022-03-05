@@ -377,8 +377,8 @@ const renderer = new WebGLRenderer({ antialias: true });
 attachRenderer(root, renderer);
 
 const camera = new PerspectiveCamera(90);
-camera.near = 1;
-camera.far = 10000;
+camera.near = 0.5;
+camera.far = 3000;
 camera.position.z = 1.5 * R;
 attachCamera(root, camera);
 
@@ -426,8 +426,8 @@ onMounted(() => {
 
 	let controls = new PlanetMapControls(camera, renderer.domElement);
 	controls.listenToKeyEvents(rootEl);
-	controls.minDistance = R * 1.05;
-	controls.maxDistance = R * 5;
+	controls.minDistance = R * 1.04;
+	controls.maxDistance = R * 4;
 	controls.targetRadius = R;
 	onUnmounted(() => controls.dispose());
 	controls.update();

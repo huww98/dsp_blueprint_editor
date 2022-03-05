@@ -45,7 +45,7 @@ class FontTexture {
 
 export class IconSubscript extends InstancedMesh {
     fontTexture;
-    cWidth = 0.2;
+    cWidth = 0.22;
 
     constructor(numChars: number) {
         const fontTexture = new FontTexture();
@@ -76,9 +76,8 @@ export class IconSubscript extends InstancedMesh {
             pos.toArray(this.geometry.getAttribute('iconPos').array, (index + i) * 3);
 
             offset.copy(scale).multiplyScalar(0.5);
-            offset.x -= scale.x * this.cWidth * (text.length - i);
+            offset.x -= this.cWidth * (text.length - i);
             offset.y = -offset.y;
-            console.log(offset);
             offset.toArray(this.geometry.getAttribute('offset').array, (index + i) * 2)
         }
     }
