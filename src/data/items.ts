@@ -36,7 +36,19 @@ export function isStorage(id: number) {
 }
 
 export function isTank(id: number) {
-    return id === 2106
+    return id === 2106;
+}
+
+export function isEjector(id: number) {
+    return id === 2311;
+}
+
+export function isRayReciver(id: number) {
+    return id === 2208;
+}
+
+export function isEnergyExchanger(id: number) {
+    return id === 2209;
 }
 
 export const allAssemblers = new Set([

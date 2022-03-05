@@ -386,6 +386,60 @@ const storageParamParser: ParamParser<StorageParameters> = {
     },
 }
 
+export interface EjectorParameters {
+    orbitId: number;
+}
+
+const ejectorParamParser: ParamParser<EjectorParameters> = {
+    encodedSize() { return 1; },
+    encode(p, a) {
+        setParam(a, 0, p.orbitId);
+    },
+    decode(a) {
+        return {
+            orbitId: getParam(a, 0),
+        };
+    },
+}
+
+export interface PowerGeneratorParameters {
+    productId: number;
+}
+
+const powerGeneratorParamParser: ParamParser<PowerGeneratorParameters> = {
+    encodedSize() { return 1; },
+    encode(p, a) {
+        setParam(a, 0, p.productId);
+    },
+    decode(a) {
+        return {
+            productId: getParam(a, 0),
+        };
+    },
+}
+
+export enum EnergyExchangerMode {
+    Discharge = -1,
+    StandBy = 0,
+    Charge = 1,
+}
+
+export interface EnergyExchangerParameters {
+    mode: EnergyExchangerMode;
+}
+
+const energyExchangerParamParser: ParamParser<EnergyExchangerParameters> = {
+    encodedSize() { return 1; },
+    encode(p, a) {
+        setParam(a, 0, p.mode);
+    },
+    decode(a) {
+        return {
+            mode: getParam(a, 0),
+        };
+    },
+}
+
 interface UnknownParamerters {
     parameters: Int32Array,
 }
@@ -407,7 +461,8 @@ const unknownParamParser: ParamParser<UnknownParamerters> = {
 }
 
 type AllParameters = AssembleParamerters | StationParameters | SplitterParameters | LabParamerters |
-    BeltParameters | InserterParameters | TankParameters | StorageParameters | UnknownParamerters;
+    BeltParameters | InserterParameters | TankParameters | StorageParameters | EjectorParameters |
+    PowerGeneratorParameters | EnergyExchangerParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
@@ -423,6 +478,9 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2101, storageParamParser],
     [2102, storageParamParser],
     [2106, tankParamParser],
+    [2311, ejectorParamParser],
+    [2208, powerGeneratorParamParser],
+    [2209, energyExchangerParamParser],
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);

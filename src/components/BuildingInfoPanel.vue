@@ -26,10 +26,19 @@
         <div :class="{opened: tankParams.output}">输出</div>
         <div :class="{opened: tankParams.input }">输入</div>
     </div>
+    <div class="building-params" v-if="isEjector(building.itemId)">
+        <div><label>太阳帆送入轨道</label><span class="v">{{ejectorParams.orbitId === 0 ? '无' : ejectorParams.orbitId}}</span></div>
+    </div>
+    <div class="building-params" v-if="isEnergyExchanger(building.itemId)">
+        <div><label>能量枢纽模式</label><span class="v">{{energyExchangerMode}}</span></div>
+    </div>
+    <div class="building-params" v-if="isRayReciver(building.itemId)">
+        <div><label>射线接收站模式</label><span class="v">{{powerGenParams.productId > 0 ? '光子生成' : '直接发电'}}</span></div>
+    </div>
 </template>
 
 <script lang="ts">
-import { ResearchMode, AcceleratorMode, BlueprintBuilding, BeltParameters, InserterParameters, StorageParameters } from '@/blueprint/parser';
+import { ResearchMode, AcceleratorMode, EnergyExchangerMode } from '@/blueprint/parser';
 
 const labModeTexts = new Map([
     [ResearchMode.None, '未选择模式'],
@@ -41,15 +50,25 @@ const accModeTexts = new Map([
     [AcceleratorMode.ExtraOutput, '额外产出'],
     [AcceleratorMode.Accelerate, '生产加速'],
 ]);
+
+const energyExchangerModeTexts = new Map([
+    [EnergyExchangerMode.Discharge, '放电'],
+    [EnergyExchangerMode.StandBy, '待机'],
+    [EnergyExchangerMode.Charge, '充电'],
+]);
 </script>
 
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, defineProps } from 'vue';
 
-import { LabParamerters, AssembleParamerters, TankParameters } from '@/blueprint/parser';
+import {
+    LabParamerters, AssembleParamerters, TankParameters, BlueprintBuilding,
+    BeltParameters, InserterParameters, StorageParameters, EjectorParameters,
+    EnergyExchangerParameters, PowerGeneratorParameters,
+} from '@/blueprint/parser';
 import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
-import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank } from '@/data/items';
+import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank, isEjector, isEnergyExchanger, isRayReciver } from '@/data/items';
 
 import Recipe from './Recipe.vue';
 import Icon from './Icon.vue';
@@ -94,15 +113,15 @@ const beltParams = computed(() => {
     return null;
 })
 
-const inserterParams = computed(() => {
-    return props.building.parameters as InserterParameters;
-})
-const storageParams = computed(() => {
-    return props.building.parameters as StorageParameters;
-})
-const tankParams = computed(() => {
-    return props.building.parameters as TankParameters;
-})
+const inserterParams = computed(() => props.building.parameters as InserterParameters);
+const storageParams = computed(() => props.building.parameters as StorageParameters);
+const tankParams = computed(() => props.building.parameters as TankParameters);
+const ejectorParams = computed(() => props.building.parameters as EjectorParameters);
+const powerGenParams = computed(() => props.building.parameters as PowerGeneratorParameters);
+const energyExchangerMode = computed(() => {
+    const mode = (props.building.parameters as EnergyExchangerParameters).mode;
+    return energyExchangerModeTexts.get(mode)!;
+});
 </script>
 
 <style lang="scss">
