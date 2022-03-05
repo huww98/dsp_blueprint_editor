@@ -1,36 +1,38 @@
 <template>
-    <h2>{{buildingItem.name}} <small>#{{building.index}}</small></h2>
-    <Recipe v-if="building.recipeId > 0" :recipeId="building.recipeId"/>
+    <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
+    <Recipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
-    <SplitterInfo v-if="splitterInfo" :info="splitterInfo" :building="building"/>
+    <SplitterInfo v-if="splitterInfo" :info="splitterInfo" :building="building" />
     <div v-else-if="filterItem">
-        过滤器：<Icon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name"/>{{filterItem.name}}
+        过滤器：<Icon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
     </div>
-    <StationInfo v-if="isStation(building.itemId)" :building="building"/>
+    <StationInfo v-if="isStation(building.itemId)" :building="building" />
     <div v-if="isLab(building.itemId)">
-        矩阵研究站模式：{{LabModeText}}
+        矩阵研究站模式：{{ LabModeText }}
     </div>
     <div v-if="accModeText !== undefined">
-        增产效果：{{accModeText}}
+        增产效果：{{ accModeText }}
     </div>
-    <div v-if="beltIcon">
-        <Icon :icon-id="beltIcon.iconId" />
-        {{beltIcon.count}}
+    <div v-if="beltParams">
+        <Icon :icon-id="beltParams.iconId" />{{ beltParams.count }}
+    </div>
+    <div v-if="isInserter(building.itemId)">
+        分拣长度：{{ inserterParams.length }}
     </div>
 </template>
 
 <script lang="ts">
-import { ResearchMode, AcceleratorMode, BlueprintBuilding, BeltParameters } from '@/blueprint/parser';
+import { ResearchMode, AcceleratorMode, BlueprintBuilding, BeltParameters, InserterParameters } from '@/blueprint/parser';
 
 const labModeTexts = new Map([
-  [ResearchMode.None, '未选择模式'],
-  [ResearchMode.Compose, '矩阵合成'],
-  [ResearchMode.Research, '科研模式'],
+    [ResearchMode.None, '未选择模式'],
+    [ResearchMode.Compose, '矩阵合成'],
+    [ResearchMode.Research, '科研模式'],
 ]);
 
 const accModeTexts = new Map([
-  [AcceleratorMode.ExtraOutput, '额外产出'],
-  [AcceleratorMode.Accelerate, '生产加速'],
+    [AcceleratorMode.ExtraOutput, '额外产出'],
+    [AcceleratorMode.Accelerate, '生产加速'],
 ]);
 </script>
 
@@ -40,7 +42,7 @@ import { computed, defineAsyncComponent, defineProps } from 'vue';
 import { LabParamerters, AssembleParamerters } from '@/blueprint/parser';
 import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
-import { isLab, allAssemblers, isBelt, isStation, itemsMap } from '@/data/items';
+import { isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter } from '@/data/items';
 
 import Recipe from './Recipe.vue';
 import Icon from './Icon.vue';
@@ -53,35 +55,39 @@ const props = defineProps<{
 }>();
 
 const buildingItem = computed(() => {
-  return itemsMap.get(props.building.itemId)!;
+    return itemsMap.get(props.building.itemId)!;
 })
 const filterItem = computed(() => {
-  if (props.building.filterId <= 0)
-    return null;
-  return itemsMap.get(props.building.filterId)!;
+    if (props.building.filterId <= 0)
+        return null;
+    return itemsMap.get(props.building.filterId)!;
 })
 
 const LabModeText = computed(() => {
-  const mode = (props.building.parameters as LabParamerters).researchMode;
-  return labModeTexts.get(mode)!;
+    const mode = (props.building.parameters as LabParamerters).researchMode;
+    return labModeTexts.get(mode)!;
 })
 const accModeText = computed(() => {
-  const itemId = props.building.itemId
-  if(isLab(itemId) && (props.building!.parameters as LabParamerters).researchMode === ResearchMode.Compose ||
-      allAssemblers.has(itemId)) {
-    const mode = (props.building!.parameters as AssembleParamerters).acceleratorMode;
-    return accModeTexts.get(mode)!;
-  }
-  return undefined;
+    const itemId = props.building.itemId
+    if (isLab(itemId) && (props.building!.parameters as LabParamerters).researchMode === ResearchMode.Compose ||
+        allAssemblers.has(itemId)) {
+        const mode = (props.building!.parameters as AssembleParamerters).acceleratorMode;
+        return accModeTexts.get(mode)!;
+    }
+    return undefined;
 })
 
 const splitterInfo = computed(() => {
-  return props.info.splitterInfo.get(props.building.index)!
+    return props.info.splitterInfo.get(props.building.index)!
 })
 
-const beltIcon = computed(() => {
-  if (props.building && isBelt(props.building.itemId) && props.building.parameters)
-    return props.building.parameters as BeltParameters;
-  return null;
+const beltParams = computed(() => {
+    if (isBelt(props.building.itemId) && props.building.parameters)
+        return props.building.parameters as BeltParameters;
+    return null;
+})
+
+const inserterParams = computed(() => {
+    return props.building.parameters as InserterParameters;
 })
 </script>
