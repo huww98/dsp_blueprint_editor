@@ -197,7 +197,7 @@ export interface AdvancedMiningMachineParameters extends StationParameters {
 
 const stationParamsMeta = {
     base: 320,
-    storage: { base: 0, stride: 4 },
+    storage: { base: 0, stride: 6 },
     slots: { base: 192, stride: 4 },
 } as const;
 function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParameters> {
