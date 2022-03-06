@@ -3,16 +3,19 @@
         <BlueprintEditor ref="renderer" :blueprintData="data" v-model:selectedBuildingIndex="selectedBuildingIndex"
                          @update:selectedBuildingIndex="i => expandSidebar = i !== null" />        />
         <div class="sidebar" :class="{ expanded: expandSidebar }">
-            <section>
-                <label for="iconLayout">图标布局</label>
-                <select id="iconLayout" :disabled="!data"
-                        v-model="iconLayout">
-                    <option v-for="[id, s] of allIconLayouts" :key="id" :value="id">{{s}}</option>
-                </select>
-                <label for="shortDesc">缩略图文字</label>
-                <input type="text" id="shortDesc" :disabled="!data"
-                       :value="data?.header.shortDesc"
-                       @input="e => data!.header.shortDesc = (e.target as HTMLInputElement).value">
+            <section style="display: flex; flex-direction: row; gap: 5px;">
+                <div>
+                    <label for="iconLayout">图标布局</label>
+                    <select id="iconLayout" :disabled="!data"
+                            v-model="iconLayout">
+                        <option v-for="[id, s] of allIconLayouts" :key="id" :value="id">{{s}}</option>
+                    </select>
+                    <label for="shortDesc">缩略图文字</label>
+                    <input type="text" id="shortDesc" :disabled="!data"
+                           :value="data?.header.shortDesc"
+                           @input="e => data!.header.shortDesc = (e.target as HTMLInputElement).value">
+                </div>
+                <BlueprintIcon style="height: 90px; flex: none;" :layout-id="iconLayout" :icons="data?.header.icons"/>
             </section>
             <section>
                 <label for="desc">蓝图介绍</label>
@@ -78,6 +81,7 @@ import { BuildingInfo } from './blueprint/buildingInfo';
 
 import BuildingInfoPanel from './components/BuildingInfoPanel.vue';
 import SWStatus from '@/swStatus.vue';
+import BlueprintIcon from './components/BlueprintIcon.vue';
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
 
 const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);
@@ -104,6 +108,7 @@ const buildingInfo = computed(() => {
 })
 
 const allIconLayouts = new Map<number, string>([
+    [ 1, '无'],
     [10, '1-1'], [11, '1-2'],
     [20, '2-1'], [21, '2-2'], [22, '2-3'], [23, '2-4'], [24, '2-5'],
     [30, '3-1'], [31, '3-2'], [32, '3-3'], [33, '3-4'],
@@ -328,7 +333,7 @@ body {
         resize: none;
         color: inherit;
         &:focus {
-            background: #404040;
+            background: #4f6671;
         }
     }
 }

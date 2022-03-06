@@ -2,7 +2,7 @@ import { Tech, Signal } from "./types";
 import { itemsMap } from "./items";
 import { recipesMap } from "./recipes";
 
-export async function itemRecipeIconUrl(name:string) {
+export async function itemRecipeIconUrl(name:string): Promise<string> {
     return (await import(/* webpackMode: "eager" */`@/assets/icons/item_recipe/${name}.png`)).default;
 }
 
@@ -33,6 +33,7 @@ export function iconUrl(iconId: number) {
         return itemRecipeIconUrl(recipesMap.get(iconId - 20000)!.icon!);
     if (iconId < 60000)
         return techIconUrl(iconId - 40000);
+    throw new Error(`Unknown icon ${iconId}`)
 }
 
 export function* allIconIds() {
