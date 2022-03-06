@@ -4,6 +4,11 @@
                          @update:selectedBuildingIndex="i => expandSidebar = i !== null" />        />
         <div class="sidebar" :class="{ expanded: expandSidebar }">
             <section>
+                <label for="iconLayout">图标布局</label>
+                <select id="iconLayout" :disabled="!data"
+                        v-model="iconLayout">
+                    <option v-for="[id, s] of allIconLayouts" :key="id" :value="id">{{s}}</option>
+                </select>
                 <label for="shortDesc">缩略图文字</label>
                 <input type="text" id="shortDesc" :disabled="!data"
                        :value="data?.header.shortDesc"
@@ -96,6 +101,18 @@ const buildingInfo = computed(() => {
     if (data.value === null)
         return null;
     return new BuildingInfo(data.value.buildings);
+})
+
+const allIconLayouts = new Map<number, string>([
+    [10, '1-1'], [11, '1-2'],
+    [20, '2-1'], [21, '2-2'], [22, '2-3'], [23, '2-4'], [24, '2-5'],
+    [30, '3-1'], [31, '3-2'], [32, '3-3'], [33, '3-4'],
+    [40, '4-1'], [41, '4-2'],
+    [50, '5-1'], [51, '5-2'],
+]);
+const iconLayout = computed<number>({
+    get() { return data.value?.header.layout ?? 0; },
+    set(v) { data.value!.header.layout = v; },
 })
 
 const encodeBp = () => {
@@ -302,8 +319,7 @@ body {
         }
     }
 
-    textarea,
-    input {
+    textarea, input, select {
         background: #ffffff40;
         border: 0;
         width: 100%;
@@ -311,6 +327,9 @@ body {
         box-sizing: border-box;
         resize: none;
         color: inherit;
+        &:focus {
+            background: #404040;
+        }
     }
 }
 </style>
