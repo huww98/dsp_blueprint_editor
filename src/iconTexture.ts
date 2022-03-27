@@ -26,7 +26,7 @@ export class IconTexture {
         this.texture.needsUpdate = true;
         this.renderer.initTexture(this.texture);
 
-        let nextIndex = 0;
+        let nextIndex = 1; // 0 is reserved for empty icon
         for (const i of allIconIds()) {
             if (nextIndex >= WIDTH * HEIGHT)
                 throw new Error('IconTexture too small');
@@ -40,8 +40,10 @@ export class IconTexture {
 
     requestIcon(iconId: number) {
         const index = this.iconIds.get(iconId);
-        if (index === undefined)
-            throw new Error('unknown icon ' + iconId);
+        if (index === undefined) {
+            console.warn(`Unknown icon ${iconId}`)
+            return 0;
+        }
 
         if (this.loaded[iconId])
             return index;
