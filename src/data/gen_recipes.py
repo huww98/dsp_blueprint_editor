@@ -20,6 +20,8 @@ export const recipes: Recipe[] = [
         for i, c in zip(d['Results'], d['ResultCounts']):
             sys.stdout.write(f"            {{item: itemsMap.get({i})!, count: {c}}},\n")
         sys.stdout.write( "        ],\n")
+        g = d['GridIndex']
+        sys.stdout.write(f"        grid: [{g // 1000}, {(g // 100) % 10}, {g % 100}],\n")
         if d['IconPath']:
             icon = d['IconPath'].split('/')[-1]
             sys.stdout.write(f"        icon: '{icon}',\n")

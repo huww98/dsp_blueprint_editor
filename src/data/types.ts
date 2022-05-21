@@ -18,6 +18,8 @@ export interface Recipe {
     time: number;
     from: ItemStack[];
     to: ItemStack[];
+    /** page, row, column */
+    grid: [number, number, number];
 }
 
 export interface Tech {
