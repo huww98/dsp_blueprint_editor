@@ -12,7 +12,7 @@
             <div>
                 <label>货物过滤</label>
                 <span class="v">
-                    <Icon v-if="p.cargoFilter > 0" :icon-id="itemIconId(p.cargoFilter)" />
+                    <BuildingIcon v-if="p.cargoFilter > 0" :icon-id="itemIconId(p.cargoFilter)" />
                     <span v-else>无</span>
                 </span>
             </div>
@@ -24,7 +24,7 @@
             <div><label>系统警报</label><span class="v">{{systemWarningMode}}</span></div>
             <div v-if="p.systemWarningMode > 0">
                 <label>警报图标</label>
-                <span class="v"><Icon :icon-id="p.systemWarningIconId" /></span>
+                <span class="v"><BuildingIcon :icon-id="p.systemWarningIconId" /></span>
             </div>
             <div><label>声音警报</label><span class="v">{{alarmMode}}</span></div>
         </div>
@@ -71,7 +71,7 @@ import { computed, defineProps } from 'vue';
 import { BlueprintBuilding, MonitorParameters } from '@/blueprint/parser';
 import { itemIconId } from '@/data/icons';
 import { midiMap } from '@/data/midi';
-import Icon from './Icon.vue';
+import BuildingIcon from './BuildingIcon.vue';
 import ColorPreview from './ColorPreview.vue';
 
 const props = defineProps<{

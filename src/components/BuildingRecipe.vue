@@ -1,8 +1,8 @@
 <template>
     <div class="recipe">
-        <Icon v-for="i in recipe.to" :key="i.item.id" :icon-id="itemIconId(i.item.id)" :alt="i.item.name" :count="i.count"/>
+        <BuildingIcon v-for="i in recipe.to" :key="i.item.id" :icon-id="itemIconId(i.item.id)" :alt="i.item.name" :count="i.count"/>
         <img class="arrow" alt="produced from" src="@/assets/icons/arrow_left.svg"/>
-        <Icon v-for="i in recipe.from" :key="i.item.id" :icon-id="itemIconId(i.item.id)" :alt="i.item.name" :count="i.count"/>
+        <BuildingIcon v-for="i in recipe.from" :key="i.item.id" :icon-id="itemIconId(i.item.id)" :alt="i.item.name" :count="i.count"/>
     </div>
 </template>
 
@@ -10,7 +10,7 @@
 import { recipesMap } from '@/data/recipes';
 import { itemIconId } from '@/data/icons';
 import { computed, defineProps } from 'vue';
-import Icon from './Icon.vue';
+import BuildingIcon from './BuildingIcon.vue';
 
 const props = defineProps<{
     recipeId: number,

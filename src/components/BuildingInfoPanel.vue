@@ -1,10 +1,10 @@
 <template>
     <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
-    <Recipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
+    <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
     <SplitterInfo v-if="splitterInfo" :info="splitterInfo" :building="building" />
     <div v-else-if="filterItem">
-        过滤器：<Icon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
+        过滤器：<BuildingIcon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
     </div>
     <StationInfo v-if="isStation(building.itemId)" :building="building" />
     <MonitorInfo v-if="isMonitor(building.itemId)" :building="building" />
@@ -15,7 +15,7 @@
         增产效果：{{ accModeText }}
     </div>
     <div v-if="beltParams">
-        <Icon :icon-id="beltParams.iconId" />{{ beltParams.count }}
+        <BuildingIcon :icon-id="beltParams.iconId" />{{ beltParams.count }}
     </div>
     <div v-if="isInserter(building.itemId)">
         分拣长度：{{ inserterParams.length }}
@@ -74,8 +74,8 @@ import {
     isEjector, isEnergyExchanger, isRayReciver, isMonitor
 } from '@/data/items';
 
-import Recipe from './Recipe.vue';
-import Icon from './Icon.vue';
+import BuildingRecipe from './BuildingRecipe.vue';
+import BuildingIcon from './BuildingIcon.vue';
 import StationInfo from './StationInfo.vue';
 import MonitorInfo from './MonitorInfo.vue';
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));
