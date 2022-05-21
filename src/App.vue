@@ -52,7 +52,7 @@
                                 type="file" accept="text/plain" id="blueprint-file"
                                 style="position: absolute; inset: 0; opacity: 0;" />
                         </button>
-                        <a v-if="!working && bpUrl" class="button"
+                        <a v-if="bpStr" class="button" @click="prepareSave"
                             :href="bpUrl" :download="data!.header.shortDesc + '.txt'"
                             style="flex: auto; width: 50px;" >
                             保存文件
@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
+import { computed, defineAsyncComponent, nextTick, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
 import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
 import { version, rendererKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
@@ -176,11 +176,20 @@ watchEffect(() => {
 });
 
 const bpUrl = ref('');
-watchEffect(onCleanup => {
-    if (bpStr.value) {
-        const url = bpUrl.value = URL.createObjectURL(new Blob([bpStr.value], { type: 'text/plain' }));
-        onCleanup(() => URL.revokeObjectURL(url));
-    } else {
+watchEffect(() => {
+    if (codeExpired.value && bpUrl.value) {
+        URL.revokeObjectURL(bpUrl.value);
+        bpUrl.value = '';
+    }
+})
+const prepareSave = () => {
+    if (!bpUrl.value) {
+        bpUrl.value = URL.createObjectURL(new Blob([bpStrLatest()], { type: 'text/plain' }));
+    }
+}
+onUnmounted(() => {
+    if (bpUrl.value) {
+        URL.revokeObjectURL(bpUrl.value);
         bpUrl.value = '';
     }
 })
