@@ -1,69 +1,88 @@
 <template>
     <div class="container">
         <BlueprintEditor ref="renderer" :blueprintData="data" v-model:selectedBuildingIndex="selectedBuildingIndex"
-                         @update:selectedBuildingIndex="i => expandSidebar = i !== null" />        />
+                         @update:selectedBuildingIndex="i => expandSidebar = i !== null" />
         <div class="sidebar" :class="{ expanded: expandSidebar }">
-            <section style="display: flex; flex-direction: row; gap: 5px;">
-                <div>
-                    <label for="iconLayout">图标布局</label>
-                    <select id="iconLayout" :disabled="!data"
-                            v-model="iconLayout">
-                        <option v-for="[id, s] of allIconLayouts" :key="id" :value="id">{{s}}</option>
-                    </select>
-                    <label for="shortDesc">缩略图文字</label>
-                    <input type="text" id="shortDesc" :disabled="!data"
-                           :value="data?.header.shortDesc"
-                           @input="e => data!.header.shortDesc = (e.target as HTMLInputElement).value">
-                </div>
-                <BlueprintIcon style="height: 90px; flex: none;" :layout-id="iconLayout" :icons="data?.header.icons"/>
-            </section>
-            <section>
-                <label for="desc">蓝图介绍</label>
-                <textarea rows="2" id="desc" :disabled="!data"
-                          :value="data?.header.desc"
-                          @input="e => data!.header.desc = (e.target as HTMLInputElement).value"
-                ></textarea>
-            </section>
-            <section>
-                <div class="row">
-                    <label for="bp-str" style="margin-right: auto;">代码</label>
-                    <span class="error" v-if="notSupport">不支持，请手动复制</span>
-                    <button style="margin-left: 4px;" @click="copy" :disabled="working || !bpStr">复制</button>
-                    <button style="margin-left: 4px;" @click="paste" :disabled="working">粘贴</button>
-                </div>
-                <textarea rows="3" id="bp-str" v-model="bpStrInput"
-                          @copy="onCopy" @cut="onCut" @paste="onPaste"
-                          @focus="encodeBp" @change="e => parseBp((e.target as HTMLTextAreaElement).value)">
-                </textarea>
-                <div class="row" style="align-items: stretch; column-gap: 4px;">
-                    <button @click="parseBp('')" :disabled="working"
-                            style="position: relative; flex: auto; width: 50px;" >
-                        {{ bpStr ? "清空" : "选择文件" }}
-                        <input v-if="!bpStr" @change="onBpFile" :disabled="working"
-                            type="file" accept="text/plain" id="blueprint-file"
-                            style="position: absolute; inset: 0; opacity: 0;" />
-                    </button>
-                    <a v-if="!working && bpUrl" class="button"
-                        :href="bpUrl" :download="data!.header.shortDesc + '.txt'"
-                        style="flex: auto; width: 50px;" >
-                        保存文件
-                    </a>
-                </div>
-                <div class="error">{{ parseErrorMessage }}</div>
-            </section>
-            <section>
-                <div class="row">
-                    <span style="margin-right: auto;">创建版本号</span>
-                    <span>{{ data?.header.gameVersion }}</span>
-                </div>
-                <div class="row">
-                    <span style="margin-right: auto;">创建时间</span>
-                    <span>{{ data?.header.time.toLocaleString([], { timeZone: 'UTC' }) }}</span>
-                </div>
-            </section>
-            <section v-if="selectedBuilding !== null">
-                <BuildingInfoPanel :building="selectedBuilding" :info="buildingInfo!" />
-            </section>
+            <div>
+                <div class="info-tab tab"
+                    :class="{ active: activeTab === 'info'}"
+                    @click="activeTab = 'info'"></div>
+                <div class="operations-tab tab"
+                    :class="{ active: activeTab === 'operations'}"
+                    @click="activeTab = 'operations'"></div>
+            </div>
+            <div v-if="activeTab === 'info'">
+                <section style="display: flex; flex-direction: row; gap: 5px;">
+                    <div>
+                        <label for="iconLayout">图标布局</label>
+                        <select id="iconLayout" :disabled="!data"
+                                v-model="iconLayout">
+                            <option v-for="[id, s] of allIconLayouts" :key="id" :value="id">{{s}}</option>
+                        </select>
+                        <label for="shortDesc">缩略图文字</label>
+                        <input type="text" id="shortDesc" :disabled="!data"
+                            :value="data?.header.shortDesc"
+                            @input="e => data!.header.shortDesc = (e.target as HTMLInputElement).value">
+                    </div>
+                    <BlueprintIcon style="height: 90px; flex: none;" :layout-id="iconLayout" :icons="data?.header.icons"/>
+                </section>
+                <section>
+                    <label for="desc">蓝图介绍</label>
+                    <textarea rows="2" id="desc" :disabled="!data"
+                            :value="data?.header.desc"
+                            @input="e => data!.header.desc = (e.target as HTMLInputElement).value"
+                    ></textarea>
+                </section>
+                <section>
+                    <div class="row">
+                        <label for="bp-str" style="margin-right: auto;">代码</label>
+                        <span class="error" v-if="notSupport">不支持，请手动复制</span>
+                        <button style="margin-left: 4px;" @click="copy" :disabled="working || !bpStr">复制</button>
+                        <button style="margin-left: 4px;" @click="paste" :disabled="working">粘贴</button>
+                    </div>
+                    <textarea rows="3" id="bp-str" v-model="bpStrInput"
+                            @copy="onCopy" @cut="onCut" @paste="onPaste"
+                            @focus="encodeBp" @change="e => parseBp((e.target as HTMLTextAreaElement).value)">
+                    </textarea>
+                    <div class="row" style="align-items: stretch; column-gap: 4px;">
+                        <button @click="parseBp('')" :disabled="working"
+                                style="position: relative; flex: auto; width: 50px;" >
+                            {{ bpStr ? "清空" : "选择文件" }}
+                            <input v-if="!bpStr" @change="onBpFile" :disabled="working"
+                                type="file" accept="text/plain" id="blueprint-file"
+                                style="position: absolute; inset: 0; opacity: 0;" />
+                        </button>
+                        <a v-if="!working && bpUrl" class="button"
+                            :href="bpUrl" :download="data!.header.shortDesc + '.txt'"
+                            style="flex: auto; width: 50px;" >
+                            保存文件
+                        </a>
+                    </div>
+                    <div class="error">{{ parseErrorMessage }}</div>
+                </section>
+                <section>
+                    <div class="row">
+                        <span style="margin-right: auto;">创建版本号</span>
+                        <span>{{ data?.header.gameVersion }}</span>
+                    </div>
+                    <div class="row">
+                        <span style="margin-right: auto;">创建时间</span>
+                        <span>{{ data?.header.time.toLocaleString([], { timeZone: 'UTC' }) }}</span>
+                    </div>
+                </section>
+                <section v-if="selectedBuilding !== null">
+                    <BuildingInfoPanel :building="selectedBuilding" :info="buildingInfo!" />
+                </section>
+            </div>
+            <div v-else-if="activeTab === 'operations'">
+                <ul class="operations">
+                    <li v-if="data" @click="replaceModal!.open()">
+                        <img src="@/assets/icons/find_replace.svg">
+                        批量替换
+                        <ReplaceModal :blueprint="data" @change="() => {rerender(); codeExpired = true}" ref="replaceModal"/>
+                    </li>
+                </ul>
+            </div>
             <footer>
                 {{ version }}<SWStatus />
             </footer>
@@ -74,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
+import { computed, defineAsyncComponent, nextTick, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
 import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
 import { version, rendererKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
@@ -82,19 +101,31 @@ import { BuildingInfo } from './blueprint/buildingInfo';
 import BuildingInfoPanel from './components/BuildingInfoPanel.vue';
 import SWStatus from '@/swStatus.vue';
 import BlueprintIcon from './components/BlueprintIcon.vue';
+import ReplaceModal from './components/ReplaceModal.vue';
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
 
 const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);
+const replaceModal = ref<null | InstanceType<typeof ReplaceModal>>(null);
 provide(rendererKey, renderer);
 
 const bpStr = ref('');
 const data = shallowRef(null as BlueprintData | null);
 const expandSidebar = ref(true);
+const activeTab = ref<'info' | 'operations'>('info')
 const working = ref(false);
 const notSupport = ref(false);
 const codeExpired = ref(false);
 const parseErrorMessage = ref('');
 const selectedBuildingIndex = ref(null as number | null);
+
+const rerender = () => {
+    // TODO: find a more efficient way
+    const d = data.value;
+    data.value = null;
+    nextTick(() => {
+        data.value = d;
+    });
+}
 
 const selectedBuilding = computed(() => {
     if (data.value === null || selectedBuildingIndex.value === null)
@@ -260,6 +291,23 @@ body {
     }
 }
 
+.tab {
+    height: 60px;
+    width: 60px;
+    opacity: 0.5;
+    display: inline-block;
+
+    &.active {
+        opacity: 1.0;
+    }
+}
+.info-tab {
+    background: url(@/assets/icons/menu.svg) center no-repeat;
+}
+.operations-tab {
+    background: url(@/assets/icons/settings.svg) center no-repeat;
+}
+
 .row {
     display: flex;
     flex-direction: row;
@@ -277,7 +325,6 @@ body {
     background: #000000b0;
     color: white;
     display: none;
-    padding-top: 60px;
     padding-left: 10px;
     padding-right: 10px;
 
@@ -324,7 +371,7 @@ body {
         }
     }
 
-    textarea, input, select {
+    textarea, input[type="text"], select {
         background: #ffffff40;
         border: 0;
         width: 100%;
@@ -334,6 +381,23 @@ body {
         color: inherit;
         &:focus {
             background: #4f6671;
+        }
+    }
+}
+
+ul.operations {
+    padding: 0;
+    >li {
+        display: block;
+        list-style: none;
+        user-select: none;
+        cursor: pointer;
+        border-bottom: 1px solid #fff6;
+        padding: 5px;
+        margin: 0;
+
+        img {
+            vertical-align: middle;
         }
     }
 }
