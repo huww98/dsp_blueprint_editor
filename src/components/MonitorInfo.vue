@@ -67,7 +67,7 @@ const allPitchs = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', '
 </script>
 
 <script lang="ts" setup>
-import { computed, defineProps } from 'vue';
+import { computed } from 'vue';
 import { BlueprintBuilding, MonitorParameters } from '@/blueprint/parser';
 import { itemIconId } from '@/data/icons';
 import { midiMap } from '@/data/midi';

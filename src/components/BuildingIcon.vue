@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineProps, watchEffect } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { iconUrl } from '@/data/icons';
 
 const props = defineProps<{

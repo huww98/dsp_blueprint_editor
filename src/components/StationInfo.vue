@@ -44,7 +44,7 @@ const roleClass = new Map([
 </script>
 
 <script lang="ts" setup>
-import { computed, defineProps } from 'vue';
+import { computed } from 'vue';
 import { BlueprintBuilding, StationParameters } from '@/blueprint/parser';
 import BuildingIcon from './BuildingIcon.vue';
 import { itemsMap } from '@/data';

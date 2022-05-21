@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, defineProps, inject, ref, watch, watchEffect } from 'vue';
+import { computed, inject, ref, watch, watchEffect } from 'vue';
 import { SplitterInfo } from '@/blueprint/buildingInfo';
 import { BlueprintBuilding, IODir, SplitterParameters } from "@/blueprint/parser";
 import { itemsMap } from '@/data';

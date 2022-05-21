@@ -345,7 +345,7 @@ const SEGMENT = 200;
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref, onUnmounted, defineProps, defineEmits, defineExpose, watchEffect, computed } from 'vue'
+import { ref, onMounted, Ref, onUnmounted, watchEffect, computed } from 'vue'
 import { Scene, PerspectiveCamera, SphereGeometry, Mesh, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';

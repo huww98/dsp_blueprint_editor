@@ -39,7 +39,7 @@ for (const l of allLayouts.values()) {
 
 <script lang="ts" setup>
 import { iconUrl } from '@/data/icons';
-import { computed, defineProps, ref, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 
 const props = defineProps<{
     layoutId: number,

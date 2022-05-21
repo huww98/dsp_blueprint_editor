@@ -60,7 +60,7 @@ const energyExchangerModeTexts = new Map([
 </script>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, defineProps } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 
 import {
     LabParamerters, AssembleParamerters, TankParameters, BlueprintBuilding,

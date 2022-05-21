@@ -9,7 +9,7 @@
 <script lang="ts" setup>
 import { recipesMap } from '@/data/recipes';
 import { itemIconId } from '@/data/icons';
-import { computed, defineProps } from 'vue';
+import { computed } from 'vue';
 import BuildingIcon from './BuildingIcon.vue';
 
 const props = defineProps<{
