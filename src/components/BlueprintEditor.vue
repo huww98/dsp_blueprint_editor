@@ -6,7 +6,7 @@
 import {
 	Group, LineSegments, InstancedMesh, WebGLRenderer,
 	LineBasicMaterial, MeshStandardMaterial, MeshLambertMaterial, CylinderGeometry, BoxGeometry,
-	Matrix4, DirectionalLight, Vector3, Object3D, Color, Ray, Sphere, Vector2,
+	Matrix4, DirectionalLight, Vector3, Object3D, Color, Ray, Sphere, Vector2, Mesh,
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BeltParameters, BlueprintBuilding } from '@/blueprint/parser';
@@ -60,6 +60,16 @@ class AllBuildings extends Object3D {
 
 	public modelRef: { mesh: InstancedMesh, instance: number }[] = [];
 
+    public dispose() {
+        this.traverse(o => {
+            if (o instanceof Mesh) {
+                (o as Mesh).geometry.dispose();
+            }
+            if (o instanceof InstancedMesh) {
+                o.dispose();
+            }
+        });
+    }
 }
 
 const pos1 = new Vector3();
@@ -346,7 +356,7 @@ const SEGMENT = 200;
 
 <script setup lang="ts">
 import { ref, onMounted, Ref, onUnmounted, watchEffect, computed } from 'vue'
-import { Scene, PerspectiveCamera, SphereGeometry, Mesh, AmbientLight } from 'three';
+import { Scene, PerspectiveCamera, SphereGeometry, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
 import { attachCamera, attachRenderer } from '@/utils';
@@ -397,7 +407,10 @@ watchEffect(onCleanUp => {
 	if (b.value !== null) {
 		const buildings = b.value.buildings
 		scene.add(buildings);
-		onCleanUp(() => scene.remove(buildings));
+		onCleanUp(() => {
+            scene.remove(buildings);
+            buildings.dispose();
+        });
 	}
 });
 
