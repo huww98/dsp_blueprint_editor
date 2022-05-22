@@ -1,41 +1,21 @@
-import { isBelt, isSplitter } from "@/data/items";
-import { BlueprintBuilding, IODir } from "./parser";
-
-export interface SplitterInfo {
-    slots: { dir: IODir, beltIndex: number }[];
-}
+import { BlueprintBuilding } from "./parser";
 
 export class BuildingInfo {
-    splitterInfo = new Map<number, SplitterInfo>();
+    adjacency: BlueprintBuilding[][];
+
     constructor(buildings: BlueprintBuilding[]) {
+        this.adjacency = new Array(buildings.length);
+        for (let i = 0; i < this.adjacency.length; i++)
+            this.adjacency[i] = [];
+
         for (const b of buildings) {
-            if (isSplitter(b.itemId)) {
-                const info = {
-                    slots: new Array(4),
-                }
-                for (let i = 0; i < 4; i++)
-                    info.slots[i] = { dir: IODir.None, beltIndex: -1 }
-                this.splitterInfo.set(b.index, info);
+            if (b.outputObjIdx >= 0) {
+                this.adjacency[b.index][b.outputFromSlot] = buildings[b.outputObjIdx];
+                this.adjacency[b.outputObjIdx][b.outputToSlot] = b;
             }
-        }
-        for (const b of buildings) {
-            if (isBelt(b.itemId)) {
-                if (b.outputObjIdx >= 0) {
-                    const si = this.splitterInfo.get(b.outputObjIdx)
-                    if (si !== undefined) {
-                        const slot = si.slots[b.outputToSlot];
-                        slot.beltIndex = b.index;
-                        slot.dir = IODir.Input;
-                    }
-                }
-                if (b.inputObjIdx >= 0) {
-                    const si = this.splitterInfo.get(b.inputObjIdx)
-                    if (si !== undefined) {
-                        const slot = si.slots[b.inputFromSlot];
-                        slot.beltIndex = b.index;
-                        slot.dir = IODir.Output;
-                    }
-                }
+            if (b.inputObjIdx >= 0) {
+                this.adjacency[b.index][b.inputToSlot] = buildings[b.inputObjIdx];
+                this.adjacency[b.inputObjIdx][b.inputFromSlot] = b;
             }
         }
     }

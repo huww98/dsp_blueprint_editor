@@ -2,7 +2,7 @@
     <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
     <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
-    <SplitterInfo v-if="splitterInfo" :info="splitterInfo" :building="building" />
+    <SplitterInfo v-if="isSplitter(building.itemId)" :adjacency="adj" :building="building" />
     <div v-else-if="filterItem">
         过滤器：<BuildingIcon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
     </div>
@@ -71,7 +71,7 @@ import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
 import {
     isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank,
-    isEjector, isEnergyExchanger, isRayReciver, isMonitor
+    isEjector, isEnergyExchanger, isRayReciver, isMonitor, isSplitter
 } from '@/data/items';
 
 import BuildingRecipe from './BuildingRecipe.vue';
@@ -108,8 +108,8 @@ const accModeText = computed(() => {
     return undefined;
 })
 
-const splitterInfo = computed(() => {
-    return props.info.splitterInfo.get(props.building.index)!
+const adj = computed(() => {
+    return props.info.adjacency[props.building.index]
 })
 
 const beltParams = computed(() => {
