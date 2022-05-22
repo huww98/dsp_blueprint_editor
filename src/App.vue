@@ -53,8 +53,9 @@
                                 style="position: absolute; inset: 0; opacity: 0;" />
                         </button>
                         <a v-if="bpStr" class="button" @click="prepareSave"
-                            :href="bpUrl" :download="data!.header.shortDesc + '.txt'"
+                            :href="bpUrl" :download="data?.header.shortDesc + '.txt'"
                             style="flex: auto; width: 50px;" >
+                            <!-- TODO: data? to workaround rerender -->
                             保存文件
                         </a>
                     </div>
@@ -71,7 +72,7 @@
                     </div>
                 </section>
                 <section v-if="selectedBuilding !== null">
-                    <BuildingInfoPanel :building="selectedBuilding" :info="buildingInfo!" />
+                    <BuildingInfoPanel :building="selectedBuilding" @change="() => {rerender(); codeExpired = true}"/>
                 </section>
             </div>
             <div v-else-if="activeTab === 'operations'">
@@ -95,7 +96,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, nextTick, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
 import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
-import { version, rendererKey } from '@/define';
+import { version, rendererKey, buildingInfoKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
 
 import BuildingInfoPanel from './components/BuildingInfoPanel.vue';
@@ -137,6 +138,7 @@ const buildingInfo = computed(() => {
         return null;
     return new BuildingInfo(data.value.buildings);
 })
+provide(buildingInfoKey, buildingInfo);
 
 const allIconLayouts = new Map<number, string>([
     [ 1, '无'],

@@ -2,11 +2,11 @@
     <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
     <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
-    <SplitterInfo v-if="isSplitter(building.itemId)" :adjacency="adj" :building="building" />
+    <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
     <div v-else-if="filterItem">
         过滤器：<BuildingIcon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
     </div>
-    <StationInfo v-if="isStation(building.itemId)" :building="building" />
+    <StationInfo v-if="isStation(building.itemId)" :building="building" @change="emit('change')" />
     <MonitorInfo v-if="isMonitor(building.itemId)" :building="building" />
     <div v-if="isLab(building.itemId)">
         矩阵研究站模式：{{ LabModeText }}
@@ -67,7 +67,6 @@ import {
     BeltParameters, InserterParameters, StorageParameters, EjectorParameters,
     EnergyExchangerParameters, PowerGeneratorParameters,
 } from '@/blueprint/parser';
-import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
 import {
     isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank,
@@ -82,7 +81,9 @@ const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "ren
 
 const props = defineProps<{
     building: BlueprintBuilding,
-    info: BuildingInfo,
+}>();
+const emit = defineEmits<{
+    (event: 'change'): void,
 }>();
 
 const buildingItem = computed(() => {
@@ -106,10 +107,6 @@ const accModeText = computed(() => {
         return accModeTexts.get(mode)!;
     }
     return undefined;
-})
-
-const adj = computed(() => {
-    return props.info.adjacency[props.building.index]
 })
 
 const beltParams = computed(() => {

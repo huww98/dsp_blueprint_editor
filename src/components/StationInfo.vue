@@ -1,16 +1,16 @@
 <template>
     <template v-for="(s, i) in p.storage" :key="i">
-        <div class="station-storage" v-if="s.itemId > 0">
-            <BuildingIcon :icon-id="itemIconId(s.itemId)" :alt="itemsMap.get(s.itemId)!.name"/>
-            <div class="num">上限：{{s.max}}</div>
-            <div>
-                <div class="role" :class="roleClass.get(s.localRole)">本地{{roleText.get(s.localRole)}}</div>
-                <div v-if="inter" class="role" :class="roleClass.get(s.remoteRole)">星际{{roleText.get(s.remoteRole)}}</div>
-            </div>
-        </div>
-        <div class="station-storage" v-else>
-            <div class="icon-placeholder"></div>
-            <div class="placeholder">空栏位</div>
+        <div class="station-storage">
+            <ItemSelect :item-id="s.itemId > 0 ? s.itemId : null"
+                @update:item-id="itemId => setItemId(i, itemId)"/>
+            <template v-if="s.itemId > 0">
+                <div class="num">上限：{{s.max}}</div>
+                <div>
+                    <div class="role" :class="roleClass.get(s.localRole)">本地{{roleText.get(s.localRole)}}</div>
+                    <div v-if="inter" class="role" :class="roleClass.get(s.remoteRole)">星际{{roleText.get(s.remoteRole)}}</div>
+                </div>
+            </template>
+            <div class="placeholder" v-else>空栏位</div>
         </div>
     </template>
     <div class="building-params">
@@ -44,19 +44,45 @@ const roleClass = new Map([
 </script>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, inject, triggerRef } from 'vue';
 import { BlueprintBuilding, StationParameters } from '@/blueprint/parser';
-import BuildingIcon from './BuildingIcon.vue';
-import { itemsMap } from '@/data';
 import { isAdvancedMiningMachine, isInterstellarStation } from '@/data/items';
+import { buildingInfoKey } from '@/define';
+import ItemSelect from './ItemSelect.vue';
 import { itemIconId } from '@/data/icons';
 
 const props = defineProps<{
     building: BlueprintBuilding,
 }>();
+const emit = defineEmits<{
+    (event: 'change'): void,
+}>();
 
 const p = computed(() => props.building.parameters as StationParameters);
 const pc = computed(() => props.building.parameters as AdvancedMiningMachineParameters);
+
+const buildingInfo = inject(buildingInfoKey)!.value!;
+
+const setItemId = (storageIndex: number, itemId: number | null) => {
+    const s = p.value.storage[storageIndex];
+    const newItemId = itemId === null ? 0 : itemId;
+    if (s.itemId === newItemId)
+        return;
+
+    s.itemId = newItemId;
+    const adj = buildingInfo.adjacency[props.building.index];
+    for (let i = 0; i < p.value.slots.length; i++) {
+        if (p.value.slots[i].storageIdx - 1 === storageIndex) {
+            const belt = adj[i];
+            if (itemId === null)
+                belt.parameters = null;
+            else
+                belt.parameters = { iconId: itemIconId(itemId), count: 0 };
+        }
+    }
+    triggerRef(p);
+    emit('change');
+}
 
 const tripRangeOfShips = computed(() => {
     const ly = p.value.tripRangeOfShips / 2400000.0;

@@ -3,6 +3,8 @@ export interface Item {
     models: number[];
     name: string;
     icon: string;
+    /** page, row, column */
+    grid: [number, number, number];
 }
 
 export interface ItemStack {

@@ -1,6 +1,6 @@
 <template>
-    <span @click="openModal = true" class="recipe-select">
-        <BuildingIcon v-if="props.recipeId !== null" :icon-id="recipeIconId(props.recipeId)"/>
+    <span @click="openModal = true" class="icon-select">
+        <BuildingIcon v-if="props.recipeId !== null" :icon-id="recipeIconId(props.recipeId)" :alt="recipesMap.get(props.recipeId)!.name"/>
         <span class="icon icon-placeholder" v-else></span>
     </span>
     <Modal :open="openModal" @update:open="o => { if (!o) selected(null) }">
@@ -31,6 +31,7 @@
 import { ref, computed } from 'vue';
 import { Recipe } from '@/data';
 import { recipes } from '@/data/recipesData';
+import { recipesMap } from '@/data/recipes';
 import { recipeIconId } from '@/data/icons';
 import Modal from "./ModalDSP.vue";
 import BuildingIcon from './BuildingIcon.vue';
@@ -52,7 +53,7 @@ const selected = (i: Recipe | null) => {
 </script>
 
 <style lang="scss">
-.recipe-select {
+.icon-select {
     cursor: pointer;
 }
 

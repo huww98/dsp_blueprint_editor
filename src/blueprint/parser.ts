@@ -179,7 +179,11 @@ export interface StationParameters {
         localRole: LogisticRole;
         remoteRole: LogisticRole;
     }[];
-    slots: { dir: IODir; storageIdx: number; }[];
+    slots: {
+        dir: IODir;
+        /** Index into storage. Start from 1 */
+        storageIdx: number;
+    }[];
 
     workEnergyPerTick: number;
     tripRangeOfDrones: number;

@@ -2,7 +2,7 @@
     <div class="splitter-pannel">
         <svg viewBox="-125 -125 250 250" xmlns="http://www.w3.org/2000/svg">
             <circle cx=0 cy=0 r=50 stroke="currentcolor" fill="#0006" stroke-width=".5" opacity="0.6" />
-            <template v-for="(a, i) in props.adjacency" :key="i" >
+            <template v-for="(a, i) in adjacency" :key="i" >
                 <g v-if="a" :opacity="params.priority[i] ? 1 : 0.5">
                     <path d="M-5 -55l5 10 5 -10z" :fill="color(i)"
                         :transform="`rotate(${yaw[i]})` + (isInput(i) ? '' : 'rotate(180 0 -50)')"/>
@@ -32,17 +32,20 @@ import { itemsMap } from '@/data';
 import { AmbientLight, BoxGeometry, DirectionalLight, Matrix4, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import { attachRenderer } from '@/utils';
 import { itemRecipeIconUrl } from '@/data/icons';
-import { rendererKey } from '@/define';
+import { buildingInfoKey, rendererKey } from '@/define';
 
 const props = defineProps<{
-    adjacency: BlueprintBuilding[],
     building: BlueprintBuilding,
 }>();
 
 const mainRenderer = inject(rendererKey)!.value;
+const buildingInfo = inject(buildingInfoKey)!.value!;
 
+const adjacency = computed(() => {
+    return buildingInfo.adjacency[props.building.index];
+})
 const isInput = (i: number) => {
-    return props.adjacency[i].outputObjIdx === props.building.index;
+    return adjacency.value[i].outputObjIdx === props.building.index;
 }
 const color = (i: number) => {
     return isInput(i) ? '#AFFFFF' : '#FCE88F';
