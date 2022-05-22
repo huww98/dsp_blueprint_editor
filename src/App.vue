@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <BlueprintEditor ref="renderer" :blueprintData="data" v-model:selectedBuildingIndex="selectedBuildingIndex"
-                         @update:selectedBuildingIndex="i => expandSidebar = i !== null" />
+                         @update:selectedBuildingIndex="i => buildingFocused(i !== null)" />
         <div class="sidebar" :class="{ expanded: expandSidebar }">
             <div>
                 <div class="info-tab tab"
@@ -126,6 +126,12 @@ const rerender = () => {
     nextTick(() => {
         data.value = d;
     });
+}
+
+const buildingFocused = (selected: boolean) => {
+    expandSidebar.value = selected;
+    if (selected)
+        activeTab.value = 'info';
 }
 
 const selectedBuilding = computed(() => {
