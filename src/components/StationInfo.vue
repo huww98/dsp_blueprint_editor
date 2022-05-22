@@ -74,10 +74,12 @@ const setItemId = (storageIndex: number, itemId: number | null) => {
     for (let i = 0; i < p.value.slots.length; i++) {
         if (p.value.slots[i].storageIdx - 1 === storageIndex) {
             const belt = adj[i];
-            if (itemId === null)
-                belt.parameters = null;
-            else
-                belt.parameters = { iconId: itemIconId(itemId), count: 0 };
+            if (belt) {
+                if (itemId === null)
+                    belt.parameters = null;
+                else
+                    belt.parameters = { iconId: itemIconId(itemId), count: 0 };
+            }
         }
     }
     triggerRef(p);
