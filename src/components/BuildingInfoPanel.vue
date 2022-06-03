@@ -1,5 +1,17 @@
 <template>
     <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
+    <div v-if="buildingHeight != null" id="item-height">
+        <div>
+            <label for="item-height-input">高度</label>
+            <div>
+                <button @click="updateItemHeightStep(-1)">降低1</button>
+                <button @click="updateItemHeightStep(-0.5)">降低0.5</button>
+                <button @click="updateItemHeightStep(0.5)">升高0.5</button>
+                <button @click="updateItemHeightStep(1)">升高1</button>
+            </div>
+        </div>
+        <input id="item-height-input" :value="buildingHeight" @change="updateItemHeightManual" type="text"/>
+    </div>
     <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
     <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
@@ -124,6 +136,45 @@ const energyExchangerMode = computed(() => {
     const mode = (props.building.parameters as EnergyExchangerParameters).mode;
     return energyExchangerModeTexts.get(mode)!;
 });
+
+/**
+ * 计算：建筑（当前为传送带）高度
+ * TODO 此处需要考虑是否有必要四舍五入为一位小数以及锁定上下浮动精度为0.5
+ *      Here we need consider whether it is necessary to `Math.round(x * 10) / 10` and set float step = 0.5
+ * */
+const buildingHeight = computed(() => {
+    console.log(props?.building?.localOffset)
+    return props?.building?.localOffset?.[0]?.z ?? null
+})
+
+/**
+ * 手动指定高度
+ * @param e update事件
+ * */
+function updateItemHeightManual(e: Event): void {
+    updateItemHeight(Number((e.target as HTMLTextAreaElement).value))
+}
+
+/**
+ * 固定提升或降低高度
+ * @param offset 固定修改的高度值
+ * */
+function updateItemHeightStep(offset: number): void {
+    updateItemHeight(buildingHeight.value + offset)
+}
+
+/**
+ * 改变高度并重绘
+ * TODO 需要根据游戏设定限制最大、最小高度
+ *      Building height should follow dsp setting limit
+ * */
+function updateItemHeight(height: number): void {
+    props.building.localOffset.forEach(offset => {
+        offset.z = height
+    })
+    emit('change')
+}
+
 </script>
 
 <style lang="scss">
@@ -173,4 +224,20 @@ const energyExchangerMode = computed(() => {
         }
     }
 }
+
+#item-height {
+    > div {
+        display: flex;
+        justify-content: space-between;
+
+        > div {
+            display: inline;
+
+            button {
+                margin-left: 4px;
+            }
+        }
+    }
+}
+
 </style>
