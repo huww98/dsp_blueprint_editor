@@ -17,7 +17,7 @@ export interface BlueprintArea {
     };
 }
 
-interface XYZ {
+export interface XYZ {
     x: number, y: number, z: number,
 }
 export interface BlueprintBuilding {
