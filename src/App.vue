@@ -82,6 +82,16 @@
                         批量替换
                         <ReplaceModal :blueprint="data" @change="() => {rerender(); codeExpired = true}" ref="replaceModal"/>
                     </li>
+                    <template v-if="commandQueue">
+                        <li @click="commandQueue!.undo()">
+                            <img src="@/assets/icons/undo.svg">
+                            撤销
+                        </li>
+                        <li @click="commandQueue!.redo()">
+                            <img src="@/assets/icons/redo.svg">
+                            重做
+                        </li>
+                    </template>
                 </ul>
             </div>
             <footer>
