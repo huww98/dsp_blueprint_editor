@@ -94,20 +94,28 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
+import { computed, defineAsyncComponent, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
 import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
-import { version, rendererKey, buildingInfoKey } from '@/define';
+import { version, rendererKey, buildingInfoKey, commandQueueKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
 
 import BuildingInfoPanel from './components/BuildingInfoPanel.vue';
 import SWStatus from '@/swStatus.vue';
 import BlueprintIcon from './components/BlueprintIcon.vue';
 import ReplaceModal from './components/ReplaceModal.vue';
+import { CommandQueue } from './command';
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
 
 const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);
 const replaceModal = ref<null | InstanceType<typeof ReplaceModal>>(null);
 provide(rendererKey, renderer);
+
+const commandQueue = computed(() => {
+    if (data.value === null || renderer.value === null)
+        return null;
+    return new CommandQueue(data.value, renderer.value.updater!);
+});
+provide(commandQueueKey, commandQueue);
 
 const bpStr = ref('');
 const data = shallowRef(null as BlueprintData | null);
@@ -120,12 +128,7 @@ const parseErrorMessage = ref('');
 const selectedBuildingIndex = ref(null as number | null);
 
 const rerender = () => {
-    // TODO: find a more efficient way
-    const d = data.value;
-    data.value = null;
-    nextTick(() => {
-        data.value = d;
-    });
+    // TODO: migrate all changes to command
 }
 
 const buildingFocused = (selected: boolean) => {

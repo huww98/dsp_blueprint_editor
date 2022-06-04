@@ -19,6 +19,7 @@ import { IconGeometry, Icons } from '@/icons';
 import { IconSubscript } from '@/iconSubscript';
 import { Cargos } from '@/cargos';
 import { BVH } from '@/bvh';
+import { Updater } from '@/command';
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -61,7 +62,7 @@ class AllBuildings extends Object3D {
 
     public get icons() {
         return this.iconsMesh.geometry;
-	}
+    }
 
     public dispose() {
         this.traverse(o => {
@@ -256,7 +257,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 
 		let subscriptIdx = 0;
 		for (let i = 0; i < iconBelts.length; i++) {
-			const b = iconBelts[i];
+            const b = iconBelts[i];
             beltIconPos(b, transforms[b.index][0], pos);
 			const iconId = iconTexture.requestIcon((b.parameters as BeltParameters).iconId);
 			icons.addIcon(b, iconId, pos, beltIconScale);
@@ -279,7 +280,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 
 		const buildingIconScale = new Vector2();
 		for (let i = 0; i < iconBuildings.length; i++) {
-			const b = iconBuildings[i];
+            const b = iconBuildings[i];
 			if (!buildingIconPos(b, transforms[b.index][0], pos, buildingIconScale))
 				continue
 			const iconId = iconTexture.requestIcon(buildingIconId(b));
@@ -293,7 +294,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 	}
 
 	const belts = buildings.filter(b => isBelt(b.itemId));
-	const inserters = buildings.filter(b => isInserter(b.itemId));
+    const inserters = buildings.filter(b => isInserter(b.itemId));
 
 	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
 
@@ -360,6 +361,33 @@ function buildBVH(transforms: Matrix4[][], buildings: BlueprintBuilding[]) {
 	return new BVH(selectBoxes);
 }
 
+class EditorUpdater implements Updater {
+    constructor(private buildings: AllBuildings, private pos: PositionedBlueprint) {}
+
+    updateBuildingIcon(b: BlueprintBuilding): void {
+        const iconId = this.buildings.iconTexture.requestIcon(buildingIconId(b));
+        this.buildings.icons.updateIconId(b, iconId);
+    }
+    updateBeltIcon(b: BlueprintBuilding): void {
+        const iconId = b.parameters ? this.buildings.iconTexture.requestIcon((b.parameters as BeltParameters).iconId) : 0;
+        const icons = this.buildings.icons;
+        if (icons.hasIcon(b)) {
+            icons.updateIconId(b, iconId);
+        } else if(iconId != 0) {
+            const pos = new Vector3();
+            const trans = calcBuildingTrans(R, this.pos, b)
+            beltIconPos(b, trans[0], pos)
+			icons.addIcon(b, iconId, pos, beltIconScale, true);
+        }
+    }
+    updateBeltIconSubscript(b: BlueprintBuilding): void {
+        throw new Error('Method not implemented.');
+    }
+    updateSorterIcon(b: BlueprintBuilding): void {
+        throw new Error('Method not implemented.');
+    }
+}
+
 const R = 200.2;
 const SEGMENT = 200;
 
@@ -410,8 +438,9 @@ const b = computed(() => {
 	const pos = findPosForAreas(d.areas, SEGMENT);
 	const transforms = d.buildings.map(b => calcBuildingTrans(R, pos, b));
 	const buildings = buildBuildings(transforms, d.buildings, renderer)
-	const bvh = buildBVH(transforms, d.buildings);
-	return { buildings, bvh };
+    const bvh = buildBVH(transforms, d.buildings);
+    const updater = new EditorUpdater(buildings, pos);
+	return { buildings, bvh, updater };
 });
 
 watchEffect(onCleanUp => {
@@ -521,7 +550,8 @@ defineExpose({
 	selectBoxes,
 	camera,
 	cameraPosVersion,
-	getModel,
+    getModel,
+    updater: computed(() => b.value?.updater),
 });
 </script>
 

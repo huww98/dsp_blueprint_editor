@@ -28,7 +28,10 @@
 </template>
 
 <script lang="ts">
-import { AdvancedMiningMachineParameters, LogisticRole } from '@/blueprint/parser';
+import { LogisticRole, BlueprintBuilding, StationParameters, BlueprintData } from '@/blueprint/parser';
+import { Command, Updater } from '@/command';
+import { BuildingInfo } from '@/blueprint/buildingInfo';
+import { itemIconId } from '@/data/icons';
 
 const roleText = new Map([
     [LogisticRole.None, '仓储'],
@@ -41,15 +44,61 @@ const roleClass = new Map([
     [LogisticRole.Demand, 'role-demand'],
     [LogisticRole.Supply, 'role-supply'],
 ])
+
+class SetStationStorageItemCommand implements Command {
+    public readonly previousItemId;
+    public readonly belts: BlueprintBuilding[];
+
+    constructor(
+        public readonly building: BlueprintBuilding,
+        buildingInfo: BuildingInfo,
+        public readonly storageIndex: number,
+        public readonly newItemId: number,
+    ) {
+        const p = building.parameters as StationParameters;
+        const s = p.storage[storageIndex];
+        this.previousItemId = s.itemId;
+
+        this.belts = [];
+        const adj = buildingInfo.adjacency[this.building.index];
+        for (let i = 0; i < p.slots.length; i++) {
+            if (p.slots[i].storageIdx - 1 === storageIndex) {
+                const belt = adj[i];
+                if (belt) {
+                    this.belts.push(belt);
+                }
+            }
+        }
+    }
+    private setItemId(itemId: number, updater: Updater) {
+        const p = this.building.parameters as StationParameters;
+        const s = p.storage[this.storageIndex];
+
+        s.itemId = itemId;
+        for (const belt of this.belts) {
+            if (itemId === null)
+                belt.parameters = null;
+            else
+                belt.parameters = { iconId: itemIconId(itemId), count: 0 };
+            updater.updateBeltIcon(belt);
+        }
+    }
+    do(data: BlueprintData, updater: Updater): void {
+        this.setItemId(this.newItemId, updater);
+    }
+    undo(data: BlueprintData, updater: Updater): void {
+        this.setItemId(this.previousItemId, updater);
+    }
+    merge() { return false; }
+}
 </script>
 
 <script lang="ts" setup>
 import { computed, inject, triggerRef } from 'vue';
-import { BlueprintBuilding, StationParameters } from '@/blueprint/parser';
+import { AdvancedMiningMachineParameters } from '@/blueprint/parser';
 import { isAdvancedMiningMachine, isInterstellarStation } from '@/data/items';
-import { buildingInfoKey } from '@/define';
+import { buildingInfoKey, commandQueueKey } from '@/define';
 import ItemSelect from './ItemSelect.vue';
-import { itemIconId } from '@/data/icons';
 
 const props = defineProps<{
     building: BlueprintBuilding,
@@ -62,6 +111,7 @@ const p = computed(() => props.building.parameters as StationParameters);
 const pc = computed(() => props.building.parameters as AdvancedMiningMachineParameters);
 
 const buildingInfo = inject(buildingInfoKey)!.value!;
+const commandQueue = inject(commandQueueKey)!.value!;
 
 const setItemId = (storageIndex: number, itemId: number | null) => {
     const s = p.value.storage[storageIndex];
@@ -69,19 +119,7 @@ const setItemId = (storageIndex: number, itemId: number | null) => {
     if (s.itemId === newItemId)
         return;
 
-    s.itemId = newItemId;
-    const adj = buildingInfo.adjacency[props.building.index];
-    for (let i = 0; i < p.value.slots.length; i++) {
-        if (p.value.slots[i].storageIdx - 1 === storageIndex) {
-            const belt = adj[i];
-            if (belt) {
-                if (itemId === null)
-                    belt.parameters = null;
-                else
-                    belt.parameters = { iconId: itemIconId(itemId), count: 0 };
-            }
-        }
-    }
+    commandQueue.push(new SetStationStorageItemCommand(props.building, buildingInfo, storageIndex, newItemId));
     triggerRef(p);
     emit('change');
 }
