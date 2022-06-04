@@ -1,4 +1,4 @@
-import { InstancedBufferAttribute, InstancedMesh, Matrix4, Texture, Vector2, Vector3 } from "three";
+import { InstancedBufferAttribute, Matrix4, Mesh, Texture, Vector2, Vector3 } from "three";
 import { IconGeometry, IconsMaterial } from "./icons";
 
 class FontTexture {
@@ -43,7 +43,7 @@ class FontTexture {
     }
 }
 
-export class IconSubscript extends InstancedMesh {
+export class IconSubscript extends Mesh {
     fontTexture;
     cWidth = 0.22;
 
@@ -51,8 +51,9 @@ export class IconSubscript extends InstancedMesh {
         const fontTexture = new FontTexture();
         const material = new IconsMaterial(fontTexture.texture);
         material.iMapSize.set(FontTexture.allText.length, 1);
-        const geometry = new IconGeometry();
-        super(geometry, material, numChars);
+        const geometry = new IconGeometry(numChars, false);
+        geometry.instanceCount = Infinity;
+        super(geometry, material);
 
         const initTrans = new Matrix4().makeScale(
             fontTexture.cStride / fontTexture.cWidth * this.cWidth,
@@ -63,8 +64,6 @@ export class IconSubscript extends InstancedMesh {
         geometry.applyMatrix4(initTrans);
 
         this.fontTexture = fontTexture;
-        this.geometry.setAttribute('iconId', new InstancedBufferAttribute(new Int32Array(numChars), 1));
-        this.geometry.setAttribute('iconPos', new InstancedBufferAttribute(new Float32Array(numChars * 3), 3));
         this.geometry.setAttribute('offset', new InstancedBufferAttribute(new Float32Array(numChars * 2), 2));
     }
 

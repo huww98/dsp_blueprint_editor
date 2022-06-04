@@ -10,12 +10,12 @@ import {
 } from 'three';
 import { SphereLatitudeGridGeometry, SphereLongitudeGridGeometry } from '@/SphereGridGeometry';
 import { BeltParameters, BlueprintBuilding } from '@/blueprint/parser';
-import { findPosForAreas, gridAreas, calcBuildingTrans } from '@/blueprint/planet';
+import { findPosForAreas, gridAreas, calcBuildingTrans, PositionedBlueprint } from '@/blueprint/planet';
 import { buildingMeta, noIconBuildings } from '@/data/building';
 import { isBelt, isInserter } from '@/data/items';
 import { itemIconId, recipeIconId } from '@/data/icons';
 import { IconTexture } from '@/iconTexture';
-import { Icons } from '@/icons';
+import { IconGeometry, Icons } from '@/icons';
 import { IconSubscript } from '@/iconSubscript';
 import { Cargos } from '@/cargos';
 import { BVH } from '@/bvh';
@@ -45,20 +45,23 @@ function buildPlanetGrid(radius = 1, segment = 200) {
 }
 
 class AllBuildings extends Object3D {
+    constructor(
+        objects: Object3D[],
+        public readonly iconsMesh: Icons,
+        public readonly iconTexture: IconTexture,
+        public readonly cargos: Cargos,
+        public readonly modelRef: { mesh: InstancedMesh, instance: number }[],
+    ) {
+        super();
+        this.add(...objects);
+        this.add(iconsMesh);
+        if (cargos)
+            this.add(cargos);
+    }
 
-	private _cargos: Cargos | null = null;
-	public get cargos() {
-		return this._cargos;
+    public get icons() {
+        return this.iconsMesh.geometry;
 	}
-	public set cargos(c: Cargos | null) {
-		if (this._cargos)
-			this.remove(this._cargos);
-		this._cargos = c;
-		if (c)
-			this.add(c);
-	}
-
-	public modelRef: { mesh: InstancedMesh, instance: number }[] = [];
 
     public dispose() {
         this.traverse(o => {
@@ -90,6 +93,30 @@ function inserterTrans(transforms: Matrix4[], trans: Matrix4) {
 	return dir.subVectors(pos1, pos2).length();
 }
 
+function buildingIconId(b: BlueprintBuilding) {
+    return b.recipeId > 0 ? recipeIconId(b.recipeId) : itemIconId(b.itemId);
+}
+
+const scale3 = new Vector3();
+const trans = new Matrix4();
+function buildingIconPos(b: BlueprintBuilding, buildingTrans: Matrix4, pos: Vector3, scale: Vector2) {
+    const meta = buildingMeta.get(b.modelIndex);
+    if (meta === undefined)
+        return false;  // TODO: unknown building, print warning
+    trans.multiplyMatrices(buildingTrans, meta.iconTrans);
+    scale3.setFromMatrixScale(trans);
+    scale.set(scale3.x, scale3.y);
+    pos.setFromMatrixPosition(trans);
+    return true;
+}
+
+const beltIconScale = new Vector2(1.1, 1.1);
+const beltIconTrans = new Matrix4().makeTranslation(0., 0., 0.5);
+function beltIconPos(b: BlueprintBuilding, buildingTrans: Matrix4, pos: Vector3) {
+    trans.multiplyMatrices(buildingTrans, beltIconTrans);
+    pos.setFromMatrixPosition(trans);
+}
+
 function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
 	const buildBelts = (belts: BlueprintBuilding[]) => {
 		const thickness = 0.1;
@@ -107,7 +134,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				trans.multiply(offset);
 				mesh.setMatrixAt(i, trans);
 				mesh.setColorAt(i, buildingMeta.get(b.modelIndex)!.color);
-				allBuildings.modelRef[b.index] = { mesh, instance: i };
+				modelRef[b.index] = { mesh, instance: i };
 			}
 			mesh.instanceMatrix.needsUpdate = true;
 			mesh.instanceColor!.needsUpdate = true;
@@ -172,7 +199,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			trans.multiply(offset);
 			mesh.setMatrixAt(i, trans);
 			mesh.setColorAt(i, color);
-			allBuildings.modelRef[b.index] = { mesh, instance: i };
+			modelRef[b.index] = { mesh, instance: i };
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
@@ -191,16 +218,13 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			trans.multiplyMatrices(transforms[b.index][0], meta.unitBoxTrans);
 			mesh.setMatrixAt(i, trans);
 			mesh.setColorAt(i, meta.color);
-			allBuildings.modelRef[b.index] = { mesh, instance: i };
+			modelRef[b.index] = { mesh, instance: i };
 		}
 		mesh.instanceMatrix.needsUpdate = true;
 		mesh.instanceColor!.needsUpdate = true;
 		return [mesh];
 	}
 	const buildIcons = (iconBuildings: BlueprintBuilding[], iconBelts: BlueprintBuilding[], iconInsterters: BlueprintBuilding[]) => {
-		let count = iconBuildings.length + iconBelts.length + iconInsterters.length;
-		if (count === 0)
-			return [];
 		let subscripts = new Map<BlueprintBuilding, string>();
 		for (const b of iconBelts) {
 			if (b.parameters === null)
@@ -216,9 +240,8 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			subscripts.set(b, s);
 		}
 
-		const iconTexture = new IconTexture(renderer);
-		const mesh = new Icons(iconTexture.texture, count);
-		mesh.renderOrder = 10;
+		const count = iconBuildings.length + iconBelts.length + iconInsterters.length;
+		const icons = new IconGeometry(count);
 
 		let subscriptsMesh: null | IconSubscript = null;
 		if (subscripts.size > 0) {
@@ -227,22 +250,16 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				numChars += s.length;
 			}
 			subscriptsMesh = new IconSubscript(numChars);
-			subscriptsMesh.renderOrder = 11;
 		}
 		const trans = new Matrix4();
 		const pos = new Vector3();
 
-		let base = 0;
 		let subscriptIdx = 0;
-		const beltIconScale = new Vector2(1.1, 1.1);
-		const beltIconTrans = new Matrix4().makeTranslation(0., 0., 0.5);
 		for (let i = 0; i < iconBelts.length; i++) {
 			const b = iconBelts[i];
-			trans.multiplyMatrices(transforms[b.index][0], beltIconTrans);
-			const idx = i + base;
+            beltIconPos(b, transforms[b.index][0], pos);
 			const iconId = iconTexture.requestIcon((b.parameters as BeltParameters).iconId);
-			pos.setFromMatrixPosition(trans);
-			mesh.setIcon(idx, iconId, pos, beltIconScale);
+			icons.addIcon(b, iconId, pos, beltIconScale);
 
 			const sub = subscripts.get(b);
 			if (sub !== undefined) {
@@ -250,49 +267,41 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				subscriptIdx += sub.length;
 			}
 		}
-		base += iconBelts.length;
 
 		const inserterIconScale = new Vector2(0.8, 0.8);
 		const inserterIconTrans = new Matrix4().makeTranslation(0., 0., inserterHeight);
 		for (let i = 0; i < iconInsterters.length; i++) {
 			const b = iconInsterters[i];
 			trans.multiplyMatrices(transforms[b.index][0], inserterIconTrans);
-			const idx = i + base;
 			const iconId = iconTexture.requestIcon(itemIconId(b.filterId));
-			mesh.setIcon(idx, iconId, pos.setFromMatrixPosition(trans), inserterIconScale);
+			icons.addIcon(b, iconId, pos.setFromMatrixPosition(trans), inserterIconScale);
 		}
-		base += iconInsterters.length
 
-		const buildingIconScale3 = new Vector3();
 		const buildingIconScale = new Vector2();
 		for (let i = 0; i < iconBuildings.length; i++) {
 			const b = iconBuildings[i];
-			const meta = buildingMeta.get(b.modelIndex);
-			if (meta === undefined)
+			if (!buildingIconPos(b, transforms[b.index][0], pos, buildingIconScale))
 				continue
-			const idx = i + base;
-			trans.multiplyMatrices(transforms[b.index][0], meta.iconTrans);
-			const iconId = iconTexture.requestIcon(b.recipeId > 0 ? recipeIconId(b.recipeId) : itemIconId(b.itemId));
-			buildingIconScale3.setFromMatrixScale(trans);
-			buildingIconScale.set(buildingIconScale3.x, buildingIconScale3.y);
-			mesh.setIcon(idx, iconId, pos.setFromMatrixPosition(trans), buildingIconScale);
+			const iconId = iconTexture.requestIcon(buildingIconId(b));
+			icons.addIcon(b, iconId, pos, buildingIconScale);
 		}
-		base += iconBuildings.length;
 
-		const result: Object3D[] = [mesh];
-		mesh.needsUpdate();
 		if (subscriptsMesh !== null) {
 			subscriptsMesh.needsUpdate();
-			result.push(subscriptsMesh);
 		}
-		return result;
+		return [icons, subscriptsMesh] as const;
 	}
 
 	const belts = buildings.filter(b => isBelt(b.itemId));
 	const inserters = buildings.filter(b => isInserter(b.itemId));
 
-	const allBuildings = new AllBuildings();
-	allBuildings.modelRef = new Array(buildings.length);
+	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
+
+    const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
+	const iconBelts = belts.filter(b => b.parameters && (b.parameters as BeltParameters).iconId > 0);
+	const iconInsterters = inserters.filter(b => b.filterId > 0);
+
+	const modelRef = new Array<{ mesh: InstancedMesh, instance: number }>(buildings.length);
 	const cargosMesh = new Cargos(belts.length + inserters.length);
 	let numCargos = 0;
 	const addCargo = (trans: Matrix4, color: Color, distance: number) => {
@@ -302,32 +311,34 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		numCargos++;
 	}
 
+    const meshes: Object3D[] = [];
 	if (belts.length)
-		allBuildings.add(...buildBelts(belts));
+		meshes.push(...buildBelts(belts));
 
 	if (inserters.length)
-		allBuildings.add(...buildInserters(inserters));
+		meshes.push(...buildInserters(inserters));
 
 	if (numCargos) {
 		cargosMesh.count = numCargos;
 		cargosMesh.instanceMatrix.needsUpdate = true;
 		cargosMesh.instanceColor!.needsUpdate = true;
 		cargosMesh.geometry.cargoDistance.needsUpdate = true;
-		allBuildings.cargos = cargosMesh;
 	}
 
-	const boxes = buildings.filter(b => !isInserter(b.itemId) && !isBelt(b.itemId));
 	if (boxes.length)
-		allBuildings.add(...buildBoxes(boxes));
+		meshes.push(...buildBoxes(boxes));
 
-	const iconBuildings = boxes.filter(b => !noIconBuildings.has(b.itemId));
-	const iconBelts = belts.filter(b => b.parameters && (b.parameters as BeltParameters).iconId > 0);
-	const iconInsterters = inserters.filter(b => b.filterId > 0);
-	const icons = buildIcons(iconBuildings, iconBelts, iconInsterters)
-	if (icons.length)
-		allBuildings.add(...icons);
+    const iconTexture = new IconTexture(renderer);
+	const [icons, subscriptsMesh] = buildIcons(iconBuildings, iconBelts, iconInsterters)
+    if (subscriptsMesh) {
+        subscriptsMesh.renderOrder = 11;
+        meshes.push(subscriptsMesh);
+    }
 
-	return allBuildings;
+    const iconMesh = new Icons(iconTexture.texture, icons);
+    iconMesh.renderOrder = 10;
+
+	return new AllBuildings(meshes, iconMesh, iconTexture, cargosMesh, modelRef);
 }
 
 function buildBVH(transforms: Matrix4[][], buildings: BlueprintBuilding[]) {
