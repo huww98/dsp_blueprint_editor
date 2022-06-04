@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
 import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
 import { version, rendererKey, buildingInfoKey, commandQueueKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
@@ -288,6 +288,23 @@ const paste = async () => {
     }
     working.value = false;
 }
+
+const hotkey = (event: KeyboardEvent) => {
+    if (event.isComposing)
+        return;
+    if (event.ctrlKey && !event.altKey) {
+        if (event.code === 'KeyZ') {
+            if (event.shiftKey)
+                commandQueue.value?.redo();
+            else
+                commandQueue.value?.undo();
+        } else if (event.code === 'KeyY' && !event.shiftKey) {
+            commandQueue.value?.redo();
+        }
+    }
+}
+onMounted(() => document.body.addEventListener('keydown', hotkey));
+onUnmounted(() => document.body.removeEventListener('keydown', hotkey));
 </script>
 
 <style lang="scss">
