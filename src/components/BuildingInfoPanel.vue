@@ -1,5 +1,6 @@
 <template>
     <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
+    <position-panel :position="building.localOffset" @change="updateBuildingPosition(building)"></position-panel>
     <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
     <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
@@ -77,6 +78,7 @@ import BuildingRecipe from './BuildingRecipe.vue';
 import BuildingIcon from './BuildingIcon.vue';
 import StationInfo from './StationInfo.vue';
 import MonitorInfo from './MonitorInfo.vue';
+import PositionPanel from '@/components/PositionPanel.vue'
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));
 
 const props = defineProps<{
@@ -84,6 +86,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
     (event: 'change'): void,
+    (event: 'change:position', building: BlueprintBuilding[]): void,
 }>();
 
 const buildingItem = computed(() => {
@@ -124,6 +127,14 @@ const energyExchangerMode = computed(() => {
     const mode = (props.building.parameters as EnergyExchangerParameters).mode;
     return energyExchangerModeTexts.get(mode)!;
 });
+
+/**
+ * 由建筑位置变化触发重绘
+ * */
+function updateBuildingPosition(building: BlueprintBuilding) {
+    emit('change:position', [building])
+}
+
 </script>
 
 <style lang="scss">

@@ -72,7 +72,8 @@
                     </div>
                 </section>
                 <section v-if="selectedBuilding !== null">
-                    <BuildingInfoPanel :building="selectedBuilding" @change="() => {rerender(); codeExpired = true}"/>
+                    <BuildingInfoPanel :building="selectedBuilding" @change="() => {rerender(); codeExpired = true}"
+                                       @change:position="updateBuildings"/>
                 </section>
             </div>
             <div v-else-if="activeTab === 'operations'">
@@ -95,7 +96,7 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, nextTick, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
-import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
+import { BlueprintBuilding, BlueprintData, fromStr, toStr } from '@/blueprint/parser';
 import { version, rendererKey, buildingInfoKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
 
@@ -274,6 +275,26 @@ const paste = async () => {
         notSupport.value = true;
     }
     working.value = false;
+}
+
+function updateBuildingPosition(buildingInfo: BlueprintBuilding): void {
+    if (data?.value?.buildings) {
+        for (let i = 0, len = data.value.buildings.length; i < len; i++) {
+            if (data.value.buildings[i].index === buildingInfo.index) {
+                // TODO 此处改为单独重新渲染
+                data.value.buildings[i] = buildingInfo
+                return
+            }
+        }
+    }
+}
+
+function updateBuildings(buildings: BlueprintBuilding[]) {
+    buildings.forEach(buildingInfo => {
+        updateBuildingPosition(buildingInfo)
+    })
+    // 暂时全局重新渲染
+    rerender()
 }
 </script>
 
