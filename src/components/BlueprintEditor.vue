@@ -20,6 +20,7 @@ import { IconSubscript } from '@/iconSubscript';
 import { Cargos } from '@/cargos';
 import { BVH } from '@/bvh';
 import { Updater } from '@/command';
+import { commandQueueKey } from '@/define';
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -361,31 +362,27 @@ function buildBVH(transforms: Matrix4[][], buildings: BlueprintBuilding[]) {
 	return new BVH(selectBoxes);
 }
 
-class EditorUpdater implements Updater {
-    constructor(private buildings: AllBuildings, private pos: PositionedBlueprint) {}
+function registerUpdater(updater: Updater, buildings: AllBuildings, posBP: PositionedBlueprint) {
+    updater.updateBuildingIcon.on(b => {
+        const iconId = buildings.iconTexture.requestIcon(buildingIconId(b));
+        buildings.icons.updateIconId(b, iconId);
+    });
 
-    updateBuildingIcon(b: BlueprintBuilding): void {
-        const iconId = this.buildings.iconTexture.requestIcon(buildingIconId(b));
-        this.buildings.icons.updateIconId(b, iconId);
-    }
-    updateBeltIcon(b: BlueprintBuilding): void {
-        const iconId = b.parameters ? this.buildings.iconTexture.requestIcon((b.parameters as BeltParameters).iconId) : 0;
-        const icons = this.buildings.icons;
+    updater.updateBeltIcon.on(b => {
+        const iconId = b.parameters ? buildings.iconTexture.requestIcon((b.parameters as BeltParameters).iconId) : 0;
+        const icons = buildings.icons;
         if (icons.hasIcon(b)) {
             icons.updateIconId(b, iconId);
-        } else if(iconId != 0) {
+        } else if (iconId != 0) {
             const pos = new Vector3();
-            const trans = calcBuildingTrans(R, this.pos, b)
+            const trans = calcBuildingTrans(R, posBP, b)
             beltIconPos(b, trans[0], pos)
-			icons.addIcon(b, iconId, pos, beltIconScale, true);
+            icons.addIcon(b, iconId, pos, beltIconScale, true);
         }
-    }
-    updateBeltIconSubscript(b: BlueprintBuilding): void {
-        throw new Error('Method not implemented.');
-    }
-    updateSorterIcon(b: BlueprintBuilding): void {
-        throw new Error('Method not implemented.');
-    }
+    });
+
+    updater.updateBeltIconSubscript.on(b => { throw new Error('Method not implemented.') });
+    updater.updateSorterIcon.on(b => { throw new Error('Method not implemented.') });
 }
 
 const R = 200.2;
@@ -394,14 +391,13 @@ const SEGMENT = 200;
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref, onUnmounted, watchEffect, computed } from 'vue'
+import { ref, onMounted, Ref, onUnmounted, watchEffect, computed, inject } from 'vue'
 import { Scene, PerspectiveCamera, SphereGeometry, AmbientLight } from 'three';
 import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
 import { attachCamera, attachRenderer } from '@/utils';
 
 const props = defineProps<{
-  blueprintData: BlueprintData | null,
   selectedBuildingIndex: number | null,
 }>();
 
@@ -431,16 +427,18 @@ camera.far = 3000;
 camera.position.z = 1.5 * R;
 attachCamera(root, camera);
 
+const commandQueue = inject(commandQueueKey)!;
+
 const b = computed(() => {
-	if (!props.blueprintData)
+	if (!commandQueue.value)
 		return null;
-	const d = props.blueprintData
+    const d = commandQueue.value.data;
 	const pos = findPosForAreas(d.areas, SEGMENT);
 	const transforms = d.buildings.map(b => calcBuildingTrans(R, pos, b));
 	const buildings = buildBuildings(transforms, d.buildings, renderer)
     const bvh = buildBVH(transforms, d.buildings);
-    const updater = new EditorUpdater(buildings, pos);
-	return { buildings, bvh, updater };
+    registerUpdater(commandQueue.value.updater, buildings, pos);
+	return { buildings, bvh };
 });
 
 watchEffect(onCleanUp => {
@@ -551,7 +549,6 @@ defineExpose({
 	camera,
 	cameraPosVersion,
     getModel,
-    updater: computed(() => b.value?.updater),
 });
 </script>
 

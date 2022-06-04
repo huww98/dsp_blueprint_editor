@@ -1,11 +1,28 @@
 import { BlueprintBuilding, BlueprintData } from "@/blueprint/parser";
-import { ref } from "vue";
+import { onUnmounted, ref } from "vue";
 
-export interface Updater {
-    updateBuildingIcon(building: BlueprintBuilding): void;
-    updateBeltIcon(building: BlueprintBuilding): void;
-    updateBeltIconSubscript(building: BlueprintBuilding): void;
-    updateSorterIcon(building: BlueprintBuilding): void;
+type TCb = (b: BlueprintBuilding) => void;
+export class UpdateEvent {
+    private callbacks = new Set<TCb>();
+    on(callback: TCb) {
+        this.callbacks.add(callback);
+        onUnmounted(() => this.callbacks.delete(callback));
+    }
+    dispatch(b: BlueprintBuilding) {
+        for (const cb of this.callbacks) {
+            cb(b);
+        }
+    }
+}
+
+
+export class Updater {
+    updateBuildingIcon = new UpdateEvent();
+    updateBeltIcon = new UpdateEvent();
+    updateBeltIconSubscript = new UpdateEvent();
+    updateSorterIcon = new UpdateEvent();
+
+    updateStationInfo = new UpdateEvent();
 }
 
 export interface Command {
@@ -25,7 +42,10 @@ export class CommandQueue {
     }
 
     private stateVersion = ref(0);
-    constructor(private data: BlueprintData, private updater: Updater) {}
+    public readonly updater;
+    constructor(public readonly data: BlueprintData) {
+        this.updater = new Updater();
+    }
 
     // commands:         c1 c2 c3
     // currentPosition: 0  1  2  3

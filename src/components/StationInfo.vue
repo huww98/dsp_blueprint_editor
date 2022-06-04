@@ -75,12 +75,13 @@ class SetStationStorageItemCommand implements Command {
         const s = p.storage[this.storageIndex];
 
         s.itemId = itemId;
+        updater.updateStationInfo.dispatch(this.building);
         for (const belt of this.belts) {
             if (itemId === null)
                 belt.parameters = null;
             else
                 belt.parameters = { iconId: itemIconId(itemId), count: 0 };
-            updater.updateBeltIcon(belt);
+            updater.updateBeltIcon.dispatch(belt);
         }
     }
     do(data: BlueprintData, updater: Updater): void {
@@ -113,6 +114,11 @@ const pc = computed(() => props.building.parameters as AdvancedMiningMachinePara
 const buildingInfo = inject(buildingInfoKey)!.value!;
 const commandQueue = inject(commandQueueKey)!.value!;
 
+commandQueue.updater.updateStationInfo.on(b => {
+    if (b === props.building)
+        triggerRef(p);
+});
+
 const setItemId = (storageIndex: number, itemId: number | null) => {
     const s = p.value.storage[storageIndex];
     const newItemId = itemId === null ? 0 : itemId;
@@ -120,7 +126,6 @@ const setItemId = (storageIndex: number, itemId: number | null) => {
         return;
 
     commandQueue.push(new SetStationStorageItemCommand(props.building, buildingInfo, storageIndex, newItemId));
-    triggerRef(p);
     emit('change');
 }
 

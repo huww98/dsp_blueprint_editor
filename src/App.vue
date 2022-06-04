@@ -1,7 +1,8 @@
 <template>
     <div class="container">
-        <BlueprintEditor ref="renderer" :blueprintData="data" v-model:selectedBuildingIndex="selectedBuildingIndex"
-                         @update:selectedBuildingIndex="i => buildingFocused(i !== null)" />
+        <BlueprintEditor ref="renderer"
+            v-model:selectedBuildingIndex="selectedBuildingIndex"
+            @update:selectedBuildingIndex="i => buildingFocused(i !== null)" />
         <div class="sidebar" :class="{ expanded: expandSidebar }">
             <div>
                 <div class="info-tab tab"
@@ -127,9 +128,9 @@ const replaceModal = ref<null | InstanceType<typeof ReplaceModal>>(null);
 provide(rendererKey, renderer);
 
 const commandQueue = computed(() => {
-    if (data.value === null || renderer.value === null)
+    if (data.value === null)
         return null;
-    return new CommandQueue(data.value, renderer.value.updater!);
+    return new CommandQueue(data.value);
 });
 provide(commandQueueKey, commandQueue);
 
