@@ -1,6 +1,6 @@
 <template>
     <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
-    <position-panel :position="building.localOffset" @change="updateBuildingPosition"></position-panel>
+    <position-panel :position="building.localOffset" @change="updateBuildingPosition(building)"></position-panel>
     <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
     <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
@@ -86,6 +86,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
     (event: 'change'): void,
+    (event: 'change:position', building: BlueprintBuilding[]): void,
 }>();
 
 const buildingItem = computed(() => {
@@ -130,8 +131,8 @@ const energyExchangerMode = computed(() => {
 /**
  * 由建筑位置变化触发重绘
  * */
-function updateBuildingPosition() {
-    emit('change')
+function updateBuildingPosition(building: BlueprintBuilding) {
+    emit('change:position', [building])
 }
 
 </script>

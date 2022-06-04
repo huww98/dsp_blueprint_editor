@@ -48,8 +48,6 @@ const emit = defineEmits<{
 
 const isSinglePosition = computed(() => {
     const threshold = 0.0001
-    console.log(props.position[0])
-    console.log(props.position[1])
     return Math.abs(props.position[0].x - props.position[1].x) < threshold &&
         Math.abs(props.position[0].y - props.position[1].y) < threshold &&
         Math.abs(props.position[0].z - props.position[1].z) < threshold
