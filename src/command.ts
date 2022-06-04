@@ -1,4 +1,5 @@
 import { BlueprintBuilding, BlueprintData } from "@/blueprint/parser";
+import { ref } from "vue";
 
 export interface Updater {
     updateBuildingIcon(building: BlueprintBuilding): void;
@@ -23,6 +24,7 @@ export class CommandQueue {
         this.trim()
     }
 
+    private stateVersion = ref(0);
     constructor(private data: BlueprintData, private updater: Updater) {}
 
     // commands:         c1 c2 c3
@@ -32,9 +34,10 @@ export class CommandQueue {
 
     private trim() {
         if (this.maxSize < this.commands.length) {
-            const n = this.commands.length - this.maxSize;
+            const n = Math.min(this.commands.length - this.maxSize, this.currentPosition);
             this.commands.splice(0, n);
             this.currentPosition -= n;
+            this.stateVersion.value++;
         }
     }
 
@@ -46,19 +49,32 @@ export class CommandQueue {
         this.commands.push(c);
         this.currentPosition++;
         this.trim();
+        this.stateVersion.value++;
+    }
+
+    public canUndo() {
+        this.stateVersion.value;
+        return this.currentPosition > 0;
     }
 
     public undo() {
-        if (this.currentPosition === 0)
+        if (!this.canUndo())
             return false;
         this.commands[--this.currentPosition].undo(this.data, this.updater);
+        this.stateVersion.value++;
         return true;
     }
 
+    public canRedo() {
+        this.stateVersion.value;
+        return this.currentPosition < this.commands.length;
+    }
+
     public redo() {
-        if (this.currentPosition === this.commands.length)
+        if (!this.canRedo())
             return false;
         this.commands[this.currentPosition++].do(this.data, this.updater);
+        this.stateVersion.value++;
         return true;
     }
 }

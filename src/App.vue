@@ -77,19 +77,25 @@
             </div>
             <div v-else-if="activeTab === 'operations'">
                 <ul class="operations">
-                    <li v-if="data" @click="replaceModal!.open()">
-                        <img src="@/assets/icons/find_replace.svg">
-                        批量替换
+                    <li v-if="data">
+                        <button @click="replaceModal!.open()">
+                            <img src="@/assets/icons/find_replace.svg">
+                            批量替换
+                        </button>
                         <ReplaceModal :blueprint="data" @change="() => {rerender(); codeExpired = true}" ref="replaceModal"/>
                     </li>
                     <template v-if="commandQueue">
-                        <li @click="commandQueue!.undo()">
-                            <img src="@/assets/icons/undo.svg">
-                            撤销
+                        <li>
+                            <button @click="commandQueue!.undo()" :disabled="!commandQueue.canUndo()">
+                                <img src="@/assets/icons/undo.svg">
+                                撤销
+                            </button>
                         </li>
-                        <li @click="commandQueue!.redo()">
-                            <img src="@/assets/icons/redo.svg">
-                            重做
+                        <li>
+                            <button @click="commandQueue!.redo()" :disabled="!commandQueue.canRedo()">
+                                <img src="@/assets/icons/redo.svg">
+                                重做
+                            </button>
                         </li>
                     </template>
                 </ul>
@@ -437,12 +443,21 @@ ul.operations {
     >li {
         display: block;
         list-style: none;
-        user-select: none;
-        cursor: pointer;
         border-bottom: 1px solid #fff6;
-        padding: 5px;
         margin: 0;
 
+        button {
+            padding: 5px;
+            color: white;
+            width: 100%;
+            background: transparent;
+            text-align: start;
+
+            &[disabled] {
+                background: transparent;
+                opacity: 0.5;
+            }
+        }
         img {
             vertical-align: middle;
         }
