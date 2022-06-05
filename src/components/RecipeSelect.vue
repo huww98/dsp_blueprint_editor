@@ -1,5 +1,5 @@
 <template>
-    <span @click="openModal = true" class="icon-select">
+    <span @click="openModal = true" class="icon-select" ref="handler" tabindex="0" role="listbox">
         <BuildingIcon v-if="props.recipeId !== null" :icon-id="recipeIconId(props.recipeId)" :alt="recipesMap.get(props.recipeId)!.name"/>
         <span class="icon icon-placeholder" v-else></span>
     </span>
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Recipe } from '@/data';
 import { recipes } from '@/data/recipesData';
 import { recipesMap } from '@/data/recipes';
@@ -36,10 +36,14 @@ import { recipeIconId } from '@/data/icons';
 import Modal from "./ModalDSP.vue";
 import BuildingIcon from './BuildingIcon.vue';
 
+const handler = ref<undefined | HTMLElement>(undefined);
+
 const props = defineProps<{ recipeId: number | null }>();
 const emit = defineEmits<{(event: 'update:recipeId', id: number | null): void}>();
 
 const openModal = ref(false);
+watch(openModal, o => { if (!o) handler.value!.focus() });
+
 const page = ref<1 | 2>(1);
 const icons = computed(() => recipes.filter(r => r.grid[0] === page.value));
 
