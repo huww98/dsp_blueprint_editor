@@ -393,7 +393,6 @@ const SEGMENT = 200;
 <script setup lang="ts">
 import { ref, onMounted, Ref, onUnmounted, watchEffect, computed, inject } from 'vue'
 import { Scene, PerspectiveCamera, SphereGeometry, AmbientLight } from 'three';
-import { BlueprintData } from '@/blueprint/parser';
 import { PlanetMapControls } from '@/PlanetMapControls';
 import { attachCamera, attachRenderer } from '@/utils';
 

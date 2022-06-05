@@ -1,28 +1,31 @@
 import { BlueprintBuilding, BlueprintData } from "@/blueprint/parser";
-import { onUnmounted, ref } from "vue";
+import { onUnmounted, onMounted, ref } from "vue";
 
-type TCb = (b: BlueprintBuilding) => void;
-export class UpdateEvent {
-    private callbacks = new Set<TCb>();
-    on(callback: TCb) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class EventDispatcher<TArgs extends Array<any>> {
+    private callbacks = new Set<(...args: TArgs) => void>();
+    on(callback: (...args: TArgs) => void) {
         this.callbacks.add(callback);
+    }
+    onMounted(callback: (...args: TArgs) => void) {
+        onMounted(() => this.callbacks.add(callback));
         onUnmounted(() => this.callbacks.delete(callback));
     }
-    dispatch(b: BlueprintBuilding) {
+    dispatch(...args: TArgs) {
         for (const cb of this.callbacks) {
-            cb(b);
+            cb(...args);
         }
     }
 }
 
 
 export class Updater {
-    updateBuildingIcon = new UpdateEvent();
-    updateBeltIcon = new UpdateEvent();
-    updateBeltIconSubscript = new UpdateEvent();
-    updateSorterIcon = new UpdateEvent();
+    updateBuildingIcon = new EventDispatcher<[b: BlueprintBuilding]>();
+    updateBeltIcon = new EventDispatcher<[b: BlueprintBuilding]>();
+    updateBeltIconSubscript = new EventDispatcher<[b: BlueprintBuilding]>();
+    updateSorterIcon = new EventDispatcher<[b: BlueprintBuilding]>();
 
-    updateStationInfo = new UpdateEvent();
+    updateStationInfo = new EventDispatcher<[b: BlueprintBuilding]>();
 }
 
 export interface Command {
@@ -41,7 +44,8 @@ export class CommandQueue {
         this.trim()
     }
 
-    private stateVersion = ref(0);
+    private readonly stateVersion = ref(0);
+    public readonly execVersion = ref(0);
     public readonly updater;
     constructor(public readonly data: BlueprintData) {
         this.updater = new Updater();
@@ -70,6 +74,7 @@ export class CommandQueue {
         this.currentPosition++;
         this.trim();
         this.stateVersion.value++;
+        this.execVersion.value++;
     }
 
     public canUndo() {
@@ -82,6 +87,7 @@ export class CommandQueue {
             return false;
         this.commands[--this.currentPosition].undo(this.data, this.updater);
         this.stateVersion.value++;
+        this.execVersion.value++;
         return true;
     }
 
@@ -95,6 +101,7 @@ export class CommandQueue {
             return false;
         this.commands[this.currentPosition++].do(this.data, this.updater);
         this.stateVersion.value++;
+        this.execVersion.value++;
         return true;
     }
 }

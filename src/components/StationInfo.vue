@@ -104,9 +104,6 @@ import ItemSelect from './ItemSelect.vue';
 const props = defineProps<{
     building: BlueprintBuilding,
 }>();
-const emit = defineEmits<{
-    (event: 'change'): void,
-}>();
 
 const p = computed(() => props.building.parameters as StationParameters);
 const pc = computed(() => props.building.parameters as AdvancedMiningMachineParameters);
@@ -114,7 +111,7 @@ const pc = computed(() => props.building.parameters as AdvancedMiningMachinePara
 const buildingInfo = inject(buildingInfoKey)!.value!;
 const commandQueue = inject(commandQueueKey)!.value!;
 
-commandQueue.updater.updateStationInfo.on(b => {
+commandQueue.updater.updateStationInfo.onMounted(b => {
     if (b === props.building)
         triggerRef(p);
 });
@@ -126,7 +123,6 @@ const setItemId = (storageIndex: number, itemId: number | null) => {
         return;
 
     commandQueue.push(new SetStationStorageItemCommand(props.building, buildingInfo, storageIndex, newItemId));
-    emit('change');
 }
 
 const tripRangeOfShips = computed(() => {

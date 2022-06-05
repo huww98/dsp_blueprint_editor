@@ -6,7 +6,7 @@
     <div v-else-if="filterItem">
         过滤器：<BuildingIcon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
     </div>
-    <StationInfo v-if="isStation(building.itemId)" :building="building" @change="emit('change')" />
+    <StationInfo v-if="isStation(building.itemId)" :building="building" />
     <MonitorInfo v-if="isMonitor(building.itemId)" :building="building" />
     <div v-if="isLab(building.itemId)">
         矩阵研究站模式：{{ LabModeText }}
@@ -81,9 +81,6 @@ const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "ren
 
 const props = defineProps<{
     building: BlueprintBuilding,
-}>();
-const emit = defineEmits<{
-    (event: 'change'): void,
 }>();
 
 const buildingItem = computed(() => {

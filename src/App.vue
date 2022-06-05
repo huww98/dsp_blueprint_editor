@@ -73,7 +73,7 @@
                     </div>
                 </section>
                 <section v-if="selectedBuilding !== null">
-                    <BuildingInfoPanel :building="selectedBuilding" @change="() => {rerender(); codeExpired = true}"/>
+                    <BuildingInfoPanel :building="selectedBuilding" />
                 </section>
             </div>
             <div v-else-if="activeTab === 'operations'">
@@ -127,13 +127,6 @@ const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);
 const replaceModal = ref<null | InstanceType<typeof ReplaceModal>>(null);
 provide(rendererKey, renderer);
 
-const commandQueue = computed(() => {
-    if (data.value === null)
-        return null;
-    return new CommandQueue(data.value);
-});
-provide(commandQueueKey, commandQueue);
-
 const bpStr = ref('');
 const data = shallowRef(null as BlueprintData | null);
 const expandSidebar = ref(true);
@@ -143,6 +136,20 @@ const notSupport = ref(false);
 const codeExpired = ref(false);
 const parseErrorMessage = ref('');
 const selectedBuildingIndex = ref(null as number | null);
+
+const commandQueue = computed(() => {
+    if (data.value === null)
+        return null;
+    return new CommandQueue(data.value);
+});
+provide(commandQueueKey, commandQueue);
+
+watchEffect(onCleanup => {
+    if (commandQueue.value) {
+        const stopWatch = watch(commandQueue.value.execVersion, () => codeExpired.value = true);
+        onCleanup(stopWatch);
+    }
+});
 
 const rerender = () => {
     // TODO: migrate all changes to command
