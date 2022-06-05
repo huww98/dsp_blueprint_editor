@@ -60,7 +60,7 @@ const energyExchangerModeTexts = new Map([
 </script>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, inject, ref } from 'vue';
 
 import {
     LabParamerters, AssembleParamerters, TankParameters, BlueprintBuilding,
@@ -72,12 +72,15 @@ import {
     isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank,
     isEjector, isEnergyExchanger, isRayReciver, isMonitor, isSplitter
 } from '@/data/items';
+import { commandQueueKey } from '@/define';
 
 import BuildingRecipe from './BuildingRecipe.vue';
 import BuildingIcon from './BuildingIcon.vue';
 import StationInfo from './StationInfo.vue';
 import MonitorInfo from './MonitorInfo.vue';
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));
+
+const commandQueue = inject(commandQueueKey)!.value!;
 
 const props = defineProps<{
     building: BlueprintBuilding,
@@ -86,11 +89,17 @@ const props = defineProps<{
 const buildingItem = computed(() => {
     return itemsMap.get(props.building.itemId)!;
 })
+const filterVersion = ref(0);
 const filterItem = computed(() => {
+    filterVersion.value;
     if (props.building.filterId <= 0)
         return null;
     return itemsMap.get(props.building.filterId)!;
 })
+commandQueue.updater.updateSorterIcon.onMounted(b => {
+    if (b === props.building)
+        filterVersion.value++;
+});
 
 const LabModeText = computed(() => {
     const mode = (props.building.parameters as LabParamerters).researchMode;
@@ -106,11 +115,17 @@ const accModeText = computed(() => {
     return undefined;
 })
 
+const beltVersion = ref(0);
 const beltParams = computed(() => {
+    beltVersion.value;
     if (isBelt(props.building.itemId) && props.building.parameters)
         return props.building.parameters as BeltParameters;
     return null;
-})
+});
+commandQueue.updater.updateBeltIcon.onMounted(b => {
+    if (b === props.building)
+        beltVersion.value++;
+});
 
 const inserterParams = computed(() => props.building.parameters as InserterParameters);
 const storageParams = computed(() => props.building.parameters as StorageParameters);

@@ -28,11 +28,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
-import { replace, ReplaceParams } from "@/blueprint/replace";
+import { computed, inject, reactive, ref } from "vue";
+import { ReplaceCommand, ReplaceParams } from "@/blueprint/replace";
 import { BlueprintData } from "@/blueprint/parser";
 import Modal from "./ModalDSP.vue";
 import RecipeSelect from "./RecipeSelect.vue";
+import { commandQueueKey } from "@/define";
+
+const commandQueue = inject(commandQueueKey)!.value!;
 
 const open = ref(false);
 
@@ -54,10 +57,6 @@ const r = reactive({
 
 const props = defineProps<{blueprint: BlueprintData}>()
 
-const emit = defineEmits<{
-    (event: 'change'): void,
-}>();
-
 const canReplace = computed(() => {
     return r.searchRecipe !== null && r.replaceRecipe !== null && Object.values(r.scope).some(s => s);
 })
@@ -65,8 +64,7 @@ const canReplace = computed(() => {
 const executeReplace = () => {
     if (!canReplace.value)
         return;
-    if (replace(props.blueprint, r as ReplaceParams))
-        emit("change")
+    commandQueue.push(new ReplaceCommand(props.blueprint, r as ReplaceParams));
     open.value = false;
 }
 </script>

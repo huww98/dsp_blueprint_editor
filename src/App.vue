@@ -54,9 +54,8 @@
                                 style="position: absolute; inset: 0; opacity: 0;" />
                         </button>
                         <a v-if="bpStr" class="button" @click="prepareSave"
-                            :href="bpUrl" :download="data?.header.shortDesc + '.txt'"
+                            :href="bpUrl" :download="data!.header.shortDesc + '.txt'"
                             style="flex: auto; width: 50px;" >
-                            <!-- TODO: data? to workaround rerender -->
                             保存文件
                         </a>
                     </div>
@@ -83,7 +82,7 @@
                             <img src="@/assets/icons/find_replace.svg">
                             批量替换
                         </button>
-                        <ReplaceModal :blueprint="data" @change="() => {rerender(); codeExpired = true}" ref="replaceModal"/>
+                        <ReplaceModal :blueprint="data" ref="replaceModal"/>
                     </li>
                     <template v-if="commandQueue">
                         <li>
@@ -150,10 +149,6 @@ watchEffect(onCleanup => {
         onCleanup(stopWatch);
     }
 });
-
-const rerender = () => {
-    // TODO: migrate all changes to command
-}
 
 const buildingFocused = (selected: boolean) => {
     expandSidebar.value = selected;

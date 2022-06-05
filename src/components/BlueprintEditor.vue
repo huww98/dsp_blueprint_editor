@@ -119,6 +119,13 @@ function beltIconPos(b: BlueprintBuilding, buildingTrans: Matrix4, pos: Vector3)
     pos.setFromMatrixPosition(trans);
 }
 
+const sorterIconScale = new Vector2(0.8, 0.8);
+const sorterIconTrans = new Matrix4().makeTranslation(0., 0., inserterHeight);
+function sorterIconPos(b: BlueprintBuilding, buildingTrans: Matrix4, pos: Vector3) {
+    trans.multiplyMatrices(buildingTrans, sorterIconTrans);
+    pos.setFromMatrixPosition(trans);
+}
+
 function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
 	const buildBelts = (belts: BlueprintBuilding[]) => {
 		const thickness = 0.1;
@@ -253,7 +260,6 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			}
 			subscriptsMesh = new IconSubscript(numChars);
 		}
-		const trans = new Matrix4();
 		const pos = new Vector3();
 
 		let subscriptIdx = 0;
@@ -270,13 +276,11 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 			}
 		}
 
-		const inserterIconScale = new Vector2(0.8, 0.8);
-		const inserterIconTrans = new Matrix4().makeTranslation(0., 0., inserterHeight);
 		for (let i = 0; i < iconInsterters.length; i++) {
 			const b = iconInsterters[i];
-			trans.multiplyMatrices(transforms[b.index][0], inserterIconTrans);
-			const iconId = iconTexture.requestIcon(itemIconId(b.filterId));
-			icons.addIcon(b, iconId, pos.setFromMatrixPosition(trans), inserterIconScale);
+            sorterIconPos(b, transforms[b.index][0], pos);
+            const iconId = iconTexture.requestIcon(itemIconId(b.filterId));
+			icons.addIcon(b, iconId, pos, sorterIconScale);
 		}
 
 		const buildingIconScale = new Vector2();
@@ -382,7 +386,18 @@ function registerUpdater(updater: Updater, buildings: AllBuildings, posBP: Posit
     });
 
     updater.updateBeltIconSubscript.on(b => { throw new Error('Method not implemented.') });
-    updater.updateSorterIcon.on(b => { throw new Error('Method not implemented.') });
+    updater.updateSorterIcon.on(b => {
+        const iconId = buildings.iconTexture.requestIcon(itemIconId(b.filterId));
+        const icons = buildings.icons;
+        if (icons.hasIcon(b)) {
+            icons.updateIconId(b, iconId);
+        } else if (iconId != 0) {
+            const pos = new Vector3();
+            const trans = calcBuildingTrans(R, posBP, b)
+            sorterIconPos(b, trans[0], pos)
+            icons.addIcon(b, iconId, pos, sorterIconScale, true);
+        }
+    });
 }
 
 const R = 200.2;
