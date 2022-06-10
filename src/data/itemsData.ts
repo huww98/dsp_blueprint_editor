@@ -84,7 +84,7 @@ export const items: Item[] = [
     {id: 2013, models: [43], name: '极速分拣器', icon: 'inserter-3', grid: [2, 3, 3]},
     {id: 2020, models: [38, 39, 40], name: '四向分流器', icon: 'splitter-4dir', grid: [2, 2, 4]},
     {id: 2040, models: [257], name: '自动集装机', icon: 'piler', grid: [2, 2, 5]},
-    {id: 2030, models: [208], name: '流速监测器', icon: 'monitor', grid: [2, 2, 6]},
+    {id: 2030, models: [208], name: '流速器', icon: 'monitor', grid: [2, 2, 6]},
     {id: 2313, models: [120], name: '喷涂机', icon: 'spray-coater', grid: [2, 4, 6]},
     {id: 2101, models: [51], name: '小型储物仓', icon: 'storage-1', grid: [2, 2, 7]},
     {id: 2102, models: [52], name: '大型储物仓', icon: 'storage-2', grid: [2, 2, 8]},

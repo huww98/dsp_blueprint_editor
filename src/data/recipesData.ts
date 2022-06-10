@@ -319,7 +319,7 @@ export const recipes: Recipe[] = [
     {
         id: 29, name: '卡西米尔晶体（高效）', time: 240,
         from: [
-            {item: itemsMap.get(1014)!, count: 4},
+            {item: itemsMap.get(1014)!, count: 8},
             {item: itemsMap.get(1123)!, count: 2},
             {item: itemsMap.get(1120)!, count: 12},
         ],
@@ -388,7 +388,7 @@ export const recipes: Recipe[] = [
     {
         id: 35, name: '碳纳米管（高效）', time: 240,
         from: [
-            {item: itemsMap.get(1015)!, count: 2},
+            {item: itemsMap.get(1015)!, count: 6},
         ],
         to: [
             {item: itemsMap.get(1124)!, count: 2},
@@ -434,7 +434,7 @@ export const recipes: Recipe[] = [
         from: [
             {item: itemsMap.get(1107)!, count: 20},
             {item: itemsMap.get(1125)!, count: 20},
-            {item: itemsMap.get(1205)!, count: 50},
+            {item: itemsMap.get(1205)!, count: 25},
             {item: itemsMap.get(1123)!, count: 10},
             {item: itemsMap.get(1303)!, count: 8},
         ],
@@ -451,7 +451,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1121)!, count: 5},
         ],
-        grid: [1, 4, 7],
+        grid: [1, 5, 7],
     },
     {
         id: 41, name: '氘核燃料棒', time: 720,
@@ -849,7 +849,7 @@ export const recipes: Recipe[] = [
             {item: itemsMap.get(1122)!, count: 2},
             {item: itemsMap.get(1120)!, count: 2},
         ],
-        grid: [1, 6, 8],
+        grid: [1, 6, 9],
         icon: 'photon-formula',
     },
     {
@@ -900,7 +900,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1210)!, count: 1},
         ],
-        grid: [1, 5, 7],
+        grid: [1, 6, 7],
     },
     {
         id: 79, name: '空间翘曲器（高级）', time: 600,
@@ -910,7 +910,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1210)!, count: 8},
         ],
-        grid: [1, 6, 7],
+        grid: [1, 6, 8],
         icon: 'space-warper-lv2',
     },
     {
@@ -1320,7 +1320,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1121)!, count: 1},
         ],
-        grid: [1, 3, 7],
+        grid: [1, 4, 7],
         icon: 'deuterium-formula',
     },
     {
@@ -1388,5 +1388,18 @@ export const recipes: Recipe[] = [
             {item: itemsMap.get(2040)!, count: 1},
         ],
         grid: [2, 2, 5],
+    },
+    {
+        id: 121, name: '重整精炼', time: 240,
+        from: [
+            {item: itemsMap.get(1114)!, count: 2},
+            {item: itemsMap.get(1120)!, count: 1},
+            {item: itemsMap.get(1006)!, count: 1},
+        ],
+        to: [
+            {item: itemsMap.get(1114)!, count: 3},
+        ],
+        grid: [1, 3, 7],
+        icon: 'reforming-refine',
     },
 ];
