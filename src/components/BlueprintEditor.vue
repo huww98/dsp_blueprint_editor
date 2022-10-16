@@ -234,7 +234,7 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 		return [mesh];
 	}
 	const buildIcons = (iconBuildings: BlueprintBuilding[], iconBelts: BlueprintBuilding[], iconInsterters: BlueprintBuilding[]) => {
-		let subscripts = new Map<BlueprintBuilding, string>();
+		const subscripts = new Map<BlueprintBuilding, string>();
 		for (const b of iconBelts) {
 			if (b.parameters === null)
 				continue;
@@ -489,7 +489,7 @@ watchEffect(onCleanUp => {
 onMounted(() => {
 	const rootEl = root.value!;
 
-	let controls = new PlanetMapControls(camera, renderer.domElement);
+	const controls = new PlanetMapControls(camera, renderer.domElement);
 	controls.listenToKeyEvents(rootEl);
 	controls.minDistance = R * 1.04;
 	controls.maxDistance = R * 4;
