@@ -40,7 +40,8 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [194, { color: 0XC84F58, box: [3.2, 3.8, 3.2], offset: [0.0, 1.9, 0.0] }], // 位面熔炉
     [ 61, { color: null,     box: [6.9, 11.6, 12.6], offset: [0.0, 5.8, 0.2] }], // 原油萃取站
     [ 63, { color: 0x354EA6, box: [4.2, 10.6, 7.4], offset: [0.0, 5.3, -0.32] }], // 原油精炼厂
-    [ 64, { color: 0x617CA3, box: [9.2, 6.3, 5.3], offset: [0.48, 3.15, 0.78] }], // 化工厂
+    [ 64, { color: 0xECBB3E, box: [9.2, 6.3, 5.3], offset: [0.48, 3.15, 0.78] }], // 化工厂
+    [376, { color: 0x62B5E5, box: [9.7, 6.3, 5.3], offset: [0.23, 3.15, 0.78] }], // 化工厂 Mk.II
     [119, { color: null,     box: [4.8, 9.4, 4.8], offset: [0.0, 4.7, 0.0] }], // 分馏塔
     [ 55, { color: 0x303656, box: [3.6, 4.0, 3.6], offset: [0.0, 2.0, 0.0] }], // 太阳能板
     [ 46, { color: null,     box: [3.27, 4.46, 2.98], offset: [0.0, 2.23, -0.09] }], // 蓄电器
@@ -53,6 +54,7 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [ 49, { color: 0xE0CFB0, box: [7.6, 25.0, 7.6], offset: [0.0, 12.5, 0.0] }], // 物流运输站
     [ 50, { color: 0xE0CFB0, box: [8.0, 34.0, 8.0], offset: [0.0, 17.0, 0.0] }], // 星际物流运输站
     [ 70, { color: 0xE5E8E8, box: [6.1, 3.1, 6.1], offset: [0.0, 1.55, 0.0] }], // 矩阵研究站
+    [371, { color: 0x718495, box: [3.0, 1.9, 3.2], offset: [0.0, 1.1, 0.0] }], // 物流配送器
 ])
 
 export const buildingMeta = new Map<number, BuildingMeta>();

@@ -108,7 +108,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2901)!, count: 1},
         ],
-        grid: [2, 4, 8],
+        grid: [2, 4, 6],
     },
     {
         id: 11, name: '棱镜', time: 120,
@@ -153,7 +153,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2307)!, count: 1},
         ],
-        grid: [2, 3, 7],
+        grid: [2, 3, 8],
     },
     {
         id: 15, name: '原油精炼厂', time: 360,
@@ -166,7 +166,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2308)!, count: 1},
         ],
-        grid: [2, 3, 8],
+        grid: [2, 3, 9],
     },
     {
         id: 16, name: '等离子精炼', time: 240,
@@ -245,7 +245,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2309)!, count: 1},
         ],
-        grid: [2, 4, 7],
+        grid: [2, 4, 9],
     },
     {
         id: 23, name: '塑料', time: 180,
@@ -256,7 +256,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1115)!, count: 1},
         ],
-        grid: [1, 1, 8],
+        grid: [1, 1, 9],
     },
     {
         id: 24, name: '硫酸', time: 360,
@@ -280,7 +280,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1117)!, count: 1},
         ],
-        grid: [1, 2, 8],
+        grid: [1, 2, 9],
     },
     {
         id: 26, name: '钛晶石', time: 240,
@@ -291,7 +291,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1118)!, count: 1},
         ],
-        grid: [1, 3, 9],
+        grid: [1, 3, 8],
     },
     {
         id: 27, name: '结构矩阵', time: 480,
@@ -350,7 +350,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1123)!, count: 2},
         ],
-        grid: [1, 1, 9],
+        grid: [1, 1, 8],
     },
     {
         id: 32, name: '石墨烯（高效）', time: 120,
@@ -361,7 +361,7 @@ export const recipes: Recipe[] = [
             {item: itemsMap.get(1123)!, count: 2},
             {item: itemsMap.get(1120)!, count: 1},
         ],
-        grid: [1, 2, 9],
+        grid: [1, 2, 8],
         icon: 'graphene-lv2',
     },
     {
@@ -373,7 +373,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1124)!, count: 2},
         ],
-        grid: [1, 4, 9],
+        grid: [1, 4, 8],
     },
     {
         id: 34, name: '硅石', time: 600,
@@ -393,7 +393,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1124)!, count: 2},
         ],
-        grid: [1, 5, 9],
+        grid: [1, 5, 8],
         icon: 'nanotube-lv2',
     },
     {
@@ -427,7 +427,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1304)!, count: 1},
         ],
-        grid: [1, 4, 8],
+        grid: [1, 5, 9],
     },
     {
         id: 39, name: '微型粒子对撞机', time: 900,
@@ -474,7 +474,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1403)!, count: 1},
         ],
-        grid: [1, 5, 8],
+        grid: [1, 6, 10],
     },
     {
         id: 43, name: '人造恒星', time: 1800,
@@ -549,7 +549,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2301)!, count: 1},
         ],
-        grid: [2, 3, 4],
+        grid: [2, 3, 5],
     },
     {
         id: 49, name: '抽水站', time: 240,
@@ -562,7 +562,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2306)!, count: 1},
         ],
-        grid: [2, 3, 6],
+        grid: [2, 3, 7],
     },
     {
         id: 50, name: '电路板', time: 60,
@@ -618,7 +618,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(1117)!, count: 1},
         ],
-        grid: [1, 3, 8],
+        grid: [1, 3, 9],
         icon: 'crystal-rubber-lv0',
     },
     {
@@ -993,7 +993,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2101)!, count: 1},
         ],
-        grid: [2, 2, 7],
+        grid: [2, 2, 6],
     },
     {
         id: 87, name: '四向分流器', time: 120,
@@ -1049,7 +1049,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2102)!, count: 1},
         ],
-        grid: [2, 2, 8],
+        grid: [2, 2, 7],
     },
     {
         id: 92, name: '极速传送带', time: 60,
@@ -1248,7 +1248,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2313)!, count: 1},
         ],
-        grid: [2, 4, 6],
+        grid: [2, 4, 7],
     },
     {
         id: 110, name: '分馏塔', time: 180,
@@ -1261,7 +1261,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2314)!, count: 1},
         ],
-        grid: [2, 3, 9],
+        grid: [2, 4, 8],
     },
     {
         id: 111, name: '轨道采集器', time: 1800,
@@ -1310,7 +1310,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2106)!, count: 1},
         ],
-        grid: [2, 2, 9],
+        grid: [2, 2, 8],
     },
     {
         id: 115, name: '重氢分馏', time: 1,
@@ -1337,7 +1337,7 @@ export const recipes: Recipe[] = [
         grid: [2, 4, 5],
     },
     {
-        id: 117, name: '流速监测器', time: 120,
+        id: 117, name: '流速器', time: 120,
         from: [
             {item: itemsMap.get(1101)!, count: 3},
             {item: itemsMap.get(1201)!, count: 2},
@@ -1347,7 +1347,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2030)!, count: 1},
         ],
-        grid: [2, 2, 6],
+        grid: [2, 3, 4],
     },
     {
         id: 118, name: '地热发电站', time: 360,
@@ -1374,7 +1374,7 @@ export const recipes: Recipe[] = [
         to: [
             {item: itemsMap.get(2316)!, count: 1},
         ],
-        grid: [2, 3, 5],
+        grid: [2, 3, 6],
     },
     {
         id: 120, name: '自动集装机', time: 240,
@@ -1401,5 +1401,42 @@ export const recipes: Recipe[] = [
         ],
         grid: [1, 3, 7],
         icon: 'reforming-refine',
+    },
+    {
+        id: 122, name: '物流配送器', time: 480,
+        from: [
+            {item: itemsMap.get(1101)!, count: 8},
+            {item: itemsMap.get(1401)!, count: 4},
+            {item: itemsMap.get(1303)!, count: 4},
+        ],
+        to: [
+            {item: itemsMap.get(2107)!, count: 1},
+        ],
+        grid: [2, 2, 9],
+    },
+    {
+        id: 123, name: '配送运输机', time: 120,
+        from: [
+            {item: itemsMap.get(1101)!, count: 2},
+            {item: itemsMap.get(1204)!, count: 1},
+            {item: itemsMap.get(1303)!, count: 1},
+        ],
+        to: [
+            {item: itemsMap.get(5003)!, count: 1},
+        ],
+        grid: [1, 4, 9],
+    },
+    {
+        id: 124, name: '化工厂 Mk.II', time: 600,
+        from: [
+            {item: itemsMap.get(2309)!, count: 1},
+            {item: itemsMap.get(1119)!, count: 10},
+            {item: itemsMap.get(1127)!, count: 3},
+            {item: itemsMap.get(1305)!, count: 3},
+        ],
+        to: [
+            {item: itemsMap.get(2317)!, count: 1},
+        ],
+        grid: [2, 4, 10],
     },
 ];

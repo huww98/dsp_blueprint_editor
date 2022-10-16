@@ -16,6 +16,8 @@ export const items: Item[] = [
             models = range(modelIndex, modelIndex + d['ModelCount'])
         models = ', '.join(str(m) for m in models)
         g = d['GridIndex']
+        if g == 0:
+            continue
         sys.stdout.write(f"    {{id: {d['ID']}, models: [{models}], name: '{d['Name']}', icon: '{icon}', grid: [{g // 1000}, {(g // 100) % 10}, {g % 100}]}},\n")
     sys.stdout.write('];\n')
 

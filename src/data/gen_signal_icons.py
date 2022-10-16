@@ -4,7 +4,9 @@ import json
 def main():
     data = json.load(sys.stdin)['dataArray']
     sys.stdout.write(
-"""export const signal: Signal[] = [
+"""import { Signal } from "./types";
+
+export const signal: Signal[] = [
 """)
     for d in data:
         grid_index = d['GridIndex'] - 1101

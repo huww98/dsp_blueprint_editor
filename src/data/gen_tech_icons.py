@@ -4,7 +4,9 @@ import json
 def main():
     data = json.load(sys.stdin)['dataArray']
     sys.stdout.write(
-"""export const tech: Tech[] = [
+"""import { Tech } from "./types";
+
+export const tech: Tech[] = [
 """)
     for d in data:
         if not d['Published']:
