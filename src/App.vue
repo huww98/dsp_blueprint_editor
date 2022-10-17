@@ -53,8 +53,8 @@
                                 type="file" accept="text/plain" id="blueprint-file"
                                 style="position: absolute; inset: 0; opacity: 0;" />
                         </button>
-                        <a v-if="bpStr" class="button" @click="prepareSave"
-                            :href="bpUrl" :download="data!.header.shortDesc + '.txt'"
+                        <a v-if="bpStr && data" class="button" @click="prepareSave"
+                            :href="bpUrl" :download="data.header.shortDesc + '.txt'"
                             style="flex: auto; width: 50px;" >
                             保存文件
                         </a>
@@ -233,6 +233,7 @@ const parseBp = (s: string) => {
             watch(data.value, () => codeExpired.value = true);
         } catch (e) {
             parseErrorMessage.value = String(e);
+            console.error(e);
         }
     } else {
         data.value = null;

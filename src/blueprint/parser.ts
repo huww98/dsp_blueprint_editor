@@ -150,8 +150,16 @@ interface ParamParser<TParam extends AllParameters> {
     decode(a: DataView): TParam;
 }
 
-function getParam(v: DataView, pos: number) {
-    return v.getInt32(pos * Int32Array.BYTES_PER_ELEMENT, true);
+function getParam(v: DataView, pos: number, defaultValue?: number) {
+    const p = pos * Int32Array.BYTES_PER_ELEMENT;
+    if (p >= v.byteLength) {
+        if (defaultValue === undefined) {
+            throw new Error('参数解析错误：数据段太短');
+        } else {
+            return defaultValue;
+        }
+    }
+    return v.getInt32(p, true);
 }
 function setParam(v: DataView, pos: number, value: number) {
     v.setInt32(pos * Int32Array.BYTES_PER_ELEMENT, value, true);
@@ -367,7 +375,7 @@ const beltParamParser: ParamParser<BeltParameters> = {
     decode(a) {
         return {
             iconId: getParam(a, 0),
-            count: getParam(a, 1),
+            count: getParam(a, 1, 0),
         };
     },
 }
