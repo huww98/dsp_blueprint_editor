@@ -166,7 +166,7 @@ function setParam(v: DataView, pos: number, value: number) {
 }
 
 const stationDesc = {
-    maxItemKind: 3,
+    maxItemKind: 4,
     numSlots: 12,
 };
 const interstellarStationDesc = {
