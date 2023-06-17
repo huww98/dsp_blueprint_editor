@@ -42,7 +42,7 @@ uniform ivec2 iMapSize;
 void main() {
 	#include <uv_vertex>
 	ivec2 iPosition = ivec2(iconId % iMapSize.x, iconId / iMapSize.x);
-	vUv = (vUv + vec2(iPosition)) / vec2(iMapSize);
+	vMapUv = (vMapUv + vec2(iPosition)) / vec2(iMapSize);
 
 	vec4 mvPosition = modelViewMatrix * vec4(iconPos, 1.0);
 
