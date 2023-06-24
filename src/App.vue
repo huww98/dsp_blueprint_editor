@@ -41,7 +41,7 @@
                         <button style="margin-left: 4px;" @click="copy" :disabled="working || !bpStr">复制</button>
                         <button style="margin-left: 4px;" @click="paste" :disabled="working">粘贴</button>
                     </div>
-                    <textarea rows="3" id="bp-str" v-model="bpStrInput"
+                    <textarea class="bp-code" rows="3" id="bp-str" v-model="bpStrInput"
                             @copy="onCopy" @cut="onCut" @paste="onPaste"
                             @focus="encodeBp" @change="e => parseBp((e.target as HTMLTextAreaElement).value)">
                     </textarea>
@@ -439,6 +439,10 @@ body {
         &:focus {
             background: #4f6671;
         }
+    }
+
+    .bp-code {
+        word-break: break-all;
     }
 }
 
