@@ -20,7 +20,9 @@ import { IconSubscript } from '@/iconSubscript';
 import { Cargos } from '@/cargos';
 import { BVH } from '@/bvh';
 import { Updater } from '@/command';
-import { commandQueueKey } from '@/define';
+import { buildingInfoKey, commandQueueKey } from '@/define';
+import { BeltCurve, BeltRenderBatch } from '@/belt';
+import { BuildingInfo } from '@/blueprint/buildingInfo';
 
 function buildPlanetGrid(radius = 1, segment = 200) {
 	const allGrids = new Group();
@@ -126,36 +128,41 @@ function sorterIconPos(b: BlueprintBuilding, buildingTrans: Matrix4, pos: Vector
     pos.setFromMatrixPosition(trans);
 }
 
-function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[], renderer: WebGLRenderer) {
+function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[], buildingInfo: BuildingInfo, renderer: WebGLRenderer) {
 	const buildBelts = (belts: BlueprintBuilding[]) => {
-		const thickness = 0.1;
-		const material = new MeshLambertMaterial();
 		const objects: Object3D[] = [];
-		{
-			const geometry = new CylinderGeometry(0.32, 0.32, thickness, 8);
-			const mesh = new InstancedMesh(geometry, material, belts.length);
-			const offset = new Matrix4().makeRotationX(Math.PI / 2);
-			offset.premultiply(new Matrix4().makeTranslation(0, 0, thickness / 2));
-			const trans = new Matrix4();
-			for (let i = 0; i < belts.length; i++) {
-				const b = belts[i];
-				trans.copy(transforms[b.index][0]);
-				trans.multiply(offset);
-				mesh.setMatrixAt(i, trans);
-				mesh.setColorAt(i, buildingMeta.get(b.modelIndex)!.color);
-				modelRef[b.index] = { mesh, instance: i };
-			}
-			mesh.instanceMatrix.needsUpdate = true;
-			mesh.instanceColor!.needsUpdate = true;
-			objects.push(mesh);
-		}
-		const linkThickness = 0.6 * thickness;
-		{ // links
-			const geometry = new BoxGeometry(0.15, linkThickness, 1.0);
-			const mesh = new InstancedMesh(geometry, material, belts.length);
-			let numLinks = 0;
-			const offset = new Matrix4().makeTranslation(0, linkThickness / 2, -0.5);
-			const pos1 = new Vector3();
+
+        const beltCurves = new Map<number, BeltCurve[]>();
+        beltCurves.set(1, []);
+        beltCurves.set(2, []);
+        beltCurves.set(4, []);
+        beltCurves.set(8, []);
+        const noConnBelts = [] as BlueprintBuilding[]; // TODO: render this
+
+        const prev = new Vector3();
+        const cur = new Vector3();
+        const next = new Vector3();
+        for (const b of belts) {
+            const pIndex = buildingInfo.adjacency[b.index][1]?.index ?? -1;
+            const p = pIndex >= 0 ? prev.setFromMatrixPosition(transforms[pIndex][0]) : null;
+            const n = b.outputObjIdx >= 0 ? next.setFromMatrixPosition(transforms[b.outputObjIdx][0]) : null;
+            if (p === null && n === null) {
+                noConnBelts.push(b);
+                continue;
+            }
+            cur.setFromMatrixPosition(transforms[b.index][0]);
+            const curve = new BeltCurve(p, cur, n);
+            beltCurves.get(curve.numSegments())!.push(curve);
+        }
+        for (const [numSeg, curves] of beltCurves) {
+            if (curves.length === 0)
+                continue;
+            const mesh = new BeltRenderBatch(numSeg, curves);
+            objects.push(mesh);
+        }
+        { // links
+			const cargoPos = new Vector3(0, 0, 0.1);
+            const pos1 = new Vector3();
 			const pos2 = new Vector3();
 			const dir = new Vector3();
 			const temp = new Matrix4();
@@ -164,8 +171,9 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 				const b1 = belts[i];
 				if (b1.outputObjIdx < 0)
 					continue;
-				pos1.setFromMatrixPosition(transforms[b1.index][0]);
-				pos2.setFromMatrixPosition(transforms[b1.outputObjIdx][0]);
+				pos1.copy(cargoPos).applyMatrix4(transforms[b1.index][0]);
+				pos2.copy(cargoPos).applyMatrix4(transforms[b1.outputObjIdx][0]);
+                pos1
 				const len = dir.subVectors(pos1, pos2).length();
 				trans.identity();
 				trans.lookAt(pos1, pos2, pos1);
@@ -173,18 +181,6 @@ function buildBuildings(transforms: Matrix4[][], buildings: BlueprintBuilding[],
 
 				const color = buildingMeta.get(b1.modelIndex)!.color;
 				addCargo(trans, color, len);
-
-				trans.multiply(temp.makeScale(1., 1., len));
-				trans.multiply(offset);
-				mesh.setMatrixAt(numLinks, trans);
-				mesh.setColorAt(numLinks, color);
-				numLinks++;
-			}
-			if (numLinks) {
-				mesh.count = numLinks;
-				mesh.instanceMatrix.needsUpdate = true;
-				mesh.instanceColor!.needsUpdate = true;
-				objects.push(mesh);
 			}
 		}
 		return objects;
@@ -442,14 +438,15 @@ camera.position.z = 1.5 * R;
 attachCamera(root, camera);
 
 const commandQueue = inject(commandQueueKey)!;
+const buildingInfo = inject(buildingInfoKey)!;
 
 const b = computed(() => {
-	if (!commandQueue.value)
+	if (!commandQueue.value || !buildingInfo.value)
 		return null;
     const d = commandQueue.value.data;
 	const pos = findPosForAreas(d.areas, SEGMENT);
 	const transforms = d.buildings.map(b => calcBuildingTrans(R, pos, b));
-	const buildings = buildBuildings(transforms, d.buildings, renderer)
+	const buildings = buildBuildings(transforms, d.buildings, buildingInfo.value, renderer)
     const bvh = buildBVH(transforms, d.buildings);
     registerUpdater(commandQueue.value.updater, buildings, pos);
 	return { buildings, bvh };
