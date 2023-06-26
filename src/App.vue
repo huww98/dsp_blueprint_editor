@@ -233,6 +233,9 @@ const parseBp = (s: string) => {
             data.value.header = reactive(data.value.header);
             parseErrorMessage.value = '';
             watch(data.value, () => codeExpired.value = true);
+            gtag('event', 'bp_parse', {
+                'bp_length': s.length,
+            })
         } catch (e) {
             parseErrorMessage.value = String(e);
             console.error(e);
