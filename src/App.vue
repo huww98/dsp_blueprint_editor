@@ -71,8 +71,9 @@
                         <span>{{ data?.header.time.toLocaleString([], { timeZone: 'UTC' }) }}</span>
                     </div>
                 </section>
-                <section v-if="selectedBuilding !== null">
-                    <BuildingInfoPanel :building="selectedBuilding" />
+                <section>
+                    <BuildingInfoPanel v-if="selectedBuilding !== null" :building="selectedBuilding" />
+                    <BuildingOverview v-else-if="data" />
                 </section>
             </div>
             <div v-else-if="activeTab === 'operations'">
@@ -120,6 +121,7 @@ import SWStatus from '@/swStatus.vue';
 import BlueprintIcon from './components/BlueprintIcon.vue';
 import ReplaceModal from './components/ReplaceModal.vue';
 import { CommandQueue } from './command';
+import BuildingOverview from './components/BuildingOverview.vue';
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
 
 const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);

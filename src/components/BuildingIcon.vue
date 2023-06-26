@@ -1,7 +1,7 @@
 <template>
-    <div class="icon">
+    <div class="icon" :class="{'has-count': props.count !== undefined}" :title="props.alt">
         <img :src="src" :alt="props.alt">
-        <div class="count">{{props.count === undefined || props.count === 1 ? '' : props.count}}</div>
+        <div v-if="props.count !== undefined" class="count">{{props.count === 1 ? '' : props.count}}</div>
     </div>
 </template>
 
@@ -29,6 +29,10 @@ watchEffect(async () => {
     height: 2.5rem;
     width: 2.5rem;
 
+    &.has-count {
+        padding-bottom: .4em;
+    }
+
     img {
         height: 100%;
         width: 100%;
@@ -39,6 +43,8 @@ watchEffect(async () => {
         right: 0;
         bottom: 0;
         font-size: 0.8em;
+        color: cyan;
+        text-shadow: 0 0 10px cyan;
     }
 }
 </style>
