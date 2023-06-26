@@ -1,6 +1,8 @@
 <template>
     <h2>包含设施 <small>共{{ total }}个</small></h2>
-    <BuildingIcon v-for="[itemId, count] in buildingCounter" :key="itemId" :icon-id="itemIconId(itemId)" :alt="itemName(itemId)" :count="count"/>
+    <div class="overview-icons">
+        <BuildingIcon v-for="[itemId, count] in buildingCounter" :key="itemId" :icon-id="itemIconId(itemId)" :alt="itemName(itemId)" :count="count"/>
+    </div>
 </template>
 
 <script lang="ts" setup>
@@ -29,3 +31,11 @@ function itemName(itemId: number) {
     return itemsMap.get(itemId)?.name;
 }
 </script>
+
+<style>
+.overview-icons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+</style>
