@@ -58,4 +58,14 @@ module.exports = defineConfig({
             msTileImage: null,
         },
     },
+
+    pluginOptions: {
+      i18n: {
+        localeDir: 'locales',
+        enableLegacy: false,
+        runtimeOnly: true,
+        compositionOnly: true,
+        fullInstall: true
+      }
+    }
 })
