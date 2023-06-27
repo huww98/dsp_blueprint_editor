@@ -1,16 +1,20 @@
 <template>
-    <h2>包含设施 <small>共{{ total }}个</small></h2>
+    <h2>{{t('包含设施')}} <small>共{{ total }}个</small></h2>
     <div class="overview-icons">
         <BuildingIcon v-for="[itemId, count] in buildingCounter" :key="itemId" :icon-id="itemIconId(itemId)" :alt="itemName(itemId)" :count="count"/>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { commandQueueKey } from '@/define';
 import { computed, inject } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+import { commandQueueKey } from '@/define';
 import BuildingIcon from './BuildingIcon.vue';
 import { itemIconId } from '@/data/icons';
 import { itemsMap } from '@/data';
+
+const { t } = useI18n();
 
 const commandQueue = inject(commandQueueKey)!.value!;
 

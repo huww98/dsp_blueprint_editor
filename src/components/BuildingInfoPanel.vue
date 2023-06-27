@@ -1,5 +1,5 @@
 <template>
-    <h2>{{ buildingItem.name }}<small>#{{ building.index }}</small></h2>
+    <h2>{{ t(buildingItem.name) }} <small>#{{ building.index }}</small></h2>
     <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
     <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
@@ -12,7 +12,7 @@
         矩阵研究站模式：{{ LabModeText }}
     </div>
     <div v-if="accModeText !== undefined">
-        增产效果：{{ accModeText }}
+        <label>{{ t('增产剂效果简') }}</label> {{ accModeText }}
     </div>
     <div v-if="beltParams">
         <BuildingIcon :icon-id="beltParams.iconId" />{{ beltParams.count }}
@@ -49,7 +49,7 @@ const labModeTexts = new Map([
 
 const accModeTexts = new Map([
     [AcceleratorMode.ExtraOutput, '额外产出'],
-    [AcceleratorMode.Accelerate, '生产加速'],
+    [AcceleratorMode.Accelerate, '加速生产'],
 ]);
 
 const energyExchangerModeTexts = new Map([
@@ -61,6 +61,7 @@ const energyExchangerModeTexts = new Map([
 
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, inject, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import {
     LabParamerters, AssembleParamerters, TankParameters, BlueprintBuilding,
@@ -79,6 +80,8 @@ import BuildingIcon from './BuildingIcon.vue';
 import StationInfo from './StationInfo.vue';
 import MonitorInfo from './MonitorInfo.vue';
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));
+
+const { t } = useI18n();
 
 const commandQueue = inject(commandQueueKey)!.value!;
 
@@ -110,7 +113,7 @@ const accModeText = computed(() => {
     if (isLab(itemId) && (props.building!.parameters as LabParamerters).researchMode === ResearchMode.Compose ||
         allAssemblers.has(itemId)) {
         const mode = (props.building!.parameters as AssembleParamerters).acceleratorMode;
-        return accModeTexts.get(mode)!;
+        return t(accModeTexts.get(mode)!);
     }
     return undefined;
 })
@@ -143,6 +146,7 @@ const energyExchangerMode = computed(() => {
     >div, .p {
         display: flex;
         flex-direction: row;
+        margin-top: 4px;
     }
     .r {
         gap: 10px;

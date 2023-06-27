@@ -4,26 +4,26 @@
             <ItemSelect :item-id="s.itemId > 0 ? s.itemId : null"
                 @update:item-id="itemId => setItemId(i, itemId)"/>
             <template v-if="s.itemId > 0">
-                <div class="num">上限：{{s.max}}</div>
+                <div class="num"><label>{{ t('货物上限') }}</label> {{s.max}}</div>
                 <div>
-                    <div class="role" :class="roleClass.get(s.localRole)">本地{{roleText.get(s.localRole)}}</div>
-                    <div v-if="inter" class="role" :class="roleClass.get(s.remoteRole)">星际{{roleText.get(s.remoteRole)}}</div>
+                    <div class="role" :class="roleClass.get(s.localRole)">{{ t('本地' + roleText.get(s.localRole)) }}</div>
+                    <div v-if="inter" class="role" :class="roleClass.get(s.remoteRole)">{{ t('星际' + roleText.get(s.remoteRole)) }}</div>
                 </div>
             </template>
             <div class="placeholder" v-else>空栏位</div>
         </div>
     </template>
     <div class="building-params">
-        <div v-if="!collector"><label>最大充能功率</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
-        <div v-if="!collector"><label>运输机最远路程</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
-        <div v-if="inter"><label>运输船最远路程</label><span class="v">{{tripRangeOfShips}}</span></div>
-        <div v-if="inter"><label>轨道采集器</label><span class="v">{{truth(p.includeOrbitCollector)}}</span></div>
-        <div v-if="inter"><label>曲速启用路程</label><span class="v">{{p.warpEnableDistance / 40000}} AU</span></div>
-        <div v-if="inter"><label>翘曲器必备</label><span class="v">{{truth(p.warperNecessary)}}</span></div>
-        <div v-if="!collector"><label>运输机起送量</label><span class="v">{{p.deliveryAmountOfDrones}}%</span></div>
-        <div v-if="inter"><label>运输船起送量</label><span class="v">{{p.deliveryAmountOfShips}}%</span></div>
-        <div v-if="collector"><label>采集速度</label><span class="v">{{(pc.miningSpeed / 100).toLocaleString([], { maximumFractionDigits: 0 })}}%</span></div>
-        <div><label>输出货物集装数量</label><span class="v">{{p.pilerCount === 0 ? '使用科技上限' : p.pilerCount}}</span></div>
+        <div v-if="!collector"><label>{{t('最大充能功率')}}</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
+        <div v-if="!collector"><label>{{t('运输机最远路程')}}</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
+        <div v-if="inter"><label>{{t('运输船最远路程')}}</label><span class="v">{{tripRangeOfShips}}</span></div>
+        <div v-if="inter"><label>{{t('轨道采集器')}}</label><span class="v">{{truth(p.includeOrbitCollector)}}</span></div>
+        <div v-if="inter"><label>{{t('曲速启用路程')}}</label><span class="v">{{p.warpEnableDistance / 40000}} AU</span></div>
+        <div v-if="inter"><label>{{t('翘曲器必要性')}}</label><span class="v">{{truth(p.warperNecessary)}}</span></div>
+        <div v-if="!collector"><label>{{t('运输机起送量')}}</label><span class="v">{{p.deliveryAmountOfDrones}}%</span></div>
+        <div v-if="inter"><label>{{t('运输船起送量')}}</label><span class="v">{{p.deliveryAmountOfShips}}%</span></div>
+        <div v-if="collector"><label>{{t('采集速度')}}</label><span class="v">{{(pc.miningSpeed / 100).toLocaleString([], { maximumFractionDigits: 0 })}}%</span></div>
+        <div><label>{{t('货物集装数量')}}</label><span class="v">{{p.pilerCount === 0 ? t('集装使用科技上限') : p.pilerCount}}</span></div>
     </div>
 </template>
 
@@ -96,10 +96,14 @@ class SetStationStorageItemCommand implements Command {
 
 <script lang="ts" setup>
 import { computed, inject, triggerRef } from 'vue';
+import { useI18n } from 'vue-i18n';
+
 import { AdvancedMiningMachineParameters } from '@/blueprint/parser';
 import { isAdvancedMiningMachine, isInterstellarStation } from '@/data/items';
 import { buildingInfoKey, commandQueueKey } from '@/define';
 import ItemSelect from './ItemSelect.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     building: BlueprintBuilding,
@@ -152,9 +156,11 @@ const truth = (v: boolean) => v ? '✓' : '✗';
     }
 
     .role {
-        padding: 2px 10px;
+        padding: 2px 2px;
         margin: 2px 0;
         font-size: 0.8em;
+        text-align: center;
+        min-width: 8em;
     }
     .role-none {
         background: #B2B2B2;

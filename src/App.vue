@@ -15,12 +15,12 @@
             <div v-if="activeTab === 'info'">
                 <section style="display: flex; flex-direction: row; gap: 5px;">
                     <div>
-                        <label for="iconLayout">图标布局</label>
+                        <label for="iconLayout">{{t('图标布局')}}</label>
                         <select id="iconLayout" :disabled="!data"
                                 v-model="iconLayout">
                             <option v-for="[id, s] of allIconLayouts" :key="id" :value="id">{{s}}</option>
                         </select>
-                        <label for="shortDesc">缩略图文字</label>
+                        <label for="shortDesc">{{t('缩略图文字')}}</label>
                         <input type="text" id="shortDesc" :disabled="!data"
                             :value="data?.header.shortDesc"
                             @input="e => data!.header.shortDesc = (e.target as HTMLInputElement).value">
@@ -28,7 +28,7 @@
                     <BlueprintIcon style="height: 90px; flex: none;" :layout-id="iconLayout" :icons="data?.header.icons"/>
                 </section>
                 <section>
-                    <label for="desc">蓝图介绍</label>
+                    <label for="desc">{{t('蓝图介绍')}}</label>
                     <textarea rows="2" id="desc" :disabled="!data"
                             :value="data?.header.desc"
                             @input="e => data!.header.desc = (e.target as HTMLInputElement).value"
@@ -36,7 +36,7 @@
                 </section>
                 <section>
                     <div class="row">
-                        <label for="bp-str" style="margin-right: auto;">代码</label>
+                        <label for="bp-str" style="margin-right: auto;">{{ t('蓝图代码') }}</label>
                         <span class="error" v-if="notSupport">不支持，请手动复制</span>
                         <button style="margin-left: 4px;" @click="copy" :disabled="working || !bpStr">复制</button>
                         <button style="margin-left: 4px;" @click="paste" :disabled="working">粘贴</button>
@@ -63,11 +63,11 @@
                 </section>
                 <section>
                     <div class="row">
-                        <span style="margin-right: auto;">创建版本号</span>
+                        <span style="margin-right: auto;">{{t('创建版本号')}}</span>
                         <span>{{ data?.header.gameVersion }}</span>
                     </div>
                     <div class="row">
-                        <span style="margin-right: auto;">创建时间</span>
+                        <span style="margin-right: auto;">{{t('创建时间')}}</span>
                         <span>{{ data?.header.time.toLocaleString([], { timeZone: 'UTC' }) }}</span>
                     </div>
                 </section>
@@ -112,6 +112,7 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, reactive, ref, shallowReactive, shallowRef, watch, watchEffect } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { BlueprintData, fromStr, toStr } from '@/blueprint/parser';
 import { version, rendererKey, buildingInfoKey, commandQueueKey } from '@/define';
 import { BuildingInfo } from './blueprint/buildingInfo';
@@ -123,6 +124,8 @@ import ReplaceModal from './components/ReplaceModal.vue';
 import { CommandQueue } from './command';
 import BuildingOverview from './components/BuildingOverview.vue';
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
+
+const { t } = useI18n();
 
 const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);
 const replaceModal = ref<null | InstanceType<typeof ReplaceModal>>(null);
