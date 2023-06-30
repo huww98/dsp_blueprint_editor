@@ -37,9 +37,8 @@
                 <section>
                     <div class="row">
                         <label for="bp-str" style="margin-right: auto;">{{ t('蓝图代码') }}</label>
-                        <span class="error" v-if="notSupport">不支持，请手动复制</span>
-                        <button style="margin-left: 4px;" @click="copy" :disabled="working || !bpStr">复制</button>
-                        <button style="margin-left: 4px;" @click="paste" :disabled="working">粘贴</button>
+                        <button style="margin-left: 4px;" @click="copy" :disabled="working || !bpStr">{{ t('复制') }}</button>
+                        <button style="margin-left: 4px;" @click="paste" :disabled="working">{{ t('粘贴') }}</button>
                     </div>
                     <textarea class="bp-code" rows="3" id="bp-str" v-model="bpStrInput"
                             @copy="onCopy" @cut="onCut" @paste="onPaste"
@@ -48,7 +47,7 @@
                     <div class="row" style="align-items: stretch; column-gap: 4px;">
                         <button @click="parseBp('')" :disabled="working"
                                 style="position: relative; flex: auto; width: 50px;" >
-                            {{ bpStr ? "清空" : "选择文件" }}
+                            {{ bpStr ? t("清空") : t("选择文件") }}
                             <input v-if="!bpStr" @change="onBpFile" :disabled="working"
                                 type="file" accept="text/plain" id="blueprint-file"
                                 style="position: absolute; inset: 0; opacity: 0;" />
@@ -56,7 +55,7 @@
                         <a v-if="bpStr && data" class="button" @click="prepareSave"
                             :href="bpUrl" :download="data.header.shortDesc + '.txt'"
                             style="flex: auto; width: 50px;" >
-                            保存文件
+                            {{ t("保存文件") }}
                         </a>
                     </div>
                     <div class="error">{{ parseErrorMessage }}</div>
@@ -76,31 +75,43 @@
                     <BuildingOverview v-else-if="data" />
                 </section>
             </div>
-            <div v-else-if="activeTab === 'operations'">
-                <ul class="operations">
-                    <li v-if="data">
+            <ul class="operations" v-else-if="activeTab === 'operations'">
+                <template v-if="data && commandQueue">
+                    <li>
                         <button @click="replaceModal!.open()">
                             <img src="@/assets/icons/find_replace.svg">
-                            批量替换
+                            {{ t('批量替换') }}
                         </button>
                         <ReplaceModal :blueprint="data" ref="replaceModal"/>
                     </li>
-                    <template v-if="commandQueue">
-                        <li>
-                            <button @click="commandQueue!.undo()" :disabled="!commandQueue.canUndo()">
-                                <img src="@/assets/icons/undo.svg">
-                                撤销
-                            </button>
-                        </li>
-                        <li>
-                            <button @click="commandQueue!.redo()" :disabled="!commandQueue.canRedo()">
-                                <img src="@/assets/icons/redo.svg">
-                                重做
-                            </button>
-                        </li>
-                    </template>
-                </ul>
-            </div>
+                    <li>
+                        <button @click="commandQueue!.undo()" :disabled="!commandQueue.canUndo()">
+                            <img src="@/assets/icons/undo.svg">
+                            {{ t('撤销') }}
+                        </button>
+                    </li>
+                    <li>
+                        <button @click="commandQueue!.redo()" :disabled="!commandQueue.canRedo()">
+                            <img src="@/assets/icons/redo.svg">
+                            {{ t('重做') }}
+                        </button>
+                    </li>
+                </template>
+                <li style="margin-top: auto;">
+                    <div class="select-li">
+                        <label for="select-language">
+                            <img src="@/assets/icons/translate.svg">
+                            Languages
+                        </label>
+                        <select id="select-language" v-model="lang">
+                            <option value="auto">{{t('自动选择语言')}}</option>
+                            <option value="en">English</option>
+                            <option value="zh">中文</option>
+                            <option value="fr">Français</option>
+                        </select>
+                    </div>
+                </li>
+            </ul>
             <footer>
                 {{ version }}<SWStatus />
             </footer>
@@ -123,9 +134,11 @@ import BlueprintIcon from './components/BlueprintIcon.vue';
 import ReplaceModal from './components/ReplaceModal.vue';
 import { CommandQueue } from './command';
 import BuildingOverview from './components/BuildingOverview.vue';
+import { useLang } from './i18n';
 const BlueprintEditor = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./components/BlueprintEditor.vue'));
 
 const { t } = useI18n();
+const lang = useLang();
 
 const renderer = ref<null | InstanceType<typeof BlueprintEditor>>(null);
 const replaceModal = ref<null | InstanceType<typeof ReplaceModal>>(null);
@@ -136,7 +149,6 @@ const data = shallowRef(null as BlueprintData | null);
 const expandSidebar = ref(true);
 const activeTab = ref<'info' | 'operations'>('info')
 const working = ref(false);
-const notSupport = ref(false);
 const codeExpired = ref(false);
 const parseErrorMessage = ref('');
 const selectedBuildingIndex = ref(null as number | null);
@@ -289,9 +301,8 @@ const copy = async () => {
     working.value = true;
     try {
         await navigator.clipboard.writeText(bpStrLatest());
-        notSupport.value = false;
     } catch {
-        notSupport.value = true;
+        alert(t('复制粘贴不支持'));
     }
     working.value = false;
 }
@@ -300,9 +311,8 @@ const paste = async () => {
     working.value = true;
     try {
         parseBp(await navigator.clipboard.readText());
-        notSupport.value = false;
     } catch {
-        notSupport.value = true;
+        alert(t('复制粘贴不支持'));
     }
     working.value = false;
 }
@@ -456,13 +466,17 @@ body {
 
 ul.operations {
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex: auto;
     >li {
         display: block;
         list-style: none;
         border-bottom: 1px solid #fff6;
         margin: 0;
 
-        button {
+        button, .select-li {
+            box-sizing: border-box;
             padding: 5px;
             color: white;
             width: 100%;
@@ -479,4 +493,56 @@ ul.operations {
         }
     }
 }
+
+.select-li {
+    display: flex;
+    >select {
+        margin-left: 5px;
+        flex: 1 100px;
+    }
+}
 </style>
+
+<i18n>
+{
+    zh: {
+        "复制": "复制",
+        "粘贴": "粘贴",
+        "选择文件": "选择文件",
+        "清空": "清空",
+        "复制粘贴不支持": "不支持，请手动复制",
+        "保存文件": "保存文件",
+
+        "批量替换": "批量替换",
+        "撤销": "撤销",
+        "重做": "重做",
+        "自动选择语言": "自动选择"
+    },
+    en: {
+        "复制": "Copy",
+        "粘贴": "Paste",
+        "选择文件": "Select File",
+        "清空": "Clear",
+        "复制粘贴不支持": "Not supported, please copy manually",
+        "保存文件": "Save File",
+
+        "批量替换": "Batch Replace",
+        "撤销": "Undo",
+        "重做": "Redo",
+        "自动选择语言": "Auto Select"
+    },
+    fr: {
+        "复制": "Copier",
+        "粘贴": "Coller",
+        "选择文件": "Sélectionner le fichier",
+        "清空": "Effacer",
+        "复制粘贴不支持": "Non pris en charge, veuillez copier manuellement",
+        "保存文件": "Enregistrer le fichier",
+
+        "批量替换": "Remplacement en vrac",
+        "撤销": "Annuler",
+        "重做": "Refaire",
+        "自动选择语言": "Auto Select"
+    }
+}
+</i18n>
