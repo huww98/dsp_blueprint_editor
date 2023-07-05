@@ -7,11 +7,11 @@
         <div>
             <div class="icon-tab" :class="{active: page === 1}" @click="page = 1">
                 <img src="@/assets/icons/component-icon.png">
-                物品
+                {{ t('组件公式') }}
             </div>
             <div class="icon-tab" :class="{active: page === 2}" @click="page = 2">
                 <img src="@/assets/icons/factory-icon.png">
-                建筑
+                {{ t('建筑公式') }}
             </div>
         </div>
         <div class="icon-grid">
@@ -29,6 +29,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Recipe } from '@/data';
 import { recipes } from '@/data/recipesData';
 import { recipeIconId } from '@/data/icons';
@@ -36,6 +37,7 @@ import { recipeName } from '@/i18n';
 import Modal from "./ModalDSP.vue";
 import BuildingIcon from './BuildingIcon.vue';
 
+const { t } = useI18n();
 const handler = ref<undefined | HTMLElement>(undefined);
 
 const props = defineProps<{ recipeId: number | null }>();
