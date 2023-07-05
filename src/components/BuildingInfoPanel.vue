@@ -3,38 +3,48 @@
     <BuildingRecipe v-if="building.recipeId > 0" :recipeId="building.recipeId" />
 
     <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
-    <div v-else-if="filterItem">
-        过滤器：<BuildingIcon :icon-id="itemIconId(filterItem.id)" :alt="filterItem.name" />{{ filterItem.name }}
-    </div>
     <StationInfo v-if="isStation(building.itemId)" :building="building" />
     <MonitorInfo v-if="isMonitor(building.itemId)" :building="building" />
-    <div v-if="isLab(building.itemId)">
-        矩阵研究站模式：{{ LabModeText }}
-    </div>
-    <div v-if="accModeText !== undefined">
-        <label>{{ t('增产剂效果简') }}</label> {{ accModeText }}
+    <div class="building-params">
+        <div v-if="filterItem">
+            <label>{{ t('过滤器') }}</label>
+            <span class="v" style="align-self: center;"><BuildingIcon :icon-id="itemIconId(filterItem.id)" :alt="t(filterItem.name)" /></span>
+        </div>
+        <div v-if="isLab(building.itemId)">
+            <label>{{ t('模式') }}</label>
+            <span class="v">{{ LabModeText }}</span>
+        </div>
+        <div v-if="accModeText !== undefined">
+            <label>{{ t('增产剂效果简') }}</label>
+            <span class="v">{{ accModeText }}</span>
+        </div>
+        <div v-if="isInserter(building.itemId)">
+            <label>{{ t('分拣长度') }}</label>
+            <span class="v">{{ inserterParams.length }}</span>
+        </div>
+        <div v-if="isStorage(building.itemId)">
+            <label>{{ t('自动化容量限制') }}</label>
+            <span class="v">{{ capacityForAutomation }}</span>
+        </div>
+        <div v-if="isEjector(building.itemId)">
+            <label>{{ t('送入轨道') }}</label>
+            <span class="v">{{ ejectorParams.orbitId === 0 ? t('不选轨道') : ejectorParams.orbitId }}</span>
+        </div>
+        <div v-if="isEnergyExchanger(building.itemId)">
+            <label>{{ t('模式') }}</label>
+            <span class="v">{{ energyExchangerMode }}</span>
+        </div>
+        <div v-if="isRayReciver(building.itemId)">
+            <label>{{ t('模式') }}</label>
+            <span class="v">{{ powerGenParams.productId > 0 ? t('光子生成') : t('直接发电') }}</span>
+        </div>
     </div>
     <div v-if="beltParams">
         <BuildingIcon :icon-id="beltParams.iconId" />{{ beltParams.count }}
     </div>
-    <div v-if="isInserter(building.itemId)">
-        分拣长度：{{ inserterParams.length }}
-    </div>
-    <div class="building-params" v-if="isStorage(building.itemId)">
-        <div><label>自动化容量限制</label><span class="v">{{storageParams.automationLimit}}</span></div>
-    </div>
     <div class="tank-io" v-if="isTank(building.itemId)">
-        <div :class="{opened: tankParams.output}">输出</div>
-        <div :class="{opened: tankParams.input }">输入</div>
-    </div>
-    <div class="building-params" v-if="isEjector(building.itemId)">
-        <div><label>太阳帆送入轨道</label><span class="v">{{ejectorParams.orbitId === 0 ? '无' : ejectorParams.orbitId}}</span></div>
-    </div>
-    <div class="building-params" v-if="isEnergyExchanger(building.itemId)">
-        <div><label>能量枢纽模式</label><span class="v">{{energyExchangerMode}}</span></div>
-    </div>
-    <div class="building-params" v-if="isRayReciver(building.itemId)">
-        <div><label>射线接收站模式</label><span class="v">{{powerGenParams.productId > 0 ? '光子生成' : '直接发电'}}</span></div>
+        <SwitchDSP :opened="tankParams.output">{{ t('储液罐输出') }}</SwitchDSP>
+        <SwitchDSP :opened="tankParams.input">{{ t('储液罐输入') }}</SwitchDSP>
     </div>
 </template>
 
@@ -42,7 +52,7 @@
 import { ResearchMode, AcceleratorMode, EnergyExchangerMode } from '@/blueprint/parser';
 
 const labModeTexts = new Map([
-    [ResearchMode.None, '未选择模式'],
+    [ResearchMode.None, '选择模式'],
     [ResearchMode.Compose, '矩阵合成'],
     [ResearchMode.Research, '科研模式'],
 ]);
@@ -79,6 +89,7 @@ import BuildingRecipe from './BuildingRecipe.vue';
 import BuildingIcon from './BuildingIcon.vue';
 import StationInfo from './StationInfo.vue';
 import MonitorInfo from './MonitorInfo.vue';
+import SwitchDSP from './SwitchDSP.vue';
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));
 
 const { t } = useI18n();
@@ -106,7 +117,7 @@ commandQueue.updater.updateSorterIcon.onMounted(b => {
 
 const LabModeText = computed(() => {
     const mode = (props.building.parameters as LabParamerters).researchMode;
-    return labModeTexts.get(mode)!;
+    return t(labModeTexts.get(mode)!);
 })
 const accModeText = computed(() => {
     const itemId = props.building.itemId
@@ -131,13 +142,18 @@ commandQueue.updater.updateBeltIcon.onMounted(b => {
 });
 
 const inserterParams = computed(() => props.building.parameters as InserterParameters);
-const storageParams = computed(() => props.building.parameters as StorageParameters);
 const tankParams = computed(() => props.building.parameters as TankParameters);
 const ejectorParams = computed(() => props.building.parameters as EjectorParameters);
 const powerGenParams = computed(() => props.building.parameters as PowerGeneratorParameters);
 const energyExchangerMode = computed(() => {
     const mode = (props.building.parameters as EnergyExchangerParameters).mode;
-    return energyExchangerModeTexts.get(mode)!;
+    return t(energyExchangerModeTexts.get(mode)!);
+});
+const capacityForAutomation = computed(() => {
+    const itemId = props.building.itemId;
+    const capacity = itemId === 2101 ? 30 : 60;
+    const limit = (props.building.parameters as StorageParameters).automationLimit;
+    return capacity - limit;
 });
 </script>
 
@@ -156,6 +172,7 @@ const energyExchangerMode = computed(() => {
     }
     label {
         display: inline-block;
+        font-weight: bold;
     }
     .v {
         display: inline-block;
@@ -169,24 +186,25 @@ const energyExchangerMode = computed(() => {
     flex-direction: row;
     gap: 6px;
 
-    div {
-        flex: auto;
-        width: 50px;
-        padding: 2px 10px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-
-        background: #B2B2B2;
-        &::after {
-            content: '关';
-        }
-        &.opened {
-            background: #4A8BA8;
-            &::after {
-                content: '开';
-            }
-        }
+    .switch {
+        flex: 1 50px;
     }
 }
 </style>
+
+<i18n>
+{
+    "zh": {
+        "模式": "模式",
+        "送入轨道": "送入轨道"
+    },
+    "en": {
+        "模式": "Mode",
+        "送入轨道": "Orbit"
+    },
+    "fr": {
+        "模式": "Mode",
+        "送入轨道": "Orbit"
+    }
+}
+</i18n>
