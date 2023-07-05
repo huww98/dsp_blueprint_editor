@@ -1,6 +1,6 @@
 <template>
     <span @click="openModal = true" class="icon-select" ref="handler" tabindex="0" role="listbox">
-        <BuildingIcon v-if="props.itemId !== null" :icon-id="itemIconId(props.itemId)" :alt="itemsMap.get(props.itemId)!.name"/>
+        <BuildingIcon v-if="props.itemId !== null" :icon-id="itemIconId(props.itemId)" :alt="itemName(props.itemId)"/>
         <span class="icon icon-placeholder" v-else></span>
     </span>
     <Modal :open="openModal" @update:open="o => { if (!o) selected(null) }">
@@ -31,8 +31,8 @@
 import { ref, computed, watch } from 'vue';
 import { Item } from '@/data';
 import { items } from '@/data/itemsData';
-import { itemsMap } from '@/data/items';
 import { itemIconId } from '@/data/icons';
+import { itemName } from '@/i18n';
 import Modal from "./ModalDSP.vue";
 import BuildingIcon from './BuildingIcon.vue';
 

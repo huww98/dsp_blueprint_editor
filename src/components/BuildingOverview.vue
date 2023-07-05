@@ -1,5 +1,6 @@
 <template>
-    <h2>{{t('包含设施')}} <small>共{{ total }}个</small></h2>
+    <h2>{{t('包含设施')}}</h2>
+    <p>{{ t('共{total}个', {total}) }}</p>
     <div class="overview-icons">
         <BuildingIcon v-for="[itemId, count] in buildingCounter" :key="itemId" :icon-id="itemIconId(itemId)" :alt="itemName(itemId)" :count="count"/>
     </div>
@@ -12,7 +13,7 @@ import { useI18n } from 'vue-i18n';
 import { commandQueueKey } from '@/define';
 import BuildingIcon from './BuildingIcon.vue';
 import { itemIconId } from '@/data/icons';
-import { itemsMap } from '@/data';
+import { itemName } from '@/i18n';
 
 const { t } = useI18n();
 
@@ -30,10 +31,6 @@ const buildingCounter = computed(() => {
     }
     return counter;
 });
-
-function itemName(itemId: number) {
-    return itemsMap.get(itemId)?.name;
-}
 </script>
 
 <style>
@@ -43,3 +40,17 @@ function itemName(itemId: number) {
     gap: 0.5rem;
 }
 </style>
+
+<i18n>
+{
+    "zh": {
+        "共{total}个": "共{total}个",
+    },
+    "en": {
+        "共{total}个": "{total} in total",
+    },
+    "fr": {
+        "共{total}个": "{total} au total",
+    }
+}
+</i18n>

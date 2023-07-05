@@ -10,7 +10,7 @@
                     <div v-if="inter" class="role" :class="roleClass.get(s.remoteRole)">{{ t('星际' + roleText.get(s.remoteRole)) }}</div>
                 </div>
             </template>
-            <div class="placeholder" v-else>空栏位</div>
+            <div class="placeholder" v-else>{{ t('空栏位') }}</div>
         </div>
     </template>
     <div class="building-params">
