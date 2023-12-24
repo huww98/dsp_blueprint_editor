@@ -107,7 +107,6 @@
                             <option value="auto">{{t('自动选择语言')}}</option>
                             <option value="en">English</option>
                             <option value="zh">中文</option>
-                            <option value="fr">Français</option>
                         </select>
                     </div>
                 </li>
@@ -531,18 +530,5 @@ ul.operations {
         "重做": "Redo",
         "自动选择语言": "Auto Select"
     },
-    fr: {
-        "复制": "Copier",
-        "粘贴": "Coller",
-        "选择文件": "Sélectionner le fichier",
-        "清空": "Effacer",
-        "复制粘贴不支持": "Non pris en charge, veuillez copier manuellement",
-        "保存文件": "Enregistrer le fichier",
-
-        "批量替换": "Remplacement en vrac",
-        "撤销": "Annuler",
-        "重做": "Refaire",
-        "自动选择语言": "Auto Select"
-    }
 }
 </i18n>

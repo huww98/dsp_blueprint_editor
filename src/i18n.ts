@@ -2,7 +2,6 @@ import { createI18n } from 'vue-i18n'
 
 import zh from './locales/zh.json'
 import en from './locales/en.json'
-import fr from './locales/fr.json'
 import { ref, watchEffect } from 'vue'
 import { itemsMap, recipesMap } from './data'
 
@@ -13,7 +12,6 @@ const i18n = createI18n({
     messages: {
       zh,
       en,
-      fr,
     },
 });
 

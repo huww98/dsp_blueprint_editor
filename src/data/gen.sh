@@ -10,6 +10,6 @@ python3 gen_tech_icons.py < $BASE/MonoBehaviour/TechProtoSet.json > techIconsDat
 
 find $BASE/Texture2D -regex '.*/[0-9]+.png' | xargs cp -t ../assets/icons/tech/
 find $BASE/Texture2D -regex '.*/signal-[0-9]+.png' | xargs cp -t ../assets/icons/signal/
-cp $BASE/Texture2D/itemrecipe/*.png ../assets/icons/item_recipe/
+cp $BASE/itemrecipe/*.png ../assets/icons/item_recipe/
 
-python3 i18n.py $BASE/MonoBehaviour -o ../locales
+python3 i18n.py $BASE/MonoBehaviour "$GAME_BASE/Locale" -o ../locales
