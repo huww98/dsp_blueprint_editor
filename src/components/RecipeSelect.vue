@@ -21,7 +21,7 @@
         </div>
         <div class="icon-grid">
             <BuildingIcon v-for="i of iconsRight" :icon-id="recipeIconId(i.id)" :key="i.id"
-                :style="{gridRow: i.grid[1], gridColumn: i.grid[2] - 6}"
+                :style="{gridRow: i.grid[1], gridColumn: i.grid[2] - 7}"
                 @click="selected(i)"/>
         </div>
     </Modal>
@@ -49,8 +49,8 @@ watch(openModal, o => { if (!o) handler.value!.focus() });
 const page = ref<1 | 2>(1);
 const icons = computed(() => recipes.filter(r => r.grid[0] === page.value));
 
-const iconsLeft = computed(() => icons.value.filter(r => r.grid[2] <= 6));
-const iconsRight = computed(() => icons.value.filter(r => r.grid[2] > 6));
+const iconsLeft = computed(() => icons.value.filter(r => r.grid[2] <= 7));
+const iconsRight = computed(() => icons.value.filter(r => r.grid[2] > 7));
 
 const selected = (i: Recipe | null) => {
     openModal.value = false;
@@ -73,10 +73,10 @@ const selected = (i: Recipe | null) => {
     @media screen and (max-width: 640px) {
         display: grid;
     }
-    grid-template: repeat(7, 1fr) / repeat(6, 1fr);
+    grid-template: repeat(7, 1fr) / repeat(7, 1fr);
     --cell-size: 40px;
     height: calc(7 * var(--cell-size));
-    width: calc(6 * var(--cell-size));
+    width: calc(7 * var(--cell-size));
 
     .icon {
         width: var(--cell-size);

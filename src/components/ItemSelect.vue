@@ -21,7 +21,7 @@
         </div>
         <div class="icon-grid">
             <BuildingIcon v-for="i of iconsRight" :icon-id="itemIconId(i.id)" :key="i.id"
-                :style="{gridRow: i.grid[1], gridColumn: i.grid[2] - 6}"
+                :style="{gridRow: i.grid[1], gridColumn: i.grid[2] - 7}"
                 @click="selected(i)"/>
         </div>
     </Modal>
@@ -49,8 +49,8 @@ watch(openModal, o => { if (!o) handler.value!.focus() });
 const page = ref<1 | 2>(1);
 const icons = computed(() => items.filter(i => i.grid[0] === page.value));
 
-const iconsLeft = computed(() => icons.value.filter(i => i.grid[2] <= 6));
-const iconsRight = computed(() => icons.value.filter(i => i.grid[2] > 6));
+const iconsLeft = computed(() => icons.value.filter(i => i.grid[2] <= 7));
+const iconsRight = computed(() => icons.value.filter(i => i.grid[2] > 7));
 
 const selected = (i: Item | null) => {
     openModal.value = false;

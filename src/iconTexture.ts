@@ -1,8 +1,8 @@
 import { TextureLoader, WebGLRenderer, Texture, RGBAFormat, UnsignedByteType, Vector2 } from 'three';
 import { allIconIds, iconUrl } from './data/icons';
 
-const WIDTH = 20;
-const HEIGHT = 20;
+const WIDTH = 24;
+const HEIGHT = 24;
 const ICON_SIZE = 80;
 
 export class IconTexture {
