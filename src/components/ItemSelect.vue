@@ -14,12 +14,12 @@
                 {{ t('建筑公式') }}
             </div>
         </div>
-        <div class="icon-grid">
+        <div class="icon-grid item">
             <BuildingIcon v-for="i of iconsLeft" :icon-id="itemIconId(i.id)" :key="i.id"
                 :style="{gridRow: i.grid[1], gridColumn: i.grid[2]}"
                 @click="selected(i)"/>
         </div>
-        <div class="icon-grid">
+        <div class="icon-grid item">
             <BuildingIcon v-for="i of iconsRight" :icon-id="itemIconId(i.id)" :key="i.id"
                 :style="{gridRow: i.grid[1], gridColumn: i.grid[2] - 7}"
                 @click="selected(i)"/>

@@ -14,12 +14,12 @@
                 {{ t('建筑公式') }}
             </div>
         </div>
-        <div class="icon-grid">
+        <div class="icon-grid recipe">
             <BuildingIcon v-for="i of iconsLeft" :icon-id="recipeIconId(i.id)" :key="i.id"
                 :style="{gridRow: i.grid[1], gridColumn: i.grid[2]}"
                 @click="selected(i)"/>
         </div>
-        <div class="icon-grid">
+        <div class="icon-grid recipe">
             <BuildingIcon v-for="i of iconsRight" :icon-id="recipeIconId(i.id)" :key="i.id"
                 :style="{gridRow: i.grid[1], gridColumn: i.grid[2] - 7}"
                 @click="selected(i)"/>
@@ -73,9 +73,15 @@ const selected = (i: Recipe | null) => {
     @media screen and (max-width: 640px) {
         display: grid;
     }
-    grid-template: repeat(7, 1fr) / repeat(7, 1fr);
     --cell-size: 40px;
-    height: calc(7 * var(--cell-size));
+    &.recipe {
+        grid-template: repeat(7, 1fr) / repeat(7, 1fr);
+        height: calc(7 * var(--cell-size));
+    }
+    &.item {
+        grid-template: repeat(8, 1fr) / repeat(7, 1fr);
+        height: calc(8 * var(--cell-size));
+    }
     width: calc(7 * var(--cell-size));
 
     .icon {
