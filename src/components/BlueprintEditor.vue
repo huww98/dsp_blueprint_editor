@@ -385,7 +385,7 @@ function registerUpdater(updater: Updater, buildings: AllBuildings, posBP: Posit
         }
     });
 
-    updater.updateBeltIconSubscript.on(b => { throw new Error('Method not implemented.') });
+    updater.updateBeltIconSubscript.on(() => { throw new Error('Method not implemented.') });
     updater.updateSorterIcon.on(b => {
         const iconId = buildings.iconTexture.requestIcon(itemIconId(b.filterId));
         const icons = buildings.icons;

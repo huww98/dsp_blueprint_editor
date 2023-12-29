@@ -2,7 +2,7 @@ import { createI18n } from 'vue-i18n'
 
 import zh from './locales/zh.json'
 import en from './locales/en.json'
-import { ref, watchEffect } from 'vue'
+import { Ref, ref, watchEffect } from 'vue'
 import { itemsMap, recipesMap } from './data'
 
 const i18n = createI18n({
@@ -16,14 +16,16 @@ const i18n = createI18n({
 });
 
 export function useLang() {
-    const lang = ref('auto');
+    const lang: Ref<'auto' | typeof i18n.global.locale.value> = ref('auto');
 
     watchEffect(() => {
         const locale = i18n.global.locale;
         if (lang.value === 'auto') {
+            // if navigator language is not supported, fallback will be used
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             locale.value = navigator.language as any;
         } else {
-            locale.value = lang.value as any;
+            locale.value = lang.value;
         }
     })
 

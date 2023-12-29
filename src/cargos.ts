@@ -12,6 +12,8 @@ class CargoGeometry extends BoxGeometry {
 class CargoMaterial extends MeshLambertMaterial {
     cargoMoveUniform = { value: 0. };
 
+    // this overrides base class method
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onBeforeCompile(parameters: WebGLProgramParametersWithUniforms, renderer: WebGLRenderer) {
         parameters.vertexShader = parameters.vertexShader
             .replace('#include <common>',
