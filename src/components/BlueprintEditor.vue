@@ -420,8 +420,8 @@ const emit = defineEmits<{
 }>()
 
 const scene = new Scene();
-scene.add(new AmbientLight(0xffffff, 0.2));
-const dirLight = new DirectionalLight(0xffffff, 1);
+scene.add(new AmbientLight(0xffffff, 0.3));
+const dirLight = new DirectionalLight(0xffffff, 2);
 scene.add(dirLight);
 {
 	const geometry = new SphereGeometry(R, SEGMENT, SEGMENT / 2);
