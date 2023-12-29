@@ -20,7 +20,7 @@
     },
     "devDependencies": {
         "@babel/core": "^7.0.0",
-        "@intlify/vue-i18n-loader": "^3.0.0",
+        "@intlify/vue-i18n-loader": "^4.2.0",
         "@types/jest": "^29.1.2",
         "@types/node": "^20.10.5",
         "@types/pako": "^2.0.0",
