@@ -435,10 +435,10 @@ const root: Ref<HTMLDivElement | null> = ref(null);
 const renderer = new WebGLRenderer({ antialias: true });
 attachRenderer(root, renderer);
 
-const camera = new PerspectiveCamera(90);
+const camera = new PerspectiveCamera(50);
 camera.near = 0.5;
 camera.far = 3000;
-camera.position.z = 1.5 * R;
+camera.position.z = 2 * R;
 attachCamera(root, camera);
 
 const commandQueue = inject(commandQueueKey)!;
