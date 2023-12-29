@@ -1,4 +1,4 @@
-import { TextureLoader, WebGLRenderer, Texture, RGBAFormat, UnsignedByteType, Vector2 } from 'three';
+import { TextureLoader, WebGLRenderer, Texture, RGBAFormat, UnsignedByteType, Vector2, SRGBColorSpace } from 'three';
 import { allIconIds, iconUrl } from './data/icons';
 
 const WIDTH = 24;
@@ -24,6 +24,7 @@ export class IconTexture {
         this.texture.type = UnsignedByteType;
         this.texture.flipY = true;
         this.texture.needsUpdate = true;
+        this.texture.colorSpace = SRGBColorSpace;
         this.renderer.initTexture(this.texture);
 
         let nextIndex = 1; // 0 is reserved for empty icon
