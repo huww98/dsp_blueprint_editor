@@ -14,7 +14,7 @@ enum STATE {
 const EPS = 0.000001;
 
 // Like three/examples/jsm/controls/OrbitControls
-export class PlanetMapControls extends EventDispatcher {
+export class PlanetMapControls extends EventDispatcher<{change: object, start: object, end: object}> {
 
     static changeEvent = { type: 'change' } as const;
     static startEvent = { type: 'start' } as const;

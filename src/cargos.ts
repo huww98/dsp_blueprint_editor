@@ -1,4 +1,4 @@
-import { BoxGeometry, InstancedBufferAttribute, InstancedMesh, MeshLambertMaterial, Shader } from "three";
+import { BoxGeometry, InstancedBufferAttribute, InstancedMesh, MeshLambertMaterial, WebGLProgramParametersWithUniforms, WebGLRenderer } from "three";
 
 class CargoGeometry extends BoxGeometry {
     cargoDistance
@@ -12,8 +12,8 @@ class CargoGeometry extends BoxGeometry {
 class CargoMaterial extends MeshLambertMaterial {
     cargoMoveUniform = { value: 0. };
 
-    onBeforeCompile(shader: Shader) {
-        shader.vertexShader = shader.vertexShader
+    onBeforeCompile(parameters: WebGLProgramParametersWithUniforms, renderer: WebGLRenderer) {
+        parameters.vertexShader = parameters.vertexShader
             .replace('#include <common>',
 `attribute float cargoDistance;
 uniform float cargoMove;
@@ -23,7 +23,7 @@ uniform float cargoMove;
 `#include <skinning_vertex>
 transformed.z -= cargoMove * cargoDistance;
 `);
-        shader.uniforms.cargoMove = this.cargoMoveUniform;
+        parameters.uniforms.cargoMove = this.cargoMoveUniform;
     }
 }
 
