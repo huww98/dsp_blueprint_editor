@@ -7,6 +7,8 @@ export interface BuildingMeta {
     iconTrans: Matrix4;
 }
 
+// 'box' from selectSize in SlotConfig
+// 'offset' from selectCenter in SlotConfig
 const buildingMetaRaw: [number, { color: number | null, box: [number, number, number], offset: [number, number, number] }][] = ([
     [ 35, { color: 0xE3A263, box: [0.64, 0.12, 0.64], offset: [0.0, 0.05, 0.0]}], // 低速传送带
     [ 36, { color: 0x51A896, box: [0.64, 0.12, 0.64], offset: [0.0, 0.05, 0.0]}], // 高速传送带
@@ -26,6 +28,7 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [ 65, { color: 0xEDAB5C, box: [4.2, 4.6, 4.2], offset: [0.0, 2.3, 0.0] }], // 制造台 Mk.I
     [ 66, { color: 0x38E5E1, box: [4.2, 4.6, 4.2], offset: [0.0, 2.3, 0.0] }], // 制造台 Mk.II
     [ 67, { color: 0x45C6E5, box: [4.2, 4.6, 4.2], offset: [0.0, 2.3, 0.0] }], // 制造台 Mk.III
+    [456, { color: 0x365258, box: [4.2, 4.6, 4.2], offset: [0.0, 2.3, 0.0] }], // 制造台 Mk.IV
     [ 44, { color: 0xCCCCCC, box: [1.25, 6.0, 1.25], offset: [0.0, 3.0, 0.0] }], // 电力感应塔
     [ 71, { color: 0x17E1E5, box: [2.3, 9.2, 2.3], offset: [0.0, 4.6, 0.0] }], // 无线输电塔
     [ 68, { color: 0xDBE3E4, box: [3.5, 7.0, 3.5], offset: [0.0, 3.5, 0.0] }], // 卫星配电站
@@ -38,6 +41,7 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [ 60, { color: 0x00C1B6, box: [2.6, 6.0, 5.6], offset: [0.0, 3.0, 0.1] }], // 抽水站
     [ 62, { color: 0x739CE5, box: [3.2, 3.8, 3.2], offset: [0.0, 1.9, 0.0] }], // 电弧熔炉
     [194, { color: 0xC84F58, box: [3.2, 3.8, 3.2], offset: [0.0, 1.9, 0.0] }], // 位面熔炉
+    [457, { color: 0x365258, box: [3.2, 3.8, 3.2], offset: [0.0, 1.9, 0.0] }], // 熔炉 Mk.III
     [ 61, { color: null,     box: [6.9, 11.6, 12.6], offset: [0.0, 5.8, 0.2] }], // 原油萃取站
     [ 63, { color: 0x354EA6, box: [4.2, 10.6, 7.4], offset: [0.0, 5.3, -0.32] }], // 原油精炼厂
     [ 64, { color: 0xECBB3E, box: [9.2, 6.3, 5.3], offset: [0.48, 3.15, 0.78] }], // 化工厂
@@ -54,6 +58,15 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [ 49, { color: 0xE0CFB0, box: [7.6, 25.0, 7.6], offset: [0.0, 12.5, 0.0] }], // 物流运输站
     [ 50, { color: 0xE0CFB0, box: [8.0, 34.0, 8.0], offset: [0.0, 17.0, 0.0] }], // 星际物流运输站
     [ 70, { color: 0xE5E8E8, box: [6.1, 3.1, 6.1], offset: [0.0, 1.55, 0.0] }], // 矩阵研究站
+    [455, { color: 0x365258, box: [6.1, 3.1, 6.1], offset: [0.0, 1.55, 0.0] }], // 矩阵研究站 Mk.II
+    [374, { color: null,     box: [4.5, 4.5, 4.5], offset: [0.0, 2.2, 0.0] }], // 高斯机枪塔
+    [373, { color: null,     box: [5.2, 7.4, 5.5], offset: [0.0, 3.5, 0.25] }], // 高频激光塔
+    [375, { color: null,     box: [5.8, 5.6, 7.2], offset: [0.0, 2.8, 0.0] }], // 聚爆加农炮
+    [408, { color: null,     box: [8.0, 9.0, 8.0], offset: [0.0, 4.5, 0.0] }], // 磁化电浆炮
+    [407, { color: null,     box: [7.0, 7.0, 7.5], offset: [0.0, 3.5, 0.3] }], // 导弹防御塔
+    [403, { color: null,     box: [6.0, 16.0, 6.0], offset: [0.0, 7.8, 0.0] }], // 信标
+    [402, { color: null,     box: [7.0, 14.2, 7.0], offset: [0.0, 7.0, 0.0] }], // 护盾发生器
+    [453, { color: null,     box: [5.0, 8.0, 7.0], offset: [0.0, 4.0, 0.0] }], // 战场分析基站
     [371, { color: 0x718495, box: [3.0, 1.9, 3.2], offset: [0.0, 1.1, 0.0] }], // 物流配送器
 ])
 
