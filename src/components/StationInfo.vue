@@ -6,8 +6,8 @@
             <template v-if="s.itemId > 0">
                 <div class="num"><label>{{ t('货物上限') }}</label> {{s.max}}</div>
                 <div>
-                    <div class="role" :class="roleClass.get(s.localRole)">{{ t('本地' + roleText.get(s.localRole)) }}</div>
-                    <div v-if="inter" class="role" :class="roleClass.get(s.remoteRole)">{{ t('星际' + roleText.get(s.remoteRole)) }}</div>
+                    <div class="role" :class="roleClass.get(s.localLogic)">{{ t('本地' + roleText.get(s.localLogic)) }}</div>
+                    <div v-if="inter" class="role" :class="roleClass.get(s.remoteLogic)">{{ t('星际' + roleText.get(s.remoteLogic)) }}</div>
                 </div>
             </template>
             <div class="placeholder" v-else>{{ t('空栏位') }}</div>

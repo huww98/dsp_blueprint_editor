@@ -184,8 +184,8 @@ export interface StationParameters {
     storage: {
         itemId: number;
         max: number;
-        localRole: LogisticRole;
-        remoteRole: LogisticRole;
+        localLogic: LogisticRole;
+        remoteLogic: LogisticRole;
     }[];
     slots: {
         dir: IODir;
@@ -231,8 +231,8 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                 for (let i = 0; i < desc.maxItemKind; i++) {
                     const s = p.storage[i];
                     setParam(a, base + i * stride + 0, s.itemId);
-                    setParam(a, base + i * stride + 1, s.localRole);
-                    setParam(a, base + i * stride + 2, s.remoteRole);
+                    setParam(a, base + i * stride + 1, s.localLogic);
+                    setParam(a, base + i * stride + 2, s.remoteLogic);
                     setParam(a, base + i * stride + 3, s.max);
                 }
             } {
@@ -264,8 +264,8 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                 for (let i = 0; i < desc.maxItemKind; i++) {
                     result.storage.push({
                         itemId:     getParam(a, base + i * stride + 0),
-                        localRole:  getParam(a, base + i * stride + 1),
-                        remoteRole: getParam(a, base + i * stride + 2),
+                        localLogic:  getParam(a, base + i * stride + 1),
+                        remoteLogic: getParam(a, base + i * stride + 2),
                         max:        getParam(a, base + i * stride + 3),
                     });
                 }
