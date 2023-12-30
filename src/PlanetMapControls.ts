@@ -59,7 +59,7 @@ export class PlanetMapControls extends EventDispatcher<{change: object, start: o
         KeyA: { rotate: new Vector2( 1,  0) },
         KeyD: { rotate: new Vector2(-1,  0) },
     };
-    keyRotateSpeed = 100.0;
+    keyRotateSpeed = 200.0;
 
     mouseButtons = { LEFT: -1 as MOUSE, MIDDLE: MOUSE.ROTATE, RIGHT: -1 as MOUSE };
 
