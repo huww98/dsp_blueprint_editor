@@ -159,6 +159,11 @@ const capacityForAutomation = computed(() => {
 
 <style lang="scss">
 .building-params {
+    margin-bottom: 20px;
+    h3 {
+        margin-bottom: 0;
+    }
+
     >div, .p {
         display: flex;
         flex-direction: row;

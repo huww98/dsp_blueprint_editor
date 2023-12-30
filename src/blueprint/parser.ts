@@ -186,6 +186,8 @@ export interface StationParameters {
         max: number;
         localLogic: LogisticRole;
         remoteLogic: LogisticRole;
+        // 0: 不锁定，否则将库存容量锁定为max/keepMode
+        keepMode: number;
     }[];
     slots: {
         dir: IODir;
@@ -202,6 +204,8 @@ export interface StationParameters {
     deliveryAmountOfDrones: number;
     deliveryAmountOfShips: number;
     pilerCount: number;
+    droneAutoReplenish: boolean;
+    shipAutoReplenish: boolean;
 }
 export interface AdvancedMiningMachineParameters extends StationParameters {
     miningSpeed: number;
@@ -226,6 +230,8 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
             setParam(a, base + 6, p.deliveryAmountOfDrones);
             setParam(a, base + 7, p.deliveryAmountOfShips);
             setParam(a, base + 8, p.pilerCount);
+            setParam(a, base + 10, p.droneAutoReplenish ? 1 : 0);
+            setParam(a, base + 11, p.shipAutoReplenish ? 1 : 0);
             {
                 const {base, stride} = stationParamsMeta.storage;
                 for (let i = 0; i < desc.maxItemKind; i++) {
@@ -234,6 +240,7 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                     setParam(a, base + i * stride + 1, s.localLogic);
                     setParam(a, base + i * stride + 2, s.remoteLogic);
                     setParam(a, base + i * stride + 3, s.max);
+                    setParam(a, base + i * stride + 4, s.keepMode);
                 }
             } {
                 const {base, stride} = stationParamsMeta.slots;
@@ -258,6 +265,8 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                 deliveryAmountOfDrones: getParam(a, base + 6),
                 deliveryAmountOfShips:  getParam(a, base + 7),
                 pilerCount:             getParam(a, base + 8),
+                droneAutoReplenish:     getParam(a, base + 10) > 0,
+                shipAutoReplenish:      getParam(a, base + 11) > 0,
             };
             {
                 const {base, stride} = stationParamsMeta.storage;
@@ -267,6 +276,7 @@ function stationParamsParser(desc: typeof stationDesc): ParamParser<StationParam
                         localLogic:  getParam(a, base + i * stride + 1),
                         remoteLogic: getParam(a, base + i * stride + 2),
                         max:        getParam(a, base + i * stride + 3),
+                        keepMode:   getParam(a, base + i * stride + 4),
                     });
                 }
             } {

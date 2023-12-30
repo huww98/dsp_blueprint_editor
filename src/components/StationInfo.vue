@@ -4,7 +4,10 @@
             <ItemSelect :item-id="s.itemId > 0 ? s.itemId : null"
                 @update:item-id="itemId => setItemId(i, itemId)"/>
             <template v-if="s.itemId > 0">
-                <div class="num"><label>{{ t('货物上限') }}</label> {{s.max}}</div>
+                <div class="num">
+                    <div><label>{{ t('当前货物数') }}</label> {{s.keepMode > 0 ? s.max/s.keepMode : 0}}</div>
+                    <div><label>{{ t('货物上限') }}</label> {{s.max}}</div>
+                </div>
                 <div>
                     <div class="role" :class="roleClass.get(s.localLogic)">{{ t('本地' + roleText.get(s.localLogic)) }}</div>
                     <div v-if="inter" class="role" :class="roleClass.get(s.remoteLogic)">{{ t('星际' + roleText.get(s.remoteLogic)) }}</div>
@@ -13,6 +16,11 @@
             <div class="placeholder" v-else>{{ t('空栏位') }}</div>
         </div>
     </template>
+    <div class="building-params" v-if="!collector">
+        <h3>{{ t('自动补充提示') }}</h3>
+        <div><label>{{ t('物流运输机') }}</label><span class="v">{{ truth(p.droneAutoReplenish) }}</span></div>
+        <div v-if="inter"><label>{{ t('星际物流运输船') }}</label><span class="v">{{ truth(p.shipAutoReplenish) }}</span></div>
+    </div>
     <div class="building-params">
         <div v-if="!collector"><label>{{t('最大充能功率')}}</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
         <div v-if="!collector"><label>{{t('运输机最远路程')}}</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
@@ -149,10 +157,15 @@ const truth = (v: boolean) => v ? '✓' : '✗';
     flex-direction: row;
     align-items: center;
     margin: 10px 0;
+    gap: 10px;
 
     .num {
-        margin-left: 5px;
-        margin-right: auto;
+        flex: auto;
+        >div {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
     }
 
     .role {

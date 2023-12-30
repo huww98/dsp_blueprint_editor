@@ -61,6 +61,9 @@ const selected = (i: Recipe | null) => {
 <style lang="scss">
 .icon-select {
     cursor: pointer;
+    .icon {
+        display: block;
+    }
 }
 
 .icon-placeholder {
