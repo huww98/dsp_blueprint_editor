@@ -473,6 +473,22 @@ const powerGeneratorParamParser: ParamParser<PowerGeneratorParameters> = {
     },
 }
 
+export interface ArtifacialStarParameters {
+    boost: boolean;
+}
+
+const artifacialStarParamParser: ParamParser<ArtifacialStarParameters> = {
+    encodedSize() { return 1; },
+    encode(p, a) {
+        setParam(a, 0, p.boost ? 1 : 0);
+    },
+    decode(a) {
+        return {
+            boost: getParam(a, 0, 0) > 0,
+        };
+    },
+}
+
 export enum EnergyExchangerMode {
     Discharge = -1,
     StandBy = 0,
@@ -587,7 +603,8 @@ const unknownParamParser: ParamParser<UnknownParamerters> = {
 type AllParameters = AssembleParamerters | StationParameters | AdvancedMiningMachineParameters |
     SplitterParameters | LabParamerters | BeltParameters | InserterParameters |
     TankParameters | StorageParameters | EjectorParameters |
-    PowerGeneratorParameters | EnergyExchangerParameters | MonitorParameters | UnknownParamerters;
+    PowerGeneratorParameters | ArtifacialStarParameters | EnergyExchangerParameters |
+    MonitorParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
@@ -606,6 +623,7 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2106, tankParamParser],
     [2311, ejectorParamParser],
     [2208, powerGeneratorParamParser],
+    [2210, artifacialStarParamParser],
     [2209, energyExchangerParamParser],
     [2030, MonitorParamParser],
 ]);

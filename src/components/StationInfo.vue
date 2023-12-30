@@ -106,6 +106,7 @@ class SetStationStorageItemCommand implements Command {
 import { computed, inject, triggerRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { truth } from '@/utils';
 import { AdvancedMiningMachineParameters } from '@/blueprint/parser';
 import { isAdvancedMiningMachine, isInterstellarStation } from '@/data/items';
 import { buildingInfoKey, commandQueueKey } from '@/define';
@@ -147,8 +148,6 @@ const tripRangeOfShips = computed(() => {
 
 const inter = computed(() => isInterstellarStation(props.building.itemId));
 const collector = computed(() => isAdvancedMiningMachine(props.building.itemId));
-
-const truth = (v: boolean) => v ? '✓' : '✗';
 </script>
 
 <style lang="scss">

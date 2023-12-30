@@ -47,6 +47,10 @@ export function isRayReciver(id: number) {
     return id === 2208;
 }
 
+export function isArtificialStar(id: number) {
+    return id === 2210;
+}
+
 export function isEnergyExchanger(id: number) {
     return id === 2209;
 }

@@ -71,6 +71,7 @@ import { computed } from 'vue';
 import { BlueprintBuilding, MonitorParameters } from '@/blueprint/parser';
 import { itemIconId } from '@/data/icons';
 import { midiMap } from '@/data/midi';
+import { truth } from '@/utils';
 import BuildingIcon from './BuildingIcon.vue';
 import ColorPreview from './ColorPreview.vue';
 
@@ -88,6 +89,4 @@ const pitch = computed(() => {
     return allPitchs[v % 12] + Math.floor(v / 12);
 });
 const hasLength = computed(() => !(midiMap.get(p.value.tone)!.isInstrument) || p.value.repeat);
-
-const truth = (v: boolean) => v ? '✓' : '✗';
 </script>

@@ -20,7 +20,7 @@
         </div>
         <div v-if="isInserter(building.itemId)">
             <label>{{ t('分拣长度') }}</label>
-            <span class="v">{{ inserterParams.length }}</span>
+            <span class="v">{{ (bParams as InserterParameters).length }}</span>
         </div>
         <div v-if="isStorage(building.itemId)">
             <label>{{ t('自动化容量限制') }}</label>
@@ -28,7 +28,7 @@
         </div>
         <div v-if="isEjector(building.itemId)">
             <label>{{ t('送入轨道') }}</label>
-            <span class="v">{{ ejectorParams.orbitId === 0 ? t('不选轨道') : ejectorParams.orbitId }}</span>
+            <span class="v">{{ (bParams as EjectorParameters).orbitId === 0 ? t('不选轨道') : (bParams as EjectorParameters).orbitId }}</span>
         </div>
         <div v-if="isEnergyExchanger(building.itemId)">
             <label>{{ t('模式') }}</label>
@@ -36,15 +36,19 @@
         </div>
         <div v-if="isRayReciver(building.itemId)">
             <label>{{ t('模式') }}</label>
-            <span class="v">{{ powerGenParams.productId > 0 ? t('光子生成') : t('直接发电') }}</span>
+            <span class="v">{{ (bParams as PowerGeneratorParameters).productId > 0 ? t('光子生成') : t('直接发电') }}</span>
+        </div>
+        <div v-if="isArtificialStar(building.itemId)">
+            <label>{{ t('百倍发电') }}</label>
+            <span class="v">{{ truth((bParams as ArtifacialStarParameters).boost) }}</span>
         </div>
     </div>
     <div v-if="beltParams">
         <BuildingIcon :icon-id="beltParams.iconId" />{{ beltParams.count }}
     </div>
     <div class="tank-io" v-if="isTank(building.itemId)">
-        <SwitchDSP :opened="tankParams.output">{{ t('储液罐输出') }}</SwitchDSP>
-        <SwitchDSP :opened="tankParams.input">{{ t('储液罐输入') }}</SwitchDSP>
+        <SwitchDSP :opened="(bParams as TankParameters).output">{{ t('储液罐输出') }}</SwitchDSP>
+        <SwitchDSP :opened="(bParams as TankParameters).input">{{ t('储液罐输入') }}</SwitchDSP>
     </div>
 </template>
 
@@ -73,15 +77,16 @@ const energyExchangerModeTexts = new Map([
 import { computed, defineAsyncComponent, inject, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { truth } from '@/utils';
 import {
     LabParamerters, AssembleParamerters, TankParameters, BlueprintBuilding,
     BeltParameters, InserterParameters, StorageParameters, EjectorParameters,
-    EnergyExchangerParameters, PowerGeneratorParameters,
+    EnergyExchangerParameters, PowerGeneratorParameters, ArtifacialStarParameters,
 } from '@/blueprint/parser';
 import { itemIconId } from '@/data/icons';
 import {
     isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank,
-    isEjector, isEnergyExchanger, isRayReciver, isMonitor, isSplitter
+    isEjector, isEnergyExchanger, isArtificialStar, isRayReciver, isMonitor, isSplitter
 } from '@/data/items';
 import { commandQueueKey } from '@/define';
 
@@ -141,10 +146,7 @@ commandQueue.updater.updateBeltIcon.onMounted(b => {
         beltVersion.value++;
 });
 
-const inserterParams = computed(() => props.building.parameters as InserterParameters);
-const tankParams = computed(() => props.building.parameters as TankParameters);
-const ejectorParams = computed(() => props.building.parameters as EjectorParameters);
-const powerGenParams = computed(() => props.building.parameters as PowerGeneratorParameters);
+const bParams = computed(() => props.building.parameters);
 const energyExchangerMode = computed(() => {
     const mode = (props.building.parameters as EnergyExchangerParameters).mode;
     return t(energyExchangerModeTexts.get(mode)!);

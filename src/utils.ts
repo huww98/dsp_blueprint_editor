@@ -40,3 +40,5 @@ export function attachCamera(el: Ref<Element | null>, camera: PerspectiveCamera)
     })
 	onUnmounted(() => { window.removeEventListener('resize', onResize); });
 }
+
+export function truth(v: boolean) { return v ? '✓' : '✗'}
