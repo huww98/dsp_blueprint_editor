@@ -425,20 +425,53 @@ const tankParamParser: ParamParser<TankParameters> = {
     },
 }
 
+export enum StorageType {
+    DEFAULT = 0,
+    FILTERED = 9,
+}
+export interface StorageGrid {
+    filter: number;
+}
 export interface StorageParameters {
-    automationLimit: number
+    automationLimit: number;
+    type: StorageType;
+    grids: StorageGrid[];
 }
 
-const storageParamParser: ParamParser<StorageParameters> = {
-    encodedSize() { return 1; },
-    encode(p, a) {
-        setParam(a, 0, p.automationLimit);
-    },
-    decode(a) {
-        return {
-            automationLimit: getParam(a, 0),
-        };
-    },
+function storageParamParser(size: number): ParamParser<StorageParameters>{
+    return {
+        encodedSize() {
+            const s = 10 + size;
+            if (s < 110)
+                return 110;
+            return s;
+        },
+        encode(p, a) {
+            setParam(a, 0, p.automationLimit);
+            setParam(a, 1, p.type);
+            if (p.type === StorageType.FILTERED) {
+                for (let i = 0; i < size; i++) {
+                    setParam(a, 10 + i, p.grids[i].filter);
+                }
+            }
+        },
+        decode(a) {
+            const type = getParam(a, 1, StorageType.DEFAULT)
+            const grids: StorageGrid[] = [];
+            if (type === StorageType.FILTERED) {
+                for (let i = 0; i < size; i++) {
+                    grids.push({
+                        filter: getParam(a, 10 + i, 0),
+                    });
+                }
+            }
+            return {
+                automationLimit: getParam(a, 0),
+                type,
+                grids,
+            };
+        },
+    }
 }
 
 export interface EjectorParameters {
@@ -631,8 +664,8 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2011, inserterParamParser],
     [2012, inserterParamParser],
     [2013, inserterParamParser],
-    [2101, storageParamParser],
-    [2102, storageParamParser],
+    [2101, storageParamParser(30)],
+    [2102, storageParamParser(60)],
     [2106, tankParamParser],
     [2311, ejectorParamParser],
     [2208, powerGeneratorParamParser],

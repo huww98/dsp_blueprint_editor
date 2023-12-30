@@ -5,6 +5,7 @@
     <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
     <StationInfo v-if="isStation(building.itemId)" :building="building" />
     <MonitorInfo v-if="isMonitor(building.itemId)" :building="building" />
+    <StorageInfo v-if="isStorage(building.itemId)" :building="building" />
     <div class="building-params">
         <div v-if="filterItem">
             <label>{{ t('过滤器') }}</label>
@@ -21,10 +22,6 @@
         <div v-if="isInserter(building.itemId)">
             <label>{{ t('分拣长度') }}</label>
             <span class="v">{{ (bParams as InserterParameters).length }}</span>
-        </div>
-        <div v-if="isStorage(building.itemId)">
-            <label>{{ t('自动化容量限制') }}</label>
-            <span class="v">{{ capacityForAutomation }}</span>
         </div>
         <template v-if="isEjector(building.itemId)">
             <div>
@@ -86,7 +83,7 @@ import { useI18n } from 'vue-i18n';
 import { truth } from '@/utils';
 import {
     LabParamerters, AssembleParamerters, TankParameters, BlueprintBuilding,
-    BeltParameters, InserterParameters, StorageParameters, EjectorParameters,
+    BeltParameters, InserterParameters, EjectorParameters,
     EnergyExchangerParameters, PowerGeneratorParameters, ArtifacialStarParameters,
 } from '@/blueprint/parser';
 import { itemIconId } from '@/data/icons';
@@ -100,6 +97,7 @@ import BuildingRecipe from './BuildingRecipe.vue';
 import BuildingIcon from './BuildingIcon.vue';
 import StationInfo from './StationInfo.vue';
 import MonitorInfo from './MonitorInfo.vue';
+import StorageInfo from './StorageInfo.vue';
 import SwitchDSP from './SwitchDSP.vue';
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));
 
@@ -156,12 +154,6 @@ const bParams = computed(() => props.building.parameters);
 const energyExchangerMode = computed(() => {
     const mode = (props.building.parameters as EnergyExchangerParameters).mode;
     return t(energyExchangerModeTexts.get(mode)!);
-});
-const capacityForAutomation = computed(() => {
-    const itemId = props.building.itemId;
-    const capacity = itemId === 2101 ? 30 : 60;
-    const limit = (props.building.parameters as StorageParameters).automationLimit;
-    return capacity - limit;
 });
 </script>
 

@@ -26,7 +26,6 @@ watchEffect(async () => {
 .icon {
     display: inline-block;
     position: relative;
-    height: 2.5rem;
     width: 2.5rem;
 
     &.has-count {
@@ -34,8 +33,8 @@ watchEffect(async () => {
     }
 
     img {
-        height: 100%;
         width: 100%;
+        display: block;
     }
 
     .count {
