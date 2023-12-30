@@ -514,6 +514,11 @@ const energyExchangerParamParser: ParamParser<EnergyExchangerParameters> = {
     },
 }
 
+export enum SpawnItemOperator {
+    NONE = 0,
+    GENERATE = 1,
+    CONSUME = 2,
+}
 export interface MonitorParameters {
     targetBeltId: number;
     offset: number;
@@ -532,6 +537,7 @@ export interface MonitorParameters {
     repeat: boolean;
     length: number;
     falloffRadius: [number, number];
+    spawnItemOperator: SpawnItemOperator;
 }
 
 const MonitorParamParser: ParamParser<MonitorParameters> = {
@@ -557,6 +563,8 @@ const MonitorParamParser: ParamParser<MonitorParameters> = {
         setParam(a, 10, p.systemWarningMode);
         setParam(a, 17, p.systemWarningIconId);
         setParam(a, 12, p.alarmMode);
+
+        setParam(a, 20, p.spawnItemOperator);
     },
     decode(a) {
         return {
@@ -579,6 +587,8 @@ const MonitorParamParser: ParamParser<MonitorParameters> = {
             systemWarningMode: getParam(a, 10),
             systemWarningIconId: getParam(a, 17),
             alarmMode: getParam(a, 12),
+
+            spawnItemOperator: getParam(a, 20),
         }
     }
 }
