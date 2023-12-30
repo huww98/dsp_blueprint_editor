@@ -26,10 +26,16 @@
             <label>{{ t('自动化容量限制') }}</label>
             <span class="v">{{ capacityForAutomation }}</span>
         </div>
-        <div v-if="isEjector(building.itemId)">
-            <label>{{ t('送入轨道') }}</label>
-            <span class="v">{{ (bParams as EjectorParameters).orbitId === 0 ? t('不选轨道') : (bParams as EjectorParameters).orbitId }}</span>
-        </div>
+        <template v-if="isEjector(building.itemId)">
+            <div>
+                <label>{{ t('送入轨道') }}</label>
+                <span class="v">{{ (bParams as EjectorParameters).orbitId === 0 ? t('不选轨道') : (bParams as EjectorParameters).orbitId }}</span>
+            </div>
+            <div>
+                <label>{{ t('十倍射速') }}</label>
+                <span class="v">{{ truth((bParams as EjectorParameters).boost) }}</span>
+            </div>
+        </template>
         <div v-if="isEnergyExchanger(building.itemId)">
             <label>{{ t('模式') }}</label>
             <span class="v">{{ energyExchangerMode }}</span>

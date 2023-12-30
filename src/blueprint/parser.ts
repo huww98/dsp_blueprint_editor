@@ -443,16 +443,19 @@ const storageParamParser: ParamParser<StorageParameters> = {
 
 export interface EjectorParameters {
     orbitId: number;
+    boost: boolean;
 }
 
 const ejectorParamParser: ParamParser<EjectorParameters> = {
-    encodedSize() { return 1; },
+    encodedSize() { return 2; },
     encode(p, a) {
         setParam(a, 0, p.orbitId);
+        setParam(a, 1, p.boost ? 1 : 0);
     },
     decode(a) {
         return {
             orbitId: getParam(a, 0),
+            boost: getParam(a, 1, 0) > 0,
         };
     },
 }
