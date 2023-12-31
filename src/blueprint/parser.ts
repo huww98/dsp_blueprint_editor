@@ -698,6 +698,42 @@ const MonitorParamParser: ParamParser<MonitorParameters> = {
     }
 }
 
+export enum DispenserPlayerMode {
+    NONE = 0,
+    RECYCLE = 1,
+    BOTH = 2,
+    SUPPLY = 3,
+}
+export enum DispenserStorageMode {
+    NONE = 0,
+    SUPPLY = 1,
+    DEMAND = 2,
+}
+export interface DispenserParameters {
+    playerMode: DispenserPlayerMode;
+    storageMode: DispenserStorageMode;
+    workEnergyPerTick: number;
+    courierAutoReplenish: boolean;
+}
+
+const dispenserParamParser: ParamParser<DispenserParameters> = {
+    encodedSize() { return 128; },
+    encode(p, a) {
+        setParam(a, 0, p.playerMode);
+        setParam(a, 1, p.storageMode);
+        setParam(a, 2, p.workEnergyPerTick);
+        setParam(a, 3, p.courierAutoReplenish ? 1 : 0);
+    },
+    decode(a) {
+        return {
+            playerMode: getParam(a, 0),
+            storageMode: getParam(a, 1),
+            workEnergyPerTick: getParam(a, 2),
+            courierAutoReplenish: getParam(a, 3) > 0,
+        }
+    }
+}
+
 interface UnknownParamerters {
     parameters: Int32Array,
 }
@@ -722,7 +758,7 @@ type AllParameters = AssembleParamerters | StationParameters | AdvancedMiningMac
     SplitterParameters | LabParamerters | BeltParameters | InserterParameters |
     TankParameters | StorageParameters | EjectorParameters |
     PowerGeneratorParameters | ArtifacialStarParameters | EnergyExchangerParameters |
-    MonitorParameters | BattleBaseParameters | UnknownParamerters;
+    MonitorParameters | BattleBaseParameters | DispenserParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
@@ -745,6 +781,7 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2209, energyExchangerParamParser],
     [2030, MonitorParamParser],
     [3009, battleBaseParamParser()],
+    [2107, dispenserParamParser],
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);

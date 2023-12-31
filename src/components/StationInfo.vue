@@ -22,7 +22,7 @@
         <div v-if="inter"><label>{{ t('星际物流运输船') }}</label><span class="v">{{ truth(p.shipAutoReplenish) }}</span></div>
     </div>
     <div class="building-params">
-        <div v-if="!collector"><label>{{t('最大充能功率')}}</label><span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumFractionDigits: 1, maximumFractionDigits: 1 })}} MW</span></div>
+        <WorkEnergyParam v-if="!collector" :per-tick="p.workEnergyPerTick"/>
         <div v-if="!collector"><label>{{t('运输机最远路程')}}</label><span class="v">{{(Math.acos(p.tripRangeOfDrones) / Math.PI * 180.0).toLocaleString([], { maximumFractionDigits: 0 })}}°</span></div>
         <div v-if="inter"><label>{{t('运输船最远路程')}}</label><span class="v">{{tripRangeOfShips}}</span></div>
         <div v-if="inter"><label>{{t('轨道采集器')}}</label><span class="v">{{truth(p.includeOrbitCollector)}}</span></div>
@@ -40,6 +40,7 @@ import { LogisticRole, BlueprintBuilding, StationParameters, BlueprintData } fro
 import { Command, Updater } from '@/command';
 import { BuildingInfo } from '@/blueprint/buildingInfo';
 import { itemIconId } from '@/data/icons';
+import WorkEnergyParam from './WorkEnergyParam.vue';
 
 const roleText = new Map([
     [LogisticRole.None, '仓储'],

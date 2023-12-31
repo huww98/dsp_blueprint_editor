@@ -67,6 +67,10 @@ export function isBattleBase(id: number) {
     return id === 3009;
 }
 
+export function isDispenser(id: number) {
+    return id === 2107;
+}
+
 export const allAssemblers = new Set([
     2303, // 制造台
     2304,

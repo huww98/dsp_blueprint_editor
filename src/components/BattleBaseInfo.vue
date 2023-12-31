@@ -25,10 +25,7 @@
             <label>{{ t('基站自动补充编队提示标题') }}</label>
             <span class="v">{{ truth(p.autoReplenishFleet) }}</span>
         </div>
-        <div>
-            <label>{{ t('最大充能功率') }}</label>
-            <span class="v">{{(p.workEnergyPerTick * 60 / 1_000_000).toLocaleString([], { minimumSignificantDigits: 3, maximumSignificantDigits: 3 })}} MW</span>
-        </div>
+        <WorkEnergyParam :per-tick="p.workEnergyPerTick"/>
     </div>
 </template>
 
@@ -37,6 +34,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BattleBaseParameters, BlueprintBuilding, BattleBaseDroneConstructPriority } from '@/blueprint/parser';
 import BuildingIcon from './BuildingIcon.vue';
+import WorkEnergyParam from './WorkEnergyParam.vue';
 import { itemIconId } from '@/data/icons';
 import { truth } from '@/utils';
 
