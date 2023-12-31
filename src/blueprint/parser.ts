@@ -474,6 +474,78 @@ function storageParamParser(size: number): ParamParser<StorageParameters>{
     }
 }
 
+export enum BattleBaseDroneConstructPriority {
+    REPARE = 0,
+    BALANCE = 1,
+    CONSTRUCT = 2,
+}
+export interface Fighter {
+    itemId: number;
+}
+export interface BattleBaseParameters extends StorageParameters {
+    workEnergyPerTick: number;
+    autoPickEnabled: boolean;
+    autoReplenishFleet: boolean;
+    combatEnabled: boolean;
+    autoReconstruct: boolean;
+    constructionDroneEnabled: boolean;
+    droneConstructPriority: BattleBaseDroneConstructPriority;
+    fighters: Fighter[];
+}
+
+function battleBaseParamParser(): ParamParser<BattleBaseParameters> {
+    const storageParser = storageParamParser(60);
+    const getBase = (p: StorageParameters) => {
+        switch (p.type) {
+            case StorageType.DEFAULT:
+                return 10;
+            case StorageType.FILTERED:
+                return 10 + 60;
+            default:
+                throw new Error('参数解析错误：未知的储存类型');
+        }
+    }
+    return {
+        encodedSize() {
+            return 110;
+        },
+        encode(p, a) {
+            storageParser.encode(p, a);
+            const base = getBase(p);
+            setParam(a, base + 0, p.workEnergyPerTick);
+            setParam(a, base + 1, p.autoPickEnabled ? 1 : 0);
+            setParam(a, base + 2, p.autoReplenishFleet ? 1 : 0);
+            setParam(a, base + 3, p.combatEnabled ? 1 : 0);
+            setParam(a, base + 4, p.autoReconstruct ? 1 : 0);
+            setParam(a, base + 5, p.constructionDroneEnabled ? 1 : 0);
+            setParam(a, base + 6, p.droneConstructPriority);
+            for (let i = 0; i < p.fighters.length; i++) {
+                setParam(a, base + 7 + i, p.fighters[i].itemId);
+            }
+        },
+        decode(a) {
+            const p = storageParser.decode(a);
+            const base = getBase(p);
+            const fighters: Fighter[] = [];
+            for (let i = 0; i < 12; i++) {
+                fighters.push({
+                    itemId: getParam(a, base + 7 + i),
+                });
+            }
+            return Object.assign(p, {
+                workEnergyPerTick: getParam(a, base + 0),
+                autoPickEnabled: getParam(a, base + 1) > 0,
+                autoReplenishFleet: getParam(a, base + 2) > 0,
+                combatEnabled: getParam(a, base + 3) > 0,
+                autoReconstruct: getParam(a, base + 4) > 0,
+                constructionDroneEnabled: getParam(a, base + 5) > 0,
+                droneConstructPriority: getParam(a, base + 6),
+                fighters,
+            });
+        },
+    }
+}
+
 export interface EjectorParameters {
     orbitId: number;
     boost: boolean;
@@ -650,7 +722,7 @@ type AllParameters = AssembleParamerters | StationParameters | AdvancedMiningMac
     SplitterParameters | LabParamerters | BeltParameters | InserterParameters |
     TankParameters | StorageParameters | EjectorParameters |
     PowerGeneratorParameters | ArtifacialStarParameters | EnergyExchangerParameters |
-    MonitorParameters | UnknownParamerters;
+    MonitorParameters | BattleBaseParameters | UnknownParamerters;
 
 const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2103, stationParamsParser(stationDesc)],
@@ -672,6 +744,7 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2210, artifacialStarParamParser],
     [2209, energyExchangerParamParser],
     [2030, MonitorParamParser],
+    [3009, battleBaseParamParser()],
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);

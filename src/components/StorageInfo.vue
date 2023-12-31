@@ -1,10 +1,8 @@
 <template>
     <div v-if="p.type === StorageType.FILTERED" class="storage-grid" :class="'capacity-' + capacity">
-        <template v-for="(g, i) in p.grids" :key="i" >
-            <div :class="{ban: i >= capacityForAutomation}">
-                <BuildingIcon v-if="g.filter > 0" :icon-id="itemIconId(g.filter)" />
-            </div>
-        </template>
+        <div v-for="(g, i) in p.grids" :key="i" :class="{ban: i >= capacityForAutomation}">
+            <BuildingIcon v-if="g.filter > 0" :icon-id="itemIconId(g.filter)" />
+        </div>
     </div>
     <div class="building-params">
         <div>
@@ -58,7 +56,6 @@ const capacityForAutomation = computed(() => {
     .icon {
         display: block;
         width: 100%;
-
     }
 }
 </style>

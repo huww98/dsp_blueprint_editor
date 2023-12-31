@@ -5,6 +5,7 @@
     <SplitterInfo v-if="isSplitter(building.itemId)" :building="building" />
     <StationInfo v-if="isStation(building.itemId)" :building="building" />
     <MonitorInfo v-if="isMonitor(building.itemId)" :building="building" />
+    <BattleBaseInfo v-if="isBattleBase(building.itemId)" :building="building" />
     <StorageInfo v-if="isStorage(building.itemId)" :building="building" />
     <div class="building-params">
         <div v-if="filterItem">
@@ -89,7 +90,7 @@ import {
 import { itemIconId } from '@/data/icons';
 import {
     isLab, allAssemblers, isBelt, isStation, itemsMap, isInserter, isStorage, isTank,
-    isEjector, isEnergyExchanger, isArtificialStar, isRayReciver, isMonitor, isSplitter
+    isEjector, isEnergyExchanger, isArtificialStar, isRayReciver, isMonitor, isSplitter, isBattleBase,
 } from '@/data/items';
 import { commandQueueKey } from '@/define';
 
@@ -97,6 +98,7 @@ import BuildingRecipe from './BuildingRecipe.vue';
 import BuildingIcon from './BuildingIcon.vue';
 import StationInfo from './StationInfo.vue';
 import MonitorInfo from './MonitorInfo.vue';
+import BattleBaseInfo from './BattleBaseInfo.vue';
 import StorageInfo from './StorageInfo.vue';
 import SwitchDSP from './SwitchDSP.vue';
 const SplitterInfo = defineAsyncComponent(() => import(/* webpackChunkName: "renderer" */'./SpitterInfo.vue'));

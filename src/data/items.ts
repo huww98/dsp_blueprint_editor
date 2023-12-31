@@ -32,7 +32,7 @@ export function isLab(id: number) {
 }
 
 export function isStorage(id: number) {
-    return id === 2101 || id === 2102;
+    return id === 2101 || id === 2102 || id === 3009;
 }
 
 export function isTank(id: number) {
@@ -63,12 +63,18 @@ export function isMonitor(id: number) {
     return id === 2030;
 }
 
+export function isBattleBase(id: number) {
+    return id === 3009;
+}
+
 export const allAssemblers = new Set([
     2303, // 制造台
     2304,
     2305,
+    2318,
     2302, // 熔炉
     2315,
+    2319,
     2308, // 原油精炼厂
     2309, // 化工厂
     2310, // 对撞机
