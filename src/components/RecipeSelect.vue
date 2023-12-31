@@ -1,7 +1,9 @@
 <template>
     <span @click="openModal = true" class="icon-select" ref="handler" tabindex="0" role="listbox">
         <BuildingIcon v-if="props.recipeId !== null" :icon-id="recipeIconId(props.recipeId)" :alt="recipeName(props.recipeId)"/>
-        <span class="icon icon-placeholder" v-else></span>
+        <span class="icon" v-else>
+            <div class="icon-placeholder"></div>
+        </span>
     </span>
     <Modal :open="openModal" @update:open="o => { if (!o) selected(null) }">
         <div>
@@ -61,6 +63,8 @@ const selected = (i: Recipe | null) => {
 <style lang="scss">
 .icon-select {
     cursor: pointer;
+    display: inline-block;
+
     .icon {
         display: block;
     }
@@ -69,6 +73,7 @@ const selected = (i: Recipe | null) => {
 .icon-placeholder {
     border: 1px dashed currentColor;
     background: #FFF4;
+    padding-top: 100%;
 }
 
 .icon-grid {
