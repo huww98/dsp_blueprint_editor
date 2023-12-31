@@ -1,7 +1,9 @@
 <template>
     <span @click="openModal = true" class="icon-select" ref="handler" tabindex="0" role="listbox">
         <BuildingIcon v-if="props.itemId !== null" :icon-id="itemIconId(props.itemId)" :alt="itemName(props.itemId)"/>
-        <span class="icon icon-placeholder" v-else></span>
+        <span class="icon" v-else>
+            <div class="icon-placeholder"></div>
+        </span>
     </span>
     <Modal :open="openModal" @update:open="o => { if (!o) selected(null) }">
         <div>

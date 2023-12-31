@@ -185,8 +185,6 @@ const collector = computed(() => isAdvancedMiningMachine(props.building.itemId))
     }
 
     .icon-placeholder {
-        height: 2.5em;
-        width: 2.5em;
         border-radius: 50%;
         background: #e4e4e4;
     }
