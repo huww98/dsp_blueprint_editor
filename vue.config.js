@@ -24,7 +24,7 @@ module.exports = defineConfig({
         },
         plugins: [
             new webpack.DefinePlugin({
-                VERSION: JSON.stringify(execSync('git describe --always --dirty', { encoding: 'utf8' }).trim()),
+                VERSION: JSON.stringify(execSync('git describe --tags --always --dirty', { encoding: 'utf8' }).trim()),
             }),
         ],
     },
