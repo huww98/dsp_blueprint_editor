@@ -12,7 +12,7 @@ export function isBelt(id: number) {
 }
 
 export function isInserter(id: number) {
-    return id >= 2011 && id <= 2013;
+    return id >= 2011 && id <= 2014;
 }
 
 export function isStation(id: number) {

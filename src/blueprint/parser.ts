@@ -772,6 +772,7 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2011, inserterParamParser],
     [2012, inserterParamParser],
     [2013, inserterParamParser],
+    [2014, inserterParamParser],
     [2101, storageParamParser(30)],
     [2102, storageParamParser(60)],
     [2106, tankParamParser],
