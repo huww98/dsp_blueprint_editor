@@ -16,7 +16,7 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [ 41, { color: 0xE3A263, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 低速分拣器
     [ 42, { color: 0x51A896, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 高速分拣器
     [ 43, { color: 0x61A5D7, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 极速分拣器
-    [483, { color: 0x6E7070, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 极速分拣器
+    [483, { color: 0x6E7070, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 集装分拣器
     [ 38, { color: 0x3B5666, box: [2.7, 2.4, 2.7], offset: [0.0, 1.2, 0.0] }], // 四向分流器 a
     [ 39, { color: 0x3B5666, box: [1.5, 2.4, 2.7], offset: [0.0, 1.2, 0.0] }], // 四向分流器 b
     [ 40, { color: 0x3B5666, box: [2.7, 2.4, 2.7], offset: [0.0, 1.2, 0.0] }], // 四向分流器 c
@@ -68,6 +68,8 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [403, { color: null,     box: [6.0, 16.0, 6.0], offset: [0.0, 7.8, 0.0] }], // 信标
     [402, { color: null,     box: [7.0, 14.2, 7.0], offset: [0.0, 7.0, 0.0] }], // 护盾发生器
     [453, { color: null,     box: [5.0, 8.0, 7.0], offset: [0.0, 4.0, 0.0] }], // 战场分析基站
+    [482, { color: null,     box: [4.0, 7.0, 4.0], offset: [0.0, 4.0, 0.0] }], // 地面电浆炮
+    [422, { color: null,     box: [5.0, 8.0, 7.0], offset: [0.0, 4.0, 0.0] }], // 干扰塔
     [371, { color: 0x718495, box: [3.0, 1.9, 3.2], offset: [0.0, 1.1, 0.0] }], // 物流配送器
 ])
 
