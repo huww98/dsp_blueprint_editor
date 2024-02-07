@@ -16,6 +16,7 @@ const buildingMetaRaw: [number, { color: number | null, box: [number, number, nu
     [ 41, { color: 0xE3A263, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 低速分拣器
     [ 42, { color: 0x51A896, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 高速分拣器
     [ 43, { color: 0x61A5D7, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 极速分拣器
+    [483, { color: 0x6E7070, box: [1.0, 1.0, 1.0], offset: [0.0, 0.0, 0.0]}], // 极速分拣器
     [ 38, { color: 0x3B5666, box: [2.7, 2.4, 2.7], offset: [0.0, 1.2, 0.0] }], // 四向分流器 a
     [ 39, { color: 0x3B5666, box: [1.5, 2.4, 2.7], offset: [0.0, 1.2, 0.0] }], // 四向分流器 b
     [ 40, { color: 0x3B5666, box: [2.7, 2.4, 2.7], offset: [0.0, 1.2, 0.0] }], // 四向分流器 c
