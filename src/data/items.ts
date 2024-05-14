@@ -28,7 +28,7 @@ export function isSplitter(id: number) {
 }
 
 export function isLab(id: number) {
-    return id === 2901;
+    return id === 2901 || id === 2902;
 }
 
 export function isStorage(id: number) {
@@ -81,5 +81,6 @@ export const allAssemblers = new Set([
     2319,
     2308, // 原油精炼厂
     2309, // 化工厂
+    2317,
     2310, // 对撞机
 ]);
