@@ -25,6 +25,8 @@ export const recipes: Recipe[] = [
         if d['IconPath']:
             icon = d['IconPath'].split('/')[-1]
             sys.stdout.write(f"        icon: '{icon}',\n")
+        if d['NonProductive']:
+            sys.stdout.write(f"        nonProductive: true,\n")
         sys.stdout.write( "    },\n")
     sys.stdout.write('];\n')
 

@@ -766,6 +766,7 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2316, advancedMiningMachineParamParser()],
     [2020, splitterParamParser],
     [2901, labParamParser],
+    [2902, labParamParser],
     [2001, beltParamParser],
     [2002, beltParamParser],
     [2003, beltParamParser],
@@ -785,7 +786,8 @@ const parameterParsers = new Map<number, ParamParser<AllParameters>>([
     [2107, dispenserParamParser],
 ]);
 for (const id of allAssemblers) {
-    parameterParsers.set(id, assembleParamParser);
+    if (!parameterParsers.has(id))
+        parameterParsers.set(id, assembleParamParser);
 }
 
 function parserFor(itemId: number) {

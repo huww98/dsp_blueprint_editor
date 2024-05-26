@@ -452,6 +452,7 @@ export const recipes: Recipe[] = [
             {item: itemsMap.get(1121)!, count: 5},
         ],
         grid: [1, 5, 7],
+        nonProductive: true,
     },
     {
         id: 41, name: '氘核燃料棒', time: 720,
@@ -501,6 +502,7 @@ export const recipes: Recipe[] = [
             {item: itemsMap.get(1803)!, count: 2},
         ],
         grid: [1, 6, 11],
+        nonProductive: true,
     },
     {
         id: 45, name: '制造台 Mk.I', time: 120,
@@ -667,6 +669,7 @@ export const recipes: Recipe[] = [
         ],
         grid: [1, 2, 7],
         icon: 'X-ray',
+        nonProductive: true,
     },
     {
         id: 59, name: '高纯硅块', time: 120,
@@ -851,6 +854,7 @@ export const recipes: Recipe[] = [
         ],
         grid: [1, 7, 8],
         icon: 'photon-formula',
+        nonProductive: true,
     },
     {
         id: 75, name: '宇宙矩阵', time: 900,
@@ -1401,6 +1405,7 @@ export const recipes: Recipe[] = [
         ],
         grid: [1, 3, 7],
         icon: 'reforming-refine',
+        nonProductive: true,
     },
     {
         id: 122, name: '物流配送器', time: 480,

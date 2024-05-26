@@ -94,6 +94,7 @@ import {
     isEjector, isEnergyExchanger, isArtificialStar, isRayReciver, isMonitor, isSplitter,
     isBattleBase, isDispenser,
 } from '@/data/items';
+import { recipesMap } from '@/data';
 import { commandQueueKey } from '@/define';
 
 import BuildingRecipe from './BuildingRecipe.vue';
@@ -133,14 +134,29 @@ const LabModeText = computed(() => {
     const mode = (props.building.parameters as LabParamerters).researchMode;
     return t(labModeTexts.get(mode)!);
 })
+const productive = computed(() => {
+    const recipeId = props.building.recipeId;
+    if (recipeId === 0)
+        return undefined;
+    const recipe = recipesMap.get(recipeId)!;
+    if (recipe.nonProductive)
+        return false;
+    let p = true;
+    for (const i of recipe.to)
+        p &&= i.item.productive === true;
+    return p;
+})
 const accModeText = computed(() => {
-    const itemId = props.building.itemId
-    if (isLab(itemId) && (props.building!.parameters as LabParamerters).researchMode === ResearchMode.Compose ||
-        allAssemblers.has(itemId)) {
-        const mode = (props.building!.parameters as AssembleParamerters).acceleratorMode;
-        return t(accModeTexts.get(mode)!);
-    }
-    return undefined;
+    if (!allAssemblers.has(props.building.itemId))
+        return undefined;
+
+    const p = productive.value;
+    if (p === undefined)
+        return undefined;
+    let mode = AcceleratorMode.Accelerate;
+    if (p)
+        mode = (props.building!.parameters as AssembleParamerters).acceleratorMode;
+    return t(accModeTexts.get(mode)!);
 })
 
 const beltVersion = ref(0);

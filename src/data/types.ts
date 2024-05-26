@@ -5,6 +5,7 @@ export interface Item {
     icon: string;
     /** page, row, column */
     grid: [number, number, number];
+    productive?: boolean;
 }
 
 export interface ItemStack {
@@ -22,6 +23,7 @@ export interface Recipe {
     to: ItemStack[];
     /** page, row, column */
     grid: [number, number, number];
+    nonProductive?: boolean;
 }
 
 export interface Tech {

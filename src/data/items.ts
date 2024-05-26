@@ -83,4 +83,6 @@ export const allAssemblers = new Set([
     2309, // 化工厂
     2317,
     2310, // 对撞机
+    2901, // 研究站
+    2902,
 ]);
