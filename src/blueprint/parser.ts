@@ -25,6 +25,7 @@ export interface BlueprintBuilding {
     areaIndex: number,
     localOffset: [ XYZ, XYZ ],
     yaw: [ number, number ],
+    tilt: number,
     itemId: number,
     modelIndex: number,
     outputObjIdx: number,
@@ -805,11 +806,14 @@ function importBuilding(r: BufferReader): BlueprintBuilding {
             z: r.getFloat32(),
         }
     }
+    const index = r.getInt32();
+    const v2 = index <= -100;
     const b: BlueprintBuilding = {
-        index: r.getInt32(),
+        index: v2 ? r.getInt32() : index,
         areaIndex: r.getInt8(),
         localOffset: [readXYZ(), readXYZ()],
         yaw: [r.getFloat32(), r.getFloat32()],
+        tilt: v2 ? r.getFloat32() : 0.0,
         itemId: r.getInt16(),
         modelIndex: r.getInt16(),
         outputObjIdx: r.getInt32(),
