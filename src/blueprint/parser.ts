@@ -26,6 +26,10 @@ export interface BlueprintBuilding {
     localOffset: [ XYZ, XYZ ],
     yaw: [ number, number ],
     tilt: number,
+    // optional fields introduced in newer blueprint formats
+    pitch?: number,
+    tilt2?: number,
+    pitch2?: number,
     itemId: number,
     modelIndex: number,
     outputObjIdx: number,
@@ -799,35 +803,126 @@ function parserFor(itemId: number) {
 }
 
 function importBuilding(r: BufferReader): BlueprintBuilding {
+    function fix(num: number) {
+        return +num?.toFixed(4) || 0;
+    }
     function readXYZ() {
         return {
-            x: r.getFloat32(),
-            y: r.getFloat32(),
-            z: r.getFloat32(),
+            x: fix(r.getFloat32()),
+            y: fix(r.getFloat32()),
+            z: fix(r.getFloat32()),
         }
     }
-    const index = r.getInt32();
-    const v2 = index <= -100;
+    const num = r.getInt32();
+    // create a partial object and fill fields per-format
+    const bAny: Partial<BlueprintBuilding> & { parameters: null | AllParameters } = { parameters: null };
+    if (num <= -101) {
+        // new format (prefix -101)
+        bAny.index = r.getInt32();
+        bAny.itemId = r.getInt16();
+        bAny.modelIndex = r.getInt16();
+        bAny.areaIndex = r.getInt8();
+        bAny.localOffset = [readXYZ() as XYZ, { x: 0, y: 0, z: 0 } as XYZ];
+        bAny.yaw = [fix(r.getFloat32()), 0];
+        if (bAny.itemId > 2000 && bAny.itemId < 2010) {
+            // conveyor
+            bAny.tilt = r.getFloat32();
+            bAny.pitch = 0;
+            bAny.localOffset[1] = { ...bAny.localOffset[0] };
+            bAny.yaw[1] = bAny.yaw[0];
+            bAny.tilt2 = bAny.tilt;
+            bAny.pitch2 = 0;
+        } else if (bAny.itemId > 2010 && bAny.itemId < 2020) {
+            // splitter
+            bAny.tilt = r.getFloat32();
+            bAny.pitch = r.getFloat32();
+            bAny.localOffset[1] = readXYZ();
+            bAny.yaw[1] = fix(r.getFloat32());
+            bAny.tilt2 = r.getFloat32();
+            bAny.pitch2 = r.getFloat32();
+        } else {
+            bAny.tilt = 0;
+            bAny.pitch = 0;
+            bAny.localOffset[1] = { ...bAny.localOffset[0] };
+            bAny.yaw[1] = bAny.yaw[0];
+            bAny.tilt2 = 0;
+            bAny.pitch2 = 0;
+        }
+        bAny.outputObjIdx = r.getInt32();
+        bAny.inputObjIdx = r.getInt32();
+        bAny.outputToSlot = r.getInt8();
+        bAny.inputFromSlot = r.getInt8();
+        bAny.outputFromSlot = r.getInt8();
+        bAny.inputToSlot = r.getInt8();
+        bAny.outputOffset = r.getInt8();
+        bAny.inputOffset = r.getInt8();
+        bAny.recipeId = r.getInt16();
+        bAny.filterId = r.getInt16();
+    } else if (num <= -100) {
+        // older v2 format (prefix <= -100)
+        bAny.index = r.getInt32();
+        bAny.areaIndex = r.getInt8();
+        bAny.localOffset = [readXYZ(), readXYZ()];
+        bAny.yaw = [fix(r.getFloat32()), fix(r.getFloat32())];
+        bAny.tilt = r.getFloat32();
+        bAny.itemId = r.getInt16();
+        bAny.modelIndex = r.getInt16();
+        bAny.outputObjIdx = r.getInt32();
+        bAny.inputObjIdx = r.getInt32();
+        bAny.outputToSlot = r.getInt8();
+        bAny.inputFromSlot = r.getInt8();
+        bAny.outputFromSlot = r.getInt8();
+        bAny.inputToSlot = r.getInt8();
+        bAny.outputOffset = r.getInt8();
+        bAny.inputOffset = r.getInt8();
+        bAny.recipeId = r.getInt16();
+        bAny.filterId = r.getInt16();
+    } else {
+        // legacy format
+        bAny.index = num;
+        bAny.areaIndex = r.getInt8();
+        bAny.localOffset = [readXYZ(), readXYZ()];
+        bAny.yaw = [fix(r.getFloat32()), fix(r.getFloat32())];
+        bAny.tilt = 0;
+        bAny.itemId = r.getInt16();
+        bAny.modelIndex = r.getInt16();
+        bAny.outputObjIdx = r.getInt32();
+        bAny.inputObjIdx = r.getInt32();
+        bAny.outputToSlot = r.getInt8();
+        bAny.inputFromSlot = r.getInt8();
+        bAny.outputFromSlot = r.getInt8();
+        bAny.inputToSlot = r.getInt8();
+        bAny.outputOffset = r.getInt8();
+        bAny.inputOffset = r.getInt8();
+        bAny.recipeId = r.getInt16();
+        bAny.filterId = r.getInt16();
+    }
+    // ensure properties exist and match BlueprintBuilding shape
     const b: BlueprintBuilding = {
-        index: v2 ? r.getInt32() : index,
-        areaIndex: r.getInt8(),
-        localOffset: [readXYZ(), readXYZ()],
-        yaw: [r.getFloat32(), r.getFloat32()],
-        tilt: v2 ? r.getFloat32() : 0.0,
-        itemId: r.getInt16(),
-        modelIndex: r.getInt16(),
-        outputObjIdx: r.getInt32(),
-        inputObjIdx: r.getInt32(),
-        outputToSlot: r.getInt8(),
-        inputFromSlot: r.getInt8(),
-        outputFromSlot: r.getInt8(),
-        inputToSlot: r.getInt8(),
-        outputOffset: r.getInt8(),
-        inputOffset: r.getInt8(),
-        recipeId: r.getInt16(),
-        filterId: r.getInt16(),
+        index: bAny.index,
+        areaIndex: bAny.areaIndex,
+        localOffset: bAny.localOffset,
+        yaw: bAny.yaw,
+        tilt: bAny.tilt,
+        itemId: bAny.itemId,
+        modelIndex: bAny.modelIndex,
+        outputObjIdx: bAny.outputObjIdx,
+        inputObjIdx: bAny.inputObjIdx,
+        outputToSlot: bAny.outputToSlot,
+        inputFromSlot: bAny.inputFromSlot,
+        outputFromSlot: bAny.outputFromSlot,
+        inputToSlot: bAny.inputToSlot,
+        outputOffset: bAny.outputOffset,
+        inputOffset: bAny.inputOffset,
+        recipeId: bAny.recipeId,
+        filterId: bAny.filterId,
         parameters: null,
     };
+    // copy optional new-format fields if present
+    if (bAny.pitch !== undefined) b.pitch = bAny.pitch;
+    if (bAny.tilt2 !== undefined) b.tilt2 = bAny.tilt2;
+    if (bAny.pitch2 !== undefined) b.pitch2 = bAny.pitch2;
+
     const length = r.getInt16();
     if (length > 0) {
         const p = r.getView(length * Int32Array.BYTES_PER_ELEMENT);
@@ -842,30 +937,74 @@ function exportBuilding(w: BufferWriter, b: BlueprintBuilding) {
         w.setFloat32(v.y);
         w.setFloat32(v.z);
     }
-    w.setInt32(b.index);
-    w.setInt8(b.areaIndex);
-    writeXYZ(b.localOffset[0]); writeXYZ(b.localOffset[1]);
-    w.setFloat32(b.yaw[0]); w.setFloat32(b.yaw[1]);
-    w.setInt16(b.itemId);
-    w.setInt16(b.modelIndex);
-    w.setInt32(b.outputObjIdx);
-    w.setInt32(b.inputObjIdx);
-    w.setInt8(b.outputToSlot);
-    w.setInt8(b.inputFromSlot);
-    w.setInt8(b.outputFromSlot);
-    w.setInt8(b.inputToSlot);
-    w.setInt8(b.outputOffset);
-    w.setInt8(b.inputOffset);
-    w.setInt16(b.recipeId);
-    w.setInt16(b.filterId);
+    const isNewFormat = b.pitch !== undefined || b.tilt2 !== undefined || b.pitch2 !== undefined;
+    if (isNewFormat) {
+        // write new-format prefix (-101) and fields in new order
+        w.setInt32(-101);
+        w.setInt32(b.index);
+        w.setInt16(b.itemId);
+        w.setInt16(b.modelIndex);
+        w.setInt8(b.areaIndex);
+        writeXYZ(b.localOffset[0]);
+        w.setFloat32(b.yaw[0]);
+        if (b.itemId > 2000 && b.itemId < 2010) {
+            // conveyor
+            w.setFloat32(b.tilt ?? 0);
+        } else if (b.itemId > 2010 && b.itemId < 2020) {
+            // splitter
+            w.setFloat32(b.tilt ?? 0);
+            w.setFloat32(b.pitch ?? 0);
+            writeXYZ(b.localOffset[1]);
+            w.setFloat32(b.yaw[1]);
+            w.setFloat32(b.tilt2 ?? 0);
+            w.setFloat32(b.pitch2 ?? 0);
+        }
+        w.setInt32(b.outputObjIdx);
+        w.setInt32(b.inputObjIdx);
+        w.setInt8(b.outputToSlot);
+        w.setInt8(b.inputFromSlot);
+        w.setInt8(b.outputFromSlot);
+        w.setInt8(b.inputToSlot);
+        w.setInt8(b.outputOffset);
+        w.setInt8(b.inputOffset);
+        w.setInt16(b.recipeId);
+        w.setInt16(b.filterId);
 
-    if (b.parameters !== null) {
-        const parser = parserFor(b.itemId);
-        const length = parser.encodedSize(b.parameters);
-        w.setInt16(length);
-        parser.encode(b.parameters, w.getView(length * Int32Array.BYTES_PER_ELEMENT));
+        if (b.parameters !== null) {
+            const parser = parserFor(b.itemId);
+            const length = parser.encodedSize(b.parameters);
+            w.setInt16(length);
+            parser.encode(b.parameters, w.getView(length * Int32Array.BYTES_PER_ELEMENT));
+        } else {
+            w.setInt16(0);
+        }
     } else {
-        w.setInt16(0);
+        // legacy export order (preserve original behavior for round-trip compatibility)
+        w.setInt32(b.index);
+        w.setInt8(b.areaIndex);
+        writeXYZ(b.localOffset[0]); writeXYZ(b.localOffset[1]);
+        w.setFloat32(b.yaw[0]); w.setFloat32(b.yaw[1]);
+        w.setInt16(b.itemId);
+        w.setInt16(b.modelIndex);
+        w.setInt32(b.outputObjIdx);
+        w.setInt32(b.inputObjIdx);
+        w.setInt8(b.outputToSlot);
+        w.setInt8(b.inputFromSlot);
+        w.setInt8(b.outputFromSlot);
+        w.setInt8(b.inputToSlot);
+        w.setInt8(b.outputOffset);
+        w.setInt8(b.inputOffset);
+        w.setInt16(b.recipeId);
+        w.setInt16(b.filterId);
+
+        if (b.parameters !== null) {
+            const parser = parserFor(b.itemId);
+            const length = parser.encodedSize(b.parameters);
+            w.setInt16(length);
+            parser.encode(b.parameters, w.getView(length * Int32Array.BYTES_PER_ELEMENT));
+        } else {
+            w.setInt16(0);
+        }
     }
 }
 
